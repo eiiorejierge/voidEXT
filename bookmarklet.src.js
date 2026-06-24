@@ -196,7 +196,6 @@ input:focus{border-color:var(--text);}
           <button class="btn ghost" id="openBtn">Open all</button>
         </div>
         <div class="meter" id="meter"></div>
-        <div class="bar"><i id="bar" style="width:0%"></i></div>
         <ul class="links" id="linkList"></ul>
         <div class="empty" id="linksEmpty">No links yet — generate one.</div>
       </section>
@@ -239,7 +238,7 @@ input:focus{border-color:var(--text);}
           <div class="inforow"><span class="k">Live links in rotation</span><span class="v" id="vPool">—</span></div>
           <div class="inforow"><span class="k">Total links</span><span class="v" id="vTotal">—</span></div>
           <div class="inforow"><span class="k">Blocked / dead</span><span class="v" id="vBlocked">—</span></div>
-          <div class="inforow"><span class="k">Your links left today</span><span class="v" id="vRemain">—</span></div>
+          <div class="inforow"><span class="k">Your link tokens</span><span class="v" id="vRemain">—</span></div>
         </div>
       </section>
       <!-- ACCOUNT -->
@@ -249,8 +248,7 @@ input:focus{border-color:var(--text);}
         <div class="info">
           <div class="inforow"><span class="k">Username</span><span class="v" id="acUser">—</span></div>
           <div class="inforow"><span class="k">Member since</span><span class="v" id="acSince">—</span></div>
-          <div class="inforow"><span class="k">Links used today</span><span class="v" id="acUsed">—</span></div>
-          <div class="inforow"><span class="k">Remaining today</span><span class="v" id="acRemain">—</span></div>
+          <div class="inforow"><span class="k">Link tokens</span><span class="v" id="acRemain">—</span></div>
           <div class="inforow"><span class="k">Theme</span><span class="v" id="acTheme">—</span></div>
         </div>
         <span class="flabel" style="margin-top:26px;">Change password</span>
@@ -376,19 +374,17 @@ input:focus{border-color:var(--text);}
 
   function updateMeter(d){
     if(!d||d.remaining==null){return;}
-    var lim=d.limit||5,rem=d.remaining,used=Math.max(0,lim-rem);
-    $('meter').textContent=rem+' link token'+(rem===1?'':'s')+' left today';
-    $('bar').style.width=Math.round(Math.min(1,used/lim)*100)+'%';
-    if(state.account){state.account.remaining=rem;state.account.limit=lim;}
+    var rem=d.remaining;
+    $('meter').textContent=rem+' link token'+(rem===1?'':'s');
+    if(state.account){state.account.remaining=rem;state.account.limit=d.limit;}
   }
   function renderLinks(links){
     var L=$('linkList');L.innerHTML='';
     $('linksEmpty').classList.toggle('hidden',links.length>0);
     $('genBtn').textContent='Generate a link';
     if(state.account){
-      var lim=state.account.limit||5,rem=(state.account.remaining==null?lim:state.account.remaining),used=Math.max(0,lim-rem);
-      $('meter').textContent=rem+' link token'+(rem===1?'':'s')+' left today';
-      $('bar').style.width=Math.round(Math.min(1,used/lim)*100)+'%';
+      var rem=(state.account.remaining==null?(state.account.limit||5):state.account.remaining);
+      $('meter').textContent=rem+' link token'+(rem===1?'':'s');
     }
     links.forEach(function(url,idx){
       var li=document.createElement('li');
@@ -423,9 +419,8 @@ input:focus{border-color:var(--text);}
     var a=state.account||{};
     $('acUser').textContent=state.username||'—';
     $('acSince').textContent=fmtDate(a.created);
-    var lim=a.limit||5,rem=(a.remaining==null?lim:a.remaining);
-    $('acUsed').textContent=(lim-rem)+' / '+lim;
-    $('acRemain').textContent=rem;
+    var rem=(a.remaining==null?(a.limit||5):a.remaining);
+    $('acRemain').textContent=rem+' link token'+(rem===1?'':'s');
     $('acTheme').textContent=state.settings.theme;
   }
 
@@ -496,7 +491,8 @@ input:focus{border-color:var(--text);}
       if(!res.ok){msg(res.data.error||'Could not load vault.','err');return;}
       var d=res.data;
       $('vPool').textContent=d.poolSize;$('vTotal').textContent=d.totalLinks;$('vBlocked').textContent=d.blockedCount;
-      $('vRemain').textContent=(d.remaining==null?'—':d.remaining)+' / '+(d.limit||5);
+      var vr=(d.remaining==null?0:d.remaining);
+      $('vRemain').textContent=vr+' link token'+(vr===1?'':'s');
       if(state.account){state.account.remaining=d.remaining;state.account.used=d.used;state.account.limit=d.limit;}
     }).catch(function(){msg('Network error.','err');});
   }

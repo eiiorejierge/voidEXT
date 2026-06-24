@@ -131,7 +131,7 @@ td.url{word-break:break-all;max-width:420px;}
       <div class="ptitle">Accounts</div>
       <div class="psub">Every registered account.</div>
       <div class="scroll"><table>
-        <thead><tr><th>Username</th><th>Created</th><th>Links</th><th>Theme</th><th></th></tr></thead>
+        <thead><tr><th>Username</th><th>Created</th><th>Links</th><th>Tokens</th><th>Grant tokens</th><th></th></tr></thead>
         <tbody id="usersBody"></tbody>
       </table></div>
       <div class="empty hidden" id="usersEmpty">No accounts yet.</div>
@@ -250,9 +250,21 @@ td.url{word-break:break-all;max-width:420px;}
         tr.innerHTML='<td><b>'+esc(u.username)+'</b></td>'+
           '<td class="muted" style="white-space:nowrap;">'+esc(when(u.created))+'</td>'+
           '<td>'+u.linkCount+'</td>'+
-          '<td><span class="pill">'+esc(u.settings&&u.settings.theme)+'</span></td>'+
-          '<td style="text-align:right;"><button class="btn danger sm">Delete</button></td>';
-        tr.querySelector('button').onclick=function(){api('/api/admin/delete-user',{method:'POST',body:{username:u.username}}).then(function(r){if(r.ok){loadUsers();loadStats();ok('Account deleted.');}});};
+          '<td><span class="pill">'+(u.tokens!=null?u.tokens:'—')+' tokens</span></td>'+
+          '<td style="white-space:nowrap;"><input class="tok" type="number" value="1" min="1" style="width:56px;padding:6px 8px;letter-spacing:0;"> <button class="btn sm" data-act="grant">Grant</button></td>'+
+          '<td style="text-align:right;"><button class="btn danger sm" data-act="del">Delete</button></td>';
+        var tok=tr.querySelector('.tok'),gBtn=tr.querySelector('[data-act="grant"]'),dBtn=tr.querySelector('[data-act="del"]');
+        gBtn.onclick=function(){
+          var amt=parseInt(tok.value,10)||0;
+          if(!amt){err('Enter a token amount.');return;}
+          gBtn.disabled=true;
+          api('/api/admin/grant-tokens',{method:'POST',body:{username:u.username,amount:amt}}).then(function(r){
+            gBtn.disabled=false;
+            if(r.ok){ok('Gave '+amt+' token(s) to '+u.username+' — now '+r.data.tokens+'.');loadUsers();}
+            else err(r.data.error||'Could not grant.');
+          });
+        };
+        dBtn.onclick=function(){api('/api/admin/delete-user',{method:'POST',body:{username:u.username}}).then(function(r){if(r.ok){loadUsers();loadStats();ok('Account deleted.');}});};
         tb.appendChild(tr);
       });
     });
