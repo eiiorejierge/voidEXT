@@ -12,7 +12,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, 'bookmarklet.src.js'), 'utf8');
+const VERSION = require('./lib/version.js');
+
+let src = fs.readFileSync(path.join(__dirname, 'bookmarklet.src.js'), 'utf8');
+
+// Stamp the current version in (the bookmarklet's "installed" version).
+src = src.replace(/__VERSION__/g, VERSION);
 
 // Drop the leading /* ... */ banner comment for compactness.
 const body = src.replace(/^\/\*[\s\S]*?\*\/\s*/, '').trim();
@@ -35,4 +40,4 @@ if (re.test(html)) {
 }
 fs.writeFileSync(indexPath, html);
 
-console.log('Wrote bookmarklet.min.js (' + bookmarklet.length + ' chars) + injected into landing page.');
+console.log('Wrote bookmarklet.min.js v' + VERSION + ' (' + bookmarklet.length + ' chars) + injected into landing page.');

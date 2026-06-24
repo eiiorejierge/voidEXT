@@ -134,6 +134,8 @@ input:focus{border-color:var(--text);}
 .msg.err{background:rgba(239,68,68,0.92);color:#fff;}
 .msg.ok{background:var(--btn-bg);color:var(--btn-fg);}
 .hidden{display:none!important;}
+.updbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--text);color:var(--bg);font-size:11.5px;text-align:center;padding:8px 12px;letter-spacing:.3px;font-weight:500;cursor:default;}
+.updbar b{font-weight:700;}
 ::-webkit-scrollbar{width:7px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
 @media(max-width:640px){
   .app{flex-direction:column;}
@@ -148,6 +150,7 @@ input:focus{border-color:var(--text);}
 <body data-theme="void">
 <div class="stars"></div>
 <div class="stars s2"></div>
+<div id="updateBar" class="updbar hidden"></div>
 <div class="shell">
 
   <!-- AUTH -->
@@ -267,6 +270,7 @@ input:focus{border-color:var(--text);}
           <p style="line-height:1.7;margin-bottom:12px;">• If a link is dead or blocked, tap <b>blocked</b> on it — it's pulled from everyone's rotation and reported.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
           <p style="line-height:1.7;color:var(--muted);">Links are stored on the server and shown as labels so the URLs don't leak over your shoulder.</p>
+          <p style="margin-top:16px;color:var(--muted);font-size:12px;">voidEXT <b>v__VERSION__</b></p>
         </div>
       </section>
       <div class="msg" id="msg"></div>
@@ -276,7 +280,7 @@ input:focus{border-color:var(--text);}
 
 <script>
 (function(){
-  var API='${API_BASE}', TOKEN_KEY='voidext_token';
+  var API='${API_BASE}', TOKEN_KEY='voidext_token', BUILT_VERSION='__VERSION__';
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
   var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],notifications:[],unread:0,reportSel:{}};
 
@@ -512,8 +516,24 @@ input:focus{border-color:var(--text);}
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
   };
 
+  // version / update check
+  function isNewer(a,b){
+    var pa=String(a).split('.').map(Number),pb=String(b).split('.').map(Number);
+    for(var i=0;i<3;i++){var x=pa[i]||0,y=pb[i]||0;if(x>y)return true;if(x<y)return false;}
+    return false;
+  }
+  function checkVersion(){
+    api('/api/version').then(function(res){
+      if(res.ok&&res.data.version&&isNewer(res.data.version,BUILT_VERSION)){
+        var bar=$('updateBar');
+        bar.innerHTML='⬆ Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+res.data.version+'</b> · reinstall voidEXT from the site to update';
+        bar.classList.remove('hidden');
+      }
+    }).catch(function(){});
+  }
+
   (function init(){
-    setMode('login');applyTheme('void');
+    setMode('login');applyTheme('void');checkVersion();
     if(token()){
       api('/api/me').then(function(res){
         if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge(res.data.unread||0);}
