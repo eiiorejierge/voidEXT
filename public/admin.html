@@ -88,9 +88,10 @@ a{color:#fff;}
     </div>
 
     <div class="card">
-      <h2>Reports <button class="btn ghost sm" id="clearReportsBtn">Clear log</button></h2>
+      <h2>Reports queue <button class="btn ghost sm" id="clearReportsBtn">Clear log</button></h2>
+      <p style="color:rgba(255,255,255,0.5);font-size:12.5px;margin-bottom:14px;">Reports are NOT auto-blocked. Confirm to block the link + refund affected users a token (with a notification). Deny to leave it in rotation.</p>
       <div class="scroll"><table>
-        <thead><tr><th>Link</th><th>Reported by</th><th>When</th></tr></thead>
+        <thead><tr><th>Link</th><th>By</th><th>When</th><th>Status</th><th></th></tr></thead>
         <tbody id="reportsBody"></tbody>
       </table></div>
       <div class="empty hidden" id="reportsEmpty">No reports yet.</div>
@@ -148,7 +149,7 @@ a{color:#fff;}
       var d=res.data;
       $('stats').innerHTML=[
         ['Accounts',d.accounts],['Active links',d.activeLinks],['Total links',d.totalLinks],
-        ['Blocked',d.blockedCount],['Reports',d.reportsCount]
+        ['Blocked',d.blockedCount],['Pending',d.pendingReports!=null?d.pendingReports:0],['Reports',d.reportsCount]
       ].map(function(x){return '<div class="stat"><div class="n">'+x[1]+'</div><div class="l">'+x[0]+'</div></div>';}).join('');
     });
   }
@@ -173,16 +174,40 @@ a{color:#fff;}
   }
 
   function loadReports(){
-    api('/api/admin/blocked').then(function(res){
+    api('/api/admin/reports').then(function(res){
       if(!res.ok)return;
-      var reports=(res.data.reports||[]).slice().reverse();
+      var reports=res.data.reports||[];
       var tb=$('reportsBody');tb.innerHTML='';
       $('reportsEmpty').classList.toggle('hidden',reports.length>0);
       reports.forEach(function(r){
         var tr=document.createElement('tr');
+        var statusPill=r.status==='pending'?'<span class="pill" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.5)">pending</span>'
+          :r.status==='confirmed'?'<span class="pill" style="background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.5)">blocked'+(r.affected!=null?' · '+r.affected+' refunded':'')+'</span>'
+          :'<span class="pill" style="opacity:.6">denied</span>';
+        var action=r.status==='pending'
+          ? '<button class="btn sm" data-act="confirm">Confirm</button> <button class="btn ghost sm" data-act="deny">Deny</button>'
+          : '';
         tr.innerHTML='<td class="url"><a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.url)+'</a></td>'+
           '<td><span class="pill">'+esc(r.by||'?')+'</span></td>'+
-          '<td class="muted" style="white-space:nowrap;">'+esc(when(r.at))+'</td>';
+          '<td class="muted" style="white-space:nowrap;">'+esc(when(r.at))+'</td>'+
+          '<td style="white-space:nowrap;">'+statusPill+'</td>'+
+          '<td style="text-align:right;white-space:nowrap;">'+action+'</td>';
+        var cBtn=tr.querySelector('[data-act="confirm"]');
+        var dBtn=tr.querySelector('[data-act="deny"]');
+        if(cBtn)cBtn.onclick=function(){
+          cBtn.disabled=true;
+          api('/api/admin/report-confirm',{method:'POST',body:{id:r.id}}).then(function(rr){
+            if(rr.ok){ok('Blocked. '+rr.data.affected+' user(s) refunded + notified.');loadReports();loadBlocked();loadStats();}
+            else{cBtn.disabled=false;err(rr.data.error||'Failed.');}
+          });
+        };
+        if(dBtn)dBtn.onclick=function(){
+          dBtn.disabled=true;
+          api('/api/admin/report-deny',{method:'POST',body:{id:r.id}}).then(function(rr){
+            if(rr.ok){ok('Report denied.');loadReports();loadStats();}
+            else{dBtn.disabled=false;err(rr.data.error||'Failed.');}
+          });
+        };
         tb.appendChild(tr);
       });
     });

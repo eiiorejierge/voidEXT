@@ -79,6 +79,16 @@ input:focus{border-color:var(--text);}
 .side .spacer{flex:1;}
 .navitem.logout{color:var(--muted);}
 .navitem.logout:hover{background:rgba(239,68,68,0.16);color:var(--text);}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;margin-left:auto;}
+.navitem.active .badge{background:var(--bg);color:var(--text);}
+.rep-item{display:flex;align-items:center;gap:11px;background:var(--field);border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:9px;cursor:pointer;user-select:none;}
+.rep-item .chk{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.rep-item.sel .chk{background:var(--text);color:var(--bg);border-color:var(--text);}
+.rep-item .lbl{flex:1;font-size:13px;}
+.notif{background:var(--field);border:1px solid var(--border);border-radius:11px;padding:13px 15px;margin-bottom:9px;}
+.notif.unread{border-color:var(--text);}
+.notif .nt{font-size:13px;line-height:1.5;}
+.notif .nd{font-size:11px;color:var(--muted);margin-top:6px;}
 .main{flex:1;padding:30px 32px;overflow-y:auto;position:relative;}
 .ptitle{font-size:22px;font-weight:700;letter-spacing:.5px;}
 .psub{color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:22px;letter-spacing:.3px;}
@@ -163,6 +173,8 @@ input:focus{border-color:var(--text);}
     <aside class="side">
       <div class="brand"><span class="d"></span>voidEXT</div>
       <button class="navitem active" data-nav="links"><span class="ic">✦</span> Links</button>
+      <button class="navitem" data-nav="report"><span class="ic">⚑</span> Report</button>
+      <button class="navitem" data-nav="notifs"><span class="ic">🔔</span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
       <button class="navitem" data-nav="vault"><span class="ic">◍</span> Vault</button>
       <button class="navitem" data-nav="account"><span class="ic">◐</span> Account</button>
       <button class="navitem" data-nav="settings"><span class="ic">⚙</span> Settings</button>
@@ -198,6 +210,22 @@ input:focus{border-color:var(--text);}
         <div class="trow"><span>Open links in new tab</span><button class="switch" id="setNewTab"></button></div>
         <div class="trow"><span>Confirm before reporting</span><button class="switch" id="setConfirm"></button></div>
         <button class="btn" id="saveBtn" style="margin-top:20px;">Save settings</button>
+      </section>
+      <!-- REPORT -->
+      <section id="page-report" class="hidden">
+        <div class="ptitle">Report Links</div>
+        <div class="psub">Select the links that don't work, then send them for review. An admin confirms before anything is blocked.</div>
+        <ul class="links" id="reportList" style="margin-top:6px;"></ul>
+        <div class="empty" id="reportEmpty">No links to report — generate some first.</div>
+        <button class="btn" id="reportBtn" style="margin-top:14px;">Report selected</button>
+      </section>
+      <!-- NOTIFICATIONS -->
+      <section id="page-notifs" class="hidden">
+        <div class="ptitle">Notifications</div>
+        <div class="psub">Updates about your account and links.</div>
+        <div class="actions"><button class="btn ghost" id="notifClear">Clear all</button></div>
+        <div id="notifList" style="margin-top:16px;"></div>
+        <div class="empty" id="notifEmpty">No notifications yet.</div>
       </section>
       <!-- VAULT -->
       <section id="page-vault" class="hidden">
@@ -250,7 +278,7 @@ input:focus{border-color:var(--text);}
 (function(){
   var API='${API_BASE}', TOKEN_KEY='voidext_token';
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
-  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[]};
+  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],notifications:[],unread:0,reportSel:{}};
 
   var $=function(id){return document.getElementById(id);};
   function token(){try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}}
@@ -274,13 +302,15 @@ input:focus{border-color:var(--text);}
   function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');}
 
   function nav(page){
-    ['links','vault','account','settings','help'].forEach(function(p){
+    ['links','report','notifs','vault','account','settings','help'].forEach(function(p){
       $('page-'+p).classList.toggle('hidden',p!==page);
     });
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
     if(page==='settings')openSettings();
     if(page==='account')renderAccount();
     if(page==='vault')loadVault();
+    if(page==='report')renderReport();
+    if(page==='notifs')openNotifs();
     clearMsg();
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
@@ -306,8 +336,8 @@ input:focus{border-color:var(--text);}
       .then(function(res){
         b.disabled=false;
         if(!res.ok){msg(res.data.error||'Something went wrong.','err');return;}
-        setToken(res.data.token);state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];
-        clearMsg();showApp();renderLinks(state.links);
+        setToken(res.data.token);state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];
+        clearMsg();showApp();renderLinks(state.links);setBadge(res.data.unread||0);
       })
       .catch(function(){b.disabled=false;msg('Network error — is the server reachable?','err');});
   };
@@ -356,17 +386,7 @@ input:focus{border-color:var(--text);}
     links.forEach(function(url,idx){
       var li=document.createElement('li');
       var a=document.createElement('a');a.href=url;a.target=state.settings.openInNewTab?'_blank':'_top';a.rel='noopener noreferrer';a.textContent='Link '+(idx+1);
-      var blk=document.createElement('button');blk.className='blk';blk.type='button';blk.textContent='blocked';
-      var armed=false,timer=null;
-      blk.onclick=function(){
-        if(state.settings.confirmReport&&!armed){armed=true;blk.classList.add('confirm');blk.textContent='Sure?';timer=setTimeout(function(){armed=false;blk.classList.remove('confirm');blk.textContent='blocked';},2500);return;}
-        clearTimeout(timer);blk.disabled=true;blk.textContent='...';
-        api('/api/report',{method:'POST',body:{url:url}}).then(function(res){
-          if(res.ok){state.links=state.links.filter(function(x){return x!==url;});li.parentNode&&li.parentNode.removeChild(li);$('linksEmpty').classList.toggle('hidden',state.links.length>0);msg('Reported & removed. Pool: '+res.data.poolSize,'ok');}
-          else{blk.disabled=false;blk.classList.remove('confirm');blk.textContent='blocked';msg(res.data.error||'Could not report.','err');}
-        }).catch(function(){blk.disabled=false;blk.textContent='blocked';msg('Network error.','err');});
-      };
-      li.appendChild(a);li.appendChild(blk);L.appendChild(li);
+      li.appendChild(a);L.appendChild(li);
     });
   }
 
@@ -400,6 +420,66 @@ input:focus{border-color:var(--text);}
     $('acUsed').textContent=(lim-rem)+' / '+lim;
     $('acRemain').textContent=rem;
     $('acTheme').textContent=state.settings.theme;
+  }
+
+  // report page
+  function renderReport(){
+    var L=$('reportList');L.innerHTML='';
+    state.reportSel={};
+    $('reportEmpty').classList.toggle('hidden',state.links.length>0);
+    $('reportBtn').style.display=state.links.length?'':'none';
+    state.links.forEach(function(url,idx){
+      var row=document.createElement('div');row.className='rep-item';
+      row.innerHTML='<span class="chk"></span><span class="lbl">Link '+(idx+1)+'</span>';
+      row.onclick=function(){
+        var on=!state.reportSel[url];state.reportSel[url]=on;
+        row.classList.toggle('sel',on);row.querySelector('.chk').textContent=on?'✓':'';
+      };
+      L.appendChild(row);
+    });
+  }
+  $('reportBtn').onclick=function(){
+    var urls=Object.keys(state.reportSel||{}).filter(function(u){return state.reportSel[u];});
+    if(!urls.length){msg('Select at least one link.','err');return;}
+    var b=$('reportBtn');b.disabled=true;msg('Sending report...','');
+    api('/api/report',{method:'POST',body:{urls:urls}}).then(function(res){
+      b.disabled=false;
+      if(!res.ok){msg(res.data.error||'Could not report.','err');return;}
+      msg('Reported '+res.data.reported+' link(s) for review.','ok');renderReport();
+    }).catch(function(){b.disabled=false;msg('Network error.','err');});
+  };
+
+  // notifications
+  function setBadge(n){
+    state.unread=n;
+    var b=$('navBadge');
+    if(n>0){b.textContent=n;b.classList.remove('hidden');}else{b.classList.add('hidden');}
+  }
+  function renderNotifs(){
+    var L=$('notifList');L.innerHTML='';
+    var list=(state.notifications||[]).slice().reverse();
+    $('notifEmpty').classList.toggle('hidden',list.length>0);
+    list.forEach(function(n){
+      var d=document.createElement('div');d.className='notif'+(n.read?'':' unread');
+      d.innerHTML='<div class="nt">'+(n.text||'').replace(/</g,'&lt;')+'</div><div class="nd">'+new Date(n.at).toLocaleString()+'</div>';
+      L.appendChild(d);
+    });
+  }
+  function openNotifs(){
+    renderNotifs();
+    if(state.unread>0){
+      api('/api/notifications/read',{method:'POST'});
+      (state.notifications||[]).forEach(function(n){n.read=true;});
+      setBadge(0);
+    }
+  }
+  $('notifClear').onclick=function(){
+    api('/api/notifications/clear',{method:'POST'}).then(function(){state.notifications=[];renderNotifs();setBadge(0);msg('Cleared.','ok');});
+  };
+  function refreshNotifs(){
+    api('/api/notifications').then(function(res){
+      if(res.ok){state.notifications=res.data.notifications||[];setBadge(state.notifications.filter(function(n){return !n.read;}).length);}
+    });
   }
 
   // vault page
@@ -436,7 +516,7 @@ input:focus{border-color:var(--text);}
     setMode('login');applyTheme('void');
     if(token()){
       api('/api/me').then(function(res){
-        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];showApp();renderLinks(state.links);}
+        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge(res.data.unread||0);}
         else{setToken('');showAuth();}
       }).catch(function(){showAuth();});
     }else{showAuth();}
