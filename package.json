@@ -1,0 +1,13 @@
+{
+  "name": "voidext",
+  "version": "1.0.0",
+  "private": true,
+  "description": "voidEXT — bookmarklet-driven link rotator with account auth, backed by a Vercel site.",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "build:bookmarklet": "node build-bookmarklet.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
