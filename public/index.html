@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>voidEXT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#fb8500;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Outfit',sans-serif;}
+body{min-height:100vh;color:#03045e;background:linear-gradient(135deg,#ffb5a7 0%,#ffcad4 35%,#90e0ef 70%,#0077b6 100%);display:flex;justify-content:center;align-items:flex-start;padding:48px 20px;}
+.wrap{width:100%;max-width:720px;}
+.glass{background:rgba(255,255,255,0.18);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.3);border-radius:24px;padding:34px 30px;box-shadow:0 15px 35px rgba(0,0,0,0.15);margin-bottom:22px;}
+h1{font-size:40px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,0.15);letter-spacing:-1px;}
+.tag{color:rgba(255,255,255,0.9);font-size:16px;margin-top:6px;}
+h2{font-size:20px;color:#03045e;margin-bottom:12px;}
+p{line-height:1.6;color:#023e8a;margin-bottom:10px;}
+ol{margin:10px 0 4px 20px;color:#023e8a;line-height:1.8;}
+code{background:rgba(3,4,94,0.08);padding:2px 7px;border-radius:6px;font-family:ui-monospace,monospace;font-size:13px;word-break:break-all;}
+.bm{display:inline-block;margin-top:14px;padding:12px 22px;background:linear-gradient(90deg,var(--accent),#ff9e00);color:#fff;font-weight:600;border-radius:12px;text-decoration:none;box-shadow:0 8px 20px rgba(251,133,0,0.35);}
+.bm:hover{transform:translateY(-2px);}
+.box{margin-top:14px;background:rgba(3,4,94,0.06);border:1px dashed rgba(3,4,94,0.25);border-radius:12px;padding:14px;font-family:ui-monospace,monospace;font-size:11.5px;max-height:130px;overflow:auto;word-break:break-all;color:#023e8a;}
+.note{font-size:13px;color:#5e60ce;margin-top:8px;}
+.stat{display:inline-block;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.35);border-radius:10px;padding:8px 14px;margin:4px 6px 0 0;color:#fff;font-weight:600;font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="glass" style="text-align:center;">
+    <h1>voidEXT 🌊</h1>
+    <div class="tag">Account-gated link rotation, served from one private vault.</div>
+    <div style="margin-top:16px;">
+      <span class="stat" id="poolStat">Loading pool…</span>
+      <span class="stat" id="modeStat"></span>
+    </div>
+  </div>
+
+  <div class="glass">
+    <h2>Install the bookmarklet</h2>
+    <p>Drag this button to your bookmarks bar — that's your launcher:</p>
+    <a class="bm" id="bmLink" href="#">🏖️ voidEXT</a>
+    <p class="note">If dragging doesn't work, create a new bookmark and paste the code below into its URL field.</p>
+    <div class="box" id="bmCode">Loading bookmarklet…</div>
+  </div>
+
+  <div class="glass">
+    <h2>How it works</h2>
+    <ol>
+      <li>Click the bookmarklet on any page — a beach popup appears.</li>
+      <li><b>Sign up</b> or <b>log in</b> (handled entirely in the popup).</li>
+      <li>Hit <b>Generate Links</b> to pull a fresh rotating batch from the vault.</li>
+      <li>If a link is dead/blocked, tap <b>blocked</b> on it — it's reported and pulled from everyone's rotation.</li>
+    </ol>
+    <p class="note">The full link list never leaves the server. The popup only ever sees a small rotating slice, and only after you log in.</p>
+  </div>
+</div>
+
+<script>
+  // Fetch the compiled bookmarklet so the page always shows the current build.
+  fetch('/bookmarklet.min.js').then(function(r){ return r.text(); }).then(function(code){
+    code = code.trim();
+    document.getElementById('bmLink').setAttribute('href', code);
+    document.getElementById('bmCode').textContent = code;
+  }).catch(function(){ document.getElementById('bmCode').textContent = 'Run: node build-bookmarklet.js'; });
+
+  // Show live pool size + rate-limit mode via a throwaway probe is not possible
+  // without auth, so we just label the testing mode statically here.
+  document.getElementById('poolStat').textContent = 'Vault online';
+  document.getElementById('modeStat').textContent = 'Unlimited (testing)';
+</script>
+</body>
+</html>
