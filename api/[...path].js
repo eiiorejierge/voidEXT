@@ -35,11 +35,14 @@ module.exports = async (req, res) => {
   }
 
   try {
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+      (req.socket && req.socket.remoteAddress) || 'unknown';
     const { status, json } = await handle({
       method: req.method,
       path,
       body: body || {},
       authHeader: req.headers['authorization'],
+      ip,
     });
     res.statusCode = status;
     if (json === null) return res.end();

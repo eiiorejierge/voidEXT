@@ -59,11 +59,14 @@ const server = http.createServer(async (req, res) => {
     }
     const body = req.method === 'POST' ? await readBody(req) : {};
     try {
+      const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+        req.socket.remoteAddress || 'unknown';
       const { status, json } = await handle({
         method: req.method,
         path: pathname,
         body,
         authHeader: req.headers['authorization'],
+        ip,
       });
       res.statusCode = status;
       if (json === null) return res.end();
