@@ -13,7 +13,7 @@
  * ============================================================================= */
 (function () {
   // <<< CONFIG >>> Point this at your deployed Vercel site (no trailing slash).
-  const API_BASE = 'https://voidext.vercel.app';
+  const API_BASE = 'https://void-ext.vercel.app';
 
   const OVERLAY_ID = 'beach-login-overlay';
   const WRAPPER_ID = 'beach-login-wrapper';
