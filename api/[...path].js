@@ -16,9 +16,13 @@ module.exports = async (req, res) => {
     return res.end();
   }
 
-  // Reconstruct the path: req.query.path is the catch-all segments.
-  const segs = req.query && req.query.path ? [].concat(req.query.path) : [];
-  const path = '/api/' + segs.join('/');
+  // Derive the path from req.url (reliable on Vercel), falling back to the
+  // catch-all segments if needed.
+  let path = (req.url || '').split('?')[0];
+  if (!path.startsWith('/api/')) {
+    const segs = req.query && req.query.path ? [].concat(req.query.path) : [];
+    path = '/api/' + segs.join('/');
+  }
 
   // Vercel parses JSON bodies automatically; guard for string/empty.
   let body = req.body;
