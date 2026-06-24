@@ -163,8 +163,10 @@ input:focus{border-color:var(--text);}
     <aside class="side">
       <div class="brand"><span class="d"></span>voidEXT</div>
       <button class="navitem active" data-nav="links"><span class="ic">✦</span> Links</button>
-      <button class="navitem" data-nav="settings"><span class="ic">⚙</span> Settings</button>
+      <button class="navitem" data-nav="vault"><span class="ic">◍</span> Vault</button>
       <button class="navitem" data-nav="account"><span class="ic">◐</span> Account</button>
+      <button class="navitem" data-nav="settings"><span class="ic">⚙</span> Settings</button>
+      <button class="navitem" data-nav="help"><span class="ic">?</span> Help</button>
       <div class="spacer"></div>
       <button class="navitem logout" id="logoutBtn"><span class="ic">⏻</span> Log out</button>
     </aside>
@@ -197,6 +199,18 @@ input:focus{border-color:var(--text);}
         <div class="trow"><span>Confirm before reporting</span><button class="switch" id="setConfirm"></button></div>
         <button class="btn" id="saveBtn" style="margin-top:20px;">Save settings</button>
       </section>
+      <!-- VAULT -->
+      <section id="page-vault" class="hidden">
+        <div class="ptitle">Vault</div>
+        <div class="psub">Live status of the shared link vault.</div>
+        <div class="actions"><button class="btn ghost" id="vaultRefresh">Refresh</button></div>
+        <div class="info" style="margin-top:18px;">
+          <div class="inforow"><span class="k">Live links in rotation</span><span class="v" id="vPool">—</span></div>
+          <div class="inforow"><span class="k">Total links</span><span class="v" id="vTotal">—</span></div>
+          <div class="inforow"><span class="k">Blocked / dead</span><span class="v" id="vBlocked">—</span></div>
+          <div class="inforow"><span class="k">Your links left today</span><span class="v" id="vRemain">—</span></div>
+        </div>
+      </section>
       <!-- ACCOUNT -->
       <section id="page-account" class="hidden">
         <div class="ptitle">Account</div>
@@ -207,6 +221,24 @@ input:focus{border-color:var(--text);}
           <div class="inforow"><span class="k">Links used today</span><span class="v" id="acUsed">—</span></div>
           <div class="inforow"><span class="k">Remaining today</span><span class="v" id="acRemain">—</span></div>
           <div class="inforow"><span class="k">Theme</span><span class="v" id="acTheme">—</span></div>
+        </div>
+        <span class="flabel" style="margin-top:26px;">Change password</span>
+        <div class="info" style="max-width:360px;">
+          <input id="pwCurrent" type="password" placeholder="Current password" autocomplete="off">
+          <input id="pwNew" type="password" placeholder="New password" autocomplete="off">
+          <button class="btn" id="pwBtn" style="width:100%;">Update password</button>
+        </div>
+      </section>
+      <!-- HELP -->
+      <section id="page-help" class="hidden">
+        <div class="ptitle">Help</div>
+        <div class="psub">How voidEXT works.</div>
+        <div class="info">
+          <p style="line-height:1.7;margin-bottom:12px;">• Hit <b>Generate Links</b> on the Links page to pull your daily set (5 per day). Your set is saved — it loads automatically next time.</p>
+          <p style="line-height:1.7;margin-bottom:12px;">• Click <b>Link 1</b>, <b>Link 2</b>… to open them. Use <b>Open all</b> to launch every link at once.</p>
+          <p style="line-height:1.7;margin-bottom:12px;">• If a link is dead or blocked, tap <b>blocked</b> on it — it's pulled from everyone's rotation and reported.</p>
+          <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
+          <p style="line-height:1.7;color:var(--muted);">Links are stored on the server and shown as labels so the URLs don't leak over your shoulder.</p>
         </div>
       </section>
       <div class="msg" id="msg"></div>
@@ -242,12 +274,13 @@ input:focus{border-color:var(--text);}
   function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');}
 
   function nav(page){
-    ['links','settings','account'].forEach(function(p){
+    ['links','vault','account','settings','help'].forEach(function(p){
       $('page-'+p).classList.toggle('hidden',p!==page);
     });
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
     if(page==='settings')openSettings();
     if(page==='account')renderAccount();
+    if(page==='vault')loadVault();
     clearMsg();
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
@@ -320,9 +353,9 @@ input:focus{border-color:var(--text);}
       $('meter').textContent=used+' / '+lim+' used today · '+rem+' left';
       $('bar').style.width=Math.round(used/lim*100)+'%';
     }
-    links.forEach(function(url){
+    links.forEach(function(url,idx){
       var li=document.createElement('li');
-      var a=document.createElement('a');a.href=url;a.target=state.settings.openInNewTab?'_blank':'_top';a.rel='noopener noreferrer';a.textContent=url;
+      var a=document.createElement('a');a.href=url;a.target=state.settings.openInNewTab?'_blank':'_top';a.rel='noopener noreferrer';a.textContent='Link '+(idx+1);
       var blk=document.createElement('button');blk.className='blk';blk.type='button';blk.textContent='blocked';
       var armed=false,timer=null;
       blk.onclick=function(){
@@ -368,6 +401,31 @@ input:focus{border-color:var(--text);}
     $('acRemain').textContent=rem;
     $('acTheme').textContent=state.settings.theme;
   }
+
+  // vault page
+  function loadVault(){
+    $('vPool').textContent='…';$('vTotal').textContent='…';$('vBlocked').textContent='…';$('vRemain').textContent='…';
+    api('/api/stats').then(function(res){
+      if(!res.ok){msg(res.data.error||'Could not load vault.','err');return;}
+      var d=res.data;
+      $('vPool').textContent=d.poolSize;$('vTotal').textContent=d.totalLinks;$('vBlocked').textContent=d.blockedCount;
+      $('vRemain').textContent=(d.remaining==null?'—':d.remaining)+' / '+(d.limit||5);
+      if(state.account){state.account.remaining=d.remaining;state.account.used=d.used;state.account.limit=d.limit;}
+    }).catch(function(){msg('Network error.','err');});
+  }
+  $('vaultRefresh').onclick=loadVault;
+
+  // change password
+  $('pwBtn').onclick=function(){
+    var cur=$('pwCurrent').value,nw=$('pwNew').value;
+    if(!cur||!nw){msg('Fill in both password fields.','err');return;}
+    var b=$('pwBtn');b.disabled=true;msg('Updating...','');
+    api('/api/password',{method:'POST',body:{current:cur,newPassword:nw}}).then(function(res){
+      b.disabled=false;
+      if(!res.ok){msg(res.data.error||'Could not update.','err');return;}
+      $('pwCurrent').value='';$('pwNew').value='';msg('Password updated.','ok');
+    }).catch(function(){b.disabled=false;msg('Network error.','err');});
+  };
 
   $('logoutBtn').onclick=function(){
     api('/api/logout',{method:'POST'});
