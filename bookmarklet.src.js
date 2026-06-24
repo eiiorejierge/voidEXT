@@ -189,16 +189,16 @@ input:focus{border-color:var(--text);}
       <!-- LINKS -->
       <section id="page-links">
         <div class="ptitle">Your Links</div>
-        <div class="psub">Pull your daily set from the vault — 5 per day.</div>
+        <div class="psub">Add links one at a time — 5 per day, plus any refunded tokens.</div>
         <div class="actions">
-          <button class="btn" id="genBtn">Generate Links</button>
+          <button class="btn" id="genBtn">Generate a link</button>
           <button class="btn ghost" id="copyBtn">Copy all</button>
           <button class="btn ghost" id="openBtn">Open all</button>
         </div>
         <div class="meter" id="meter"></div>
         <div class="bar"><i id="bar" style="width:0%"></i></div>
         <ul class="links" id="linkList"></ul>
-        <div class="empty" id="linksEmpty">No links yet — hit Generate.</div>
+        <div class="empty" id="linksEmpty">No links yet — generate one.</div>
       </section>
       <!-- SETTINGS -->
       <section id="page-settings" class="hidden">
@@ -348,12 +348,15 @@ input:focus{border-color:var(--text);}
 
   // links page
   $('genBtn').onclick=function(){
-    var b=$('genBtn');b.disabled=true;msg('Pulling fresh links...','');
+    var b=$('genBtn');b.disabled=true;msg('Pulling a link...','');
     api('/api/links').then(function(res){
       b.disabled=false;
       if(res.status===401){setToken('');showAuth();setMode('login');msg('Session expired — log in again.','err');return;}
-      if(!res.ok){msg(res.data.error||'Could not get links.','err');updateMeter(res.data);return;}
-      state.links=res.data.links||[];renderLinks(state.links);updateMeter(res.data);clearMsg();
+      if(res.data.links)state.links=res.data.links;
+      renderLinks(state.links);updateMeter(res.data);
+      if(!res.ok){msg(res.data.error||'Could not get a link.','err');return;}
+      if(res.data.added===null){msg(res.data.note||'No new links available.','err');return;}
+      clearMsg();
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   };
   $('copyBtn').onclick=function(){
@@ -373,19 +376,19 @@ input:focus{border-color:var(--text);}
 
   function updateMeter(d){
     if(!d||d.remaining==null){return;}
-    var used=(d.limit||5)-d.remaining;
-    $('meter').textContent=used+' / '+(d.limit||5)+' used today · '+d.remaining+' left';
-    $('bar').style.width=Math.round(used/(d.limit||5)*100)+'%';
-    if(state.account){state.account.used=used;state.account.remaining=d.remaining;state.account.limit=d.limit;}
+    var lim=d.limit||5,rem=d.remaining,used=Math.max(0,lim-rem);
+    $('meter').textContent=rem+' link token'+(rem===1?'':'s')+' left today';
+    $('bar').style.width=Math.round(Math.min(1,used/lim)*100)+'%';
+    if(state.account){state.account.remaining=rem;state.account.limit=lim;}
   }
   function renderLinks(links){
     var L=$('linkList');L.innerHTML='';
     $('linksEmpty').classList.toggle('hidden',links.length>0);
-    $('genBtn').textContent=links.length?'Regenerate Links':'Generate Links';
+    $('genBtn').textContent='Generate a link';
     if(state.account){
-      var lim=state.account.limit||5,rem=(state.account.remaining==null?lim:state.account.remaining),used=lim-rem;
-      $('meter').textContent=used+' / '+lim+' used today · '+rem+' left';
-      $('bar').style.width=Math.round(used/lim*100)+'%';
+      var lim=state.account.limit||5,rem=(state.account.remaining==null?lim:state.account.remaining),used=Math.max(0,lim-rem);
+      $('meter').textContent=rem+' link token'+(rem===1?'':'s')+' left today';
+      $('bar').style.width=Math.round(Math.min(1,used/lim)*100)+'%';
     }
     links.forEach(function(url,idx){
       var li=document.createElement('li');

@@ -9,7 +9,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 :root{--star:rgba(255,255,255,0.9);}
-body{min-height:100vh;background:#000;color:#fff;padding:30px 18px;position:relative;overflow-x:hidden;}
+body{min-height:100vh;background:#000;color:#fff;position:relative;overflow-x:hidden;}
 .stars{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:
   radial-gradient(1.5px 1.5px at 30px 40px,var(--star),transparent),
   radial-gradient(1px 1px at 140px 100px,var(--star),transparent),
@@ -18,15 +18,6 @@ body{min-height:100vh;background:#000;color:#fff;padding:30px 18px;position:rela
   radial-gradient(1px 1px at 90px 250px,var(--star),transparent);
   background-size:400px 400px;background-repeat:repeat;animation:tw 6s ease-in-out infinite alternate;}
 @keyframes tw{0%{opacity:.3;}100%{opacity:.85;}}
-.wrap{max-width:960px;margin:0 auto;position:relative;z-index:1;}
-h1{font-size:28px;font-weight:700;letter-spacing:3px;display:flex;align-items:center;gap:10px;}
-h1 .dot{width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,0.5);background:rgba(255,255,255,0.08);display:inline-block;}
-.sub{color:rgba(255,255,255,0.5);font-size:14px;margin-top:6px;margin-bottom:24px;letter-spacing:.5px;}
-.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:22px;margin-bottom:20px;backdrop-filter:blur(12px);}
-.card h2{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;letter-spacing:.5px;}
-.gate{max-width:380px;margin:70px auto;}
-input{width:100%;padding:13px 15px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:11px;color:#fff;font-size:15px;outline:none;letter-spacing:1px;}
-input:focus{border-color:#fff;}
 .btn{padding:11px 18px;border:none;border-radius:10px;background:#fff;color:#000;font-weight:600;font-size:14px;cursor:pointer;transition:.2s;font-family:inherit;letter-spacing:.5px;}
 .btn:hover{opacity:.88;}
 .btn.sm{padding:7px 12px;font-size:12.5px;}
@@ -34,81 +25,119 @@ input:focus{border-color:#fff;}
 .btn.danger:hover{background:rgba(239,68,68,0.25);}
 .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.25);color:#fff;}
 .btn.ghost:hover{border-color:#fff;}
+input{width:100%;padding:13px 15px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:11px;color:#fff;font-size:15px;outline:none;letter-spacing:1px;}
+input:focus{border-color:#fff;}
 .row{display:flex;gap:10px;align-items:center;}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;}
-.stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.13);border-radius:13px;padding:16px;text-align:center;}
-.stat .n{font-size:30px;font-weight:700;}
-.stat .l{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;text-transform:uppercase;letter-spacing:1px;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th,td{text-align:left;padding:9px 8px;border-bottom:1px solid rgba(255,255,255,0.08);vertical-align:top;}
-th{color:rgba(255,255,255,0.45);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:1px;}
-td.url{word-break:break-all;max-width:380px;}
-.muted{color:rgba(255,255,255,0.45);}
-.pill{display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:2px 10px;font-size:11px;}
-.empty{color:rgba(255,255,255,0.4);font-size:13px;padding:10px 0;}
 .msg{margin-top:10px;font-size:13px;padding:0;border-radius:9px;transition:.2s;}
 .msg.show{padding:9px 12px;}
 .msg.err{background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.45);}
 .msg.ok{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);}
 .hidden{display:none!important;}
 a{color:#fff;}
-.scroll{max-height:340px;overflow:auto;}
+
+/* GATE */
+.gatewrap{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:22px;backdrop-filter:blur(12px);}
+.gate{width:100%;max-width:380px;}
+.gate h2{font-size:18px;margin-bottom:16px;letter-spacing:1px;}
+
+/* DASHBOARD */
+.dash{position:relative;z-index:1;min-height:100vh;display:flex;}
+.side{width:220px;flex:none;border-right:1px solid rgba(255,255,255,0.12);padding:24px 16px;display:flex;flex-direction:column;background:rgba(255,255,255,0.02);}
+.side .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:2px;margin-bottom:26px;padding:0 6px;}
+.side .brand .d{width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.08);}
+.navitem{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:none;background:transparent;color:rgba(255,255,255,0.55);font-size:14px;font-weight:600;border-radius:10px;cursor:pointer;transition:.18s;text-align:left;font-family:inherit;letter-spacing:.3px;margin-bottom:4px;}
+.navitem:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.navitem.active{background:#fff;color:#000;}
+.navitem .ic{width:18px;text-align:center;}
+.navitem .badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;margin-left:auto;}
+.navitem.active .badge{background:#000;color:#fff;}
+.side .spacer{flex:1;}
+.main{flex:1;padding:30px 34px;overflow-y:auto;height:100vh;}
+.ptitle{font-size:24px;font-weight:700;letter-spacing:.5px;margin-bottom:6px;}
+.psub{color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:22px;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;}
+.stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:13px;padding:18px;text-align:center;}
+.stat .n{font-size:32px;font-weight:700;}
+.stat .l{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;text-transform:uppercase;letter-spacing:1px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.08);vertical-align:top;}
+th{color:rgba(255,255,255,0.45);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:1px;}
+td.url{word-break:break-all;max-width:420px;}
+.muted{color:rgba(255,255,255,0.45);}
+.pill{display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:2px 10px;font-size:11px;white-space:nowrap;}
+.empty{color:rgba(255,255,255,0.4);font-size:13px;padding:14px 0;}
+.scroll{max-height:62vh;overflow:auto;margin-top:8px;}
 ::-webkit-scrollbar{width:7px;height:7px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:10px;}
+@media(max-width:640px){.dash{flex-direction:column;}.side{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,0.12);padding:12px;}.side .brand{margin-bottom:0;margin-right:6px;}.navitem{margin-bottom:0;white-space:nowrap;}.side .spacer{flex:0;}.main{height:auto;padding:20px 18px;}}
 </style>
 </head>
 <body>
 <div class="stars"></div>
-<div class="wrap">
-  <h1><span class="dot"></span>voidEXT ADMIN</h1>
-  <div class="sub">Keep the vault clean — reports, blocked links, and accounts.</div>
 
-  <!-- GATE -->
-  <div id="gate" class="card gate">
-    <h2>Enter admin code</h2>
+<!-- GATE -->
+<div id="gate" class="gatewrap">
+  <div class="card gate">
+    <h2>voidEXT Admin — enter code</h2>
     <input id="keyInput" type="password" placeholder="Admin code" inputmode="numeric" autocomplete="off">
     <div class="msg" id="gateMsg"></div>
     <div style="margin-top:14px;"><button class="btn" id="enterBtn" style="width:100%;">Unlock</button></div>
   </div>
+</div>
 
-  <!-- DASHBOARD -->
-  <div id="dash" class="hidden">
-    <div class="card">
-      <h2>Overview <button class="btn ghost sm" id="refreshBtn">Refresh</button></h2>
+<!-- DASHBOARD -->
+<div id="dash" class="dash hidden">
+  <aside class="side">
+    <div class="brand"><span class="d"></span>ADMIN</div>
+    <button class="navitem active" data-nav="overview"><span class="ic">▦</span> Overview</button>
+    <button class="navitem" data-nav="reports"><span class="ic">⚑</span> Reports <span class="badge hidden" id="navPending">0</span></button>
+    <button class="navitem" data-nav="blocked"><span class="ic">⊘</span> Blocked</button>
+    <button class="navitem" data-nav="accounts"><span class="ic">◐</span> Accounts</button>
+    <div class="spacer"></div>
+    <button class="navitem" id="refreshBtn"><span class="ic">↻</span> Refresh</button>
+    <button class="navitem" id="logoutBtn"><span class="ic">⏻</span> Lock</button>
+  </aside>
+  <main class="main">
+    <!-- OVERVIEW -->
+    <section id="page-overview">
+      <div class="ptitle">Overview</div>
+      <div class="psub">Snapshot of the vault and accounts.</div>
       <div class="stats" id="stats"></div>
-    </div>
-
-    <div class="card">
-      <h2>Blocked links <span class="pill" id="blockedCount">0</span></h2>
-      <div class="row" style="margin-bottom:14px;">
-        <input id="blockUrl" type="text" placeholder="https://… block a URL manually">
-        <button class="btn sm" id="blockBtn">Block</button>
-      </div>
-      <div class="scroll"><table><tbody id="blockedBody"></tbody></table></div>
-      <div class="empty hidden" id="blockedEmpty">No blocked links. Clean vault. ✦</div>
-    </div>
-
-    <div class="card">
-      <h2>Reports queue <button class="btn ghost sm" id="clearReportsBtn">Clear log</button></h2>
-      <p style="color:rgba(255,255,255,0.5);font-size:12.5px;margin-bottom:14px;">Reports are NOT auto-blocked. Confirm to block the link + refund affected users a token (with a notification). Deny to leave it in rotation.</p>
+    </section>
+    <!-- REPORTS -->
+    <section id="page-reports" class="hidden">
+      <div class="ptitle">Reports queue</div>
+      <div class="psub">Reports are NOT auto-blocked. Confirm to block the link + refund affected users a token (with a notification). Deny to leave it in rotation.</div>
+      <div class="row"><button class="btn ghost sm" id="clearReportsBtn">Clear log</button></div>
       <div class="scroll"><table>
         <thead><tr><th>Link</th><th>By</th><th>When</th><th>Status</th><th></th></tr></thead>
         <tbody id="reportsBody"></tbody>
       </table></div>
       <div class="empty hidden" id="reportsEmpty">No reports yet.</div>
-    </div>
-
-    <div class="card">
-      <h2>Accounts <span class="pill" id="userCount">0</span></h2>
+    </section>
+    <!-- BLOCKED -->
+    <section id="page-blocked" class="hidden">
+      <div class="ptitle">Blocked links</div>
+      <div class="psub">Links removed from rotation. Unblock to restore, or block one manually.</div>
+      <div class="row" style="margin-bottom:6px;">
+        <input id="blockUrl" type="text" placeholder="https://… block a URL manually">
+        <button class="btn sm" id="blockBtn">Block</button>
+      </div>
+      <div class="scroll"><table><tbody id="blockedBody"></tbody></table></div>
+      <div class="empty hidden" id="blockedEmpty">No blocked links. Clean vault. ✦</div>
+    </section>
+    <!-- ACCOUNTS -->
+    <section id="page-accounts" class="hidden">
+      <div class="ptitle">Accounts</div>
+      <div class="psub">Every registered account.</div>
       <div class="scroll"><table>
-        <thead><tr><th>Username</th><th>Created</th><th>Saved links</th><th>Theme</th><th></th></tr></thead>
+        <thead><tr><th>Username</th><th>Created</th><th>Links</th><th>Theme</th><th></th></tr></thead>
         <tbody id="usersBody"></tbody>
       </table></div>
       <div class="empty hidden" id="usersEmpty">No accounts yet.</div>
-    </div>
-
-    <div style="text-align:center;margin:10px 0 30px;"><button class="btn ghost sm" id="logoutBtn">Lock admin</button></div>
+    </section>
     <div class="msg" id="msg"></div>
-  </div>
+  </main>
 </div>
 
 <script>
@@ -128,6 +157,7 @@ a{color:#fff;}
       .then(function(r){return r.json().catch(function(){return{};}).then(function(j){return{ok:r.ok,status:r.status,data:j};});});
   }
 
+  // ---- gate ----
   $('enterBtn').onclick=unlock;
   $('keyInput').addEventListener('keydown',function(e){if(e.key==='Enter')unlock();});
   function unlock(){
@@ -136,17 +166,30 @@ a{color:#fff;}
     setKey(k);
     api('/api/admin/stats').then(function(res){
       if(!res.ok){setKey('');msg($('gateMsg'),res.data.error||'Wrong code.','err');return;}
-      $('gate').classList.add('hidden');$('dash').classList.remove('hidden');loadAll();
+      $('gate').classList.add('hidden');$('dash').classList.remove('hidden');nav('overview');loadAll();
     }).catch(function(){setKey('');msg($('gateMsg'),'Network error.','err');});
   }
 
-  function loadAll(){loadStats();loadBlocked();loadReports();loadUsers();}
+  // ---- nav ----
+  function nav(page){
+    ['overview','reports','blocked','accounts'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
+    document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
+    if(page==='overview')loadStats();
+    if(page==='reports')loadReports();
+    if(page==='blocked')loadBlocked();
+    if(page==='accounts')loadUsers();
+    clr($('msg'));
+  }
+  document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
+
+  function loadAll(){loadStats();loadReports();loadBlocked();loadUsers();}
 
   function loadStats(){
     api('/api/admin/stats').then(function(res){
       if(res.status===401||res.status===429){return lock();}
       if(!res.ok)return;
       var d=res.data;
+      if(d.pendingReports>0){$('navPending').textContent=d.pendingReports;$('navPending').classList.remove('hidden');}else{$('navPending').classList.add('hidden');}
       $('stats').innerHTML=[
         ['Accounts',d.accounts],['Active links',d.activeLinks],['Total links',d.totalLinks],
         ['Blocked',d.blockedCount],['Pending',d.pendingReports!=null?d.pendingReports:0],['Reports',d.reportsCount]
@@ -154,29 +197,11 @@ a{color:#fff;}
     });
   }
 
-  function loadBlocked(){
-    api('/api/admin/blocked').then(function(res){
-      if(!res.ok)return;
-      var blocked=res.data.blocked||[];
-      $('blockedCount').textContent=blocked.length;
-      var tb=$('blockedBody');tb.innerHTML='';
-      $('blockedEmpty').classList.toggle('hidden',blocked.length>0);
-      blocked.forEach(function(url){
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td class="url"><a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url)+'</a></td>'+
-          '<td style="text-align:right;white-space:nowrap;"><button class="btn ghost sm">Unblock</button></td>';
-        tr.querySelector('button').onclick=function(){
-          api('/api/admin/unblock',{method:'POST',body:{url:url}}).then(function(r){if(r.ok){loadBlocked();loadStats();ok('Restored to rotation.');}});
-        };
-        tb.appendChild(tr);
-      });
-    });
-  }
-
   function loadReports(){
     api('/api/admin/reports').then(function(res){
       if(!res.ok)return;
       var reports=res.data.reports||[];
+      if(res.data.pending>0){$('navPending').textContent=res.data.pending;$('navPending').classList.remove('hidden');}else{$('navPending').classList.add('hidden');}
       var tb=$('reportsBody');tb.innerHTML='';
       $('reportsEmpty').classList.toggle('hidden',reports.length>0);
       reports.forEach(function(r){
@@ -184,30 +209,31 @@ a{color:#fff;}
         var statusPill=r.status==='pending'?'<span class="pill" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.5)">pending</span>'
           :r.status==='confirmed'?'<span class="pill" style="background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.5)">blocked'+(r.affected!=null?' · '+r.affected+' refunded':'')+'</span>'
           :'<span class="pill" style="opacity:.6">denied</span>';
-        var action=r.status==='pending'
-          ? '<button class="btn sm" data-act="confirm">Confirm</button> <button class="btn ghost sm" data-act="deny">Deny</button>'
-          : '';
+        var action=r.status==='pending'?'<button class="btn sm" data-act="confirm">Confirm</button> <button class="btn ghost sm" data-act="deny">Deny</button>':'';
         tr.innerHTML='<td class="url"><a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.url)+'</a></td>'+
           '<td><span class="pill">'+esc(r.by||'?')+'</span></td>'+
           '<td class="muted" style="white-space:nowrap;">'+esc(when(r.at))+'</td>'+
-          '<td style="white-space:nowrap;">'+statusPill+'</td>'+
+          '<td>'+statusPill+'</td>'+
           '<td style="text-align:right;white-space:nowrap;">'+action+'</td>';
-        var cBtn=tr.querySelector('[data-act="confirm"]');
-        var dBtn=tr.querySelector('[data-act="deny"]');
-        if(cBtn)cBtn.onclick=function(){
-          cBtn.disabled=true;
-          api('/api/admin/report-confirm',{method:'POST',body:{id:r.id}}).then(function(rr){
-            if(rr.ok){ok('Blocked. '+rr.data.affected+' user(s) refunded + notified.');loadReports();loadBlocked();loadStats();}
-            else{cBtn.disabled=false;err(rr.data.error||'Failed.');}
-          });
-        };
-        if(dBtn)dBtn.onclick=function(){
-          dBtn.disabled=true;
-          api('/api/admin/report-deny',{method:'POST',body:{id:r.id}}).then(function(rr){
-            if(rr.ok){ok('Report denied.');loadReports();loadStats();}
-            else{dBtn.disabled=false;err(rr.data.error||'Failed.');}
-          });
-        };
+        var cBtn=tr.querySelector('[data-act="confirm"]'),dBtn=tr.querySelector('[data-act="deny"]');
+        if(cBtn)cBtn.onclick=function(){cBtn.disabled=true;api('/api/admin/report-confirm',{method:'POST',body:{id:r.id}}).then(function(rr){if(rr.ok){ok('Blocked. '+rr.data.affected+' user(s) refunded + notified.');loadReports();loadStats();}else{cBtn.disabled=false;err(rr.data.error||'Failed.');}});};
+        if(dBtn)dBtn.onclick=function(){dBtn.disabled=true;api('/api/admin/report-deny',{method:'POST',body:{id:r.id}}).then(function(rr){if(rr.ok){ok('Report denied.');loadReports();loadStats();}else{dBtn.disabled=false;err(rr.data.error||'Failed.');}});};
+        tb.appendChild(tr);
+      });
+    });
+  }
+
+  function loadBlocked(){
+    api('/api/admin/blocked').then(function(res){
+      if(!res.ok)return;
+      var blocked=res.data.blocked||[];
+      var tb=$('blockedBody');tb.innerHTML='';
+      $('blockedEmpty').classList.toggle('hidden',blocked.length>0);
+      blocked.forEach(function(url){
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td class="url"><a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url)+'</a></td>'+
+          '<td style="text-align:right;white-space:nowrap;"><button class="btn ghost sm">Unblock</button></td>';
+        tr.querySelector('button').onclick=function(){api('/api/admin/unblock',{method:'POST',body:{url:url}}).then(function(r){if(r.ok){loadBlocked();loadStats();ok('Restored to rotation.');}});};
         tb.appendChild(tr);
       });
     });
@@ -217,7 +243,6 @@ a{color:#fff;}
     api('/api/admin/users').then(function(res){
       if(!res.ok)return;
       var users=res.data.users||[];
-      $('userCount').textContent=users.length;
       var tb=$('usersBody');tb.innerHTML='';
       $('usersEmpty').classList.toggle('hidden',users.length>0);
       users.forEach(function(u){
@@ -227,9 +252,7 @@ a{color:#fff;}
           '<td>'+u.linkCount+'</td>'+
           '<td><span class="pill">'+esc(u.settings&&u.settings.theme)+'</span></td>'+
           '<td style="text-align:right;"><button class="btn danger sm">Delete</button></td>';
-        tr.querySelector('button').onclick=function(){
-          api('/api/admin/delete-user',{method:'POST',body:{username:u.username}}).then(function(r){if(r.ok){loadUsers();loadStats();ok('Account deleted.');}});
-        };
+        tr.querySelector('button').onclick=function(){api('/api/admin/delete-user',{method:'POST',body:{username:u.username}}).then(function(r){if(r.ok){loadUsers();loadStats();ok('Account deleted.');}});};
         tb.appendChild(tr);
       });
     });
@@ -238,13 +261,10 @@ a{color:#fff;}
   $('blockBtn').onclick=function(){
     var u=$('blockUrl').value.trim();if(!u)return;
     api('/api/admin/block',{method:'POST',body:{url:u}}).then(function(r){
-      if(r.ok){$('blockUrl').value='';loadBlocked();loadReports();loadStats();ok('Link blocked.');}
-      else err(r.data.error||'Could not block.');
+      if(r.ok){$('blockUrl').value='';loadBlocked();loadStats();ok('Link blocked.');}else err(r.data.error||'Could not block.');
     });
   };
-  $('clearReportsBtn').onclick=function(){
-    api('/api/admin/clear-reports',{method:'POST'}).then(function(r){if(r.ok){loadReports();loadStats();ok('Reports cleared.');}});
-  };
+  $('clearReportsBtn').onclick=function(){api('/api/admin/clear-reports',{method:'POST'}).then(function(r){if(r.ok){loadReports();loadStats();ok('Reports cleared.');}});};
   $('refreshBtn').onclick=loadAll;
   $('logoutBtn').onclick=lock;
 
@@ -254,7 +274,7 @@ a{color:#fff;}
 
   if(key()){
     api('/api/admin/stats').then(function(res){
-      if(res.ok){$('gate').classList.add('hidden');$('dash').classList.remove('hidden');loadAll();}
+      if(res.ok){$('gate').classList.add('hidden');$('dash').classList.remove('hidden');nav('overview');loadAll();}
       else setKey('');
     });
   }
