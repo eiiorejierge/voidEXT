@@ -13,8 +13,8 @@
  * Build the one-line bookmark with:  node build-bookmarklet.js
  * ============================================================================= */
 (function () {
-  // <<< CONFIG >>> Point this at your deployed Vercel site (no trailing slash).
-  const API_BASE = 'https://void-ext.vercel.app';
+  // <<< CONFIG >>> Point this at your deployed site (no trailing slash).
+  const API_BASE = 'https://nebulabkm.xyz';
 
   const OVERLAY_ID = 'nebula-overlay';
   const WRAPPER_ID = 'nebula-wrapper';
