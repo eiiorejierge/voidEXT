@@ -173,6 +173,9 @@ textarea:focus{border-color:var(--text);}
 .pdot.on{background:#22c55e;box-shadow:0 0 7px rgba(34,197,94,.65);}
 .pstatus{font-size:11px;color:var(--muted);letter-spacing:.3px;}
 .convo .cname{display:flex;align-items:center;gap:7px;}
+.cprev .typing-txt{color:#22c55e;font-style:italic;}
+.cprev .typing-txt .td{animation:lpulseDots 1.2s steps(1,end) infinite;}
+@keyframes lpulseDots{0%{opacity:.2;}50%{opacity:1;}100%{opacity:.2;}}
 .chatcompose{display:flex;gap:9px;align-items:center;margin-top:12px;}
 .chatcompose input{margin-bottom:0;flex:1;}
 .chatcompose .btn{flex:none;}
@@ -633,9 +636,10 @@ textarea:focus{border-color:var(--text);}
     list.forEach(function(c){
       var row=document.createElement('div');row.className='convo';
       var prev=(c.last.mine?'You: ':'')+(c.last.text||'');
+      var preview=c.typing?'<span class="typing-txt">typing<span class="td">…</span></span>':esc(prev);
       row.innerHTML='<div class="av">'+esc((c.with||'?').charAt(0))+'</div>'+
         '<div class="cmid"><div class="cname"><span class="pdot'+(c.online?' on':'')+'"></span>'+esc(c.with)+'</div>'+
-        '<div class="cprev'+(c.unread?' un':'')+'">'+esc(prev)+'</div></div>'+
+        '<div class="cprev'+(c.unread?' un':'')+(c.typing?' typing':'')+'">'+preview+'</div></div>'+
         '<div class="cmeta"><div class="ctime">'+relTime(c.last.at)+'</div>'+
         (c.unread?'<div class="cunread">'+(c.unread>99?'99+':c.unread)+'</div>':'')+'</div>';
       row.onclick=function(){openThread(c.with);};
@@ -712,10 +716,14 @@ textarea:focus{border-color:var(--text);}
 
   function startMsgPoll(){
     stopMsgPoll();
+    var tick=0;
+    // Poll every 1.5s so typing/online stay accurate. In a thread we refetch
+    // every tick; on the inbox we refresh every other tick to keep it lighter.
     msgPoll=setInterval(function(){
       if($('page-messages').classList.contains('hidden')){stopMsgPoll();return;}
-      if(threadPartner)fetchThread(false); else loadInbox();
-    },4000);
+      tick++;
+      if(threadPartner)fetchThread(false); else if(tick%2===0)loadInbox();
+    },1500);
   }
   function stopMsgPoll(){ if(msgPoll){clearInterval(msgPoll);msgPoll=null;} }
 
