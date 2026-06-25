@@ -143,6 +143,14 @@ textarea:focus{border-color:var(--text);}
 .msg.err{background:rgba(239,68,68,0.92);color:#fff;}
 .msg.ok{background:var(--btn-bg);color:var(--btn-fg);}
 .hidden{display:none!important;}
+/* LOADING SCREEN */
+.loader{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);transition:opacity .35s ease;}
+.loader.fade{opacity:0;pointer-events:none;}
+.loader .lring{width:58px;height:58px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--text);animation:lspin .85s linear infinite;}
+@keyframes lspin{to{transform:rotate(360deg);}}
+.loader .lbrand{font-weight:700;font-size:22px;letter-spacing:4px;}
+.loader .ltext{color:var(--muted);font-size:12.5px;letter-spacing:1px;animation:lpulse 1.6s ease-in-out infinite;}
+@keyframes lpulse{0%,100%{opacity:.45;}50%{opacity:1;}}
 .updbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--text);color:var(--bg);font-size:11.5px;text-align:center;padding:8px 12px;letter-spacing:.3px;font-weight:500;cursor:default;}
 .updbar b{font-weight:700;}
 ::-webkit-scrollbar{width:7px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
@@ -160,6 +168,11 @@ textarea:focus{border-color:var(--text);}
 <div class="stars"></div>
 <div class="stars s2"></div>
 <div id="updateBar" class="updbar hidden"></div>
+<div id="loader" class="loader">
+  <div class="lring"></div>
+  <div class="lbrand">voidEXT</div>
+  <div class="ltext">Entering the void…</div>
+</div>
 <div class="shell">
 
   <!-- AUTH -->
@@ -618,14 +631,21 @@ textarea:focus{border-color:var(--text);}
     }).catch(function(){});
   }
 
+  function hideLoader(){
+    var l=$('loader');if(!l||l.classList.contains('fade'))return;
+    l.classList.add('fade');
+    setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l);},400);
+  }
+
   (function init(){
     setMode('login');applyTheme('void');checkVersion();
     if(token()){
       api('/api/me').then(function(res){
         if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);}
         else{setToken('');showAuth();}
-      }).catch(function(){showAuth();});
-    }else{showAuth();}
+        hideLoader();
+      }).catch(function(){showAuth();hideLoader();});
+    }else{showAuth();hideLoader();}
   })();
 })();
 </script>
