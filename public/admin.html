@@ -68,6 +68,10 @@ td.url{word-break:break-all;max-width:420px;}
 .pill{display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:2px 10px;font-size:11px;white-space:nowrap;}
 .empty{color:rgba(255,255,255,0.4);font-size:13px;padding:14px 0;}
 .scroll{max-height:62vh;overflow:auto;margin-top:8px;}
+.suggest{position:absolute;top:100%;left:0;right:0;background:#0a0a0a;border:1px solid rgba(255,255,255,0.2);border-radius:11px;margin-top:4px;max-height:220px;overflow:auto;z-index:5;}
+.suggest .s{padding:10px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.suggest .s:hover,.suggest .s.hl{background:rgba(255,255,255,0.12);}
+.suggest .s b{font-weight:700;}
 ::-webkit-scrollbar{width:7px;height:7px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:10px;}
 @media(max-width:640px){.dash{flex-direction:column;}.side{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,0.12);padding:12px;}.side .brand{margin-bottom:0;margin-right:6px;}.navitem{margin-bottom:0;white-space:nowrap;}.side .spacer{flex:0;}.main{height:auto;padding:20px 18px;}}
 </style>
@@ -92,7 +96,9 @@ td.url{word-break:break-all;max-width:420px;}
     <button class="navitem active" data-nav="overview"><span class="ic">▦</span> Overview</button>
     <button class="navitem" data-nav="reports"><span class="ic">⚑</span> Reports <span class="badge hidden" id="navPending">0</span></button>
     <button class="navitem" data-nav="blocked"><span class="ic">⊘</span> Blocked</button>
+    <button class="navitem" data-nav="bugs"><span class="ic">🐞</span> Bugs <span class="badge hidden" id="navBugs">0</span></button>
     <button class="navitem" data-nav="accounts"><span class="ic">◐</span> Accounts</button>
+    <button class="navitem" data-nav="messages"><span class="ic">✉</span> Messages</button>
     <div class="spacer"></div>
     <button class="navitem" id="refreshBtn"><span class="ic">↻</span> Refresh</button>
     <button class="navitem" id="logoutBtn"><span class="ic">⏻</span> Lock</button>
@@ -136,6 +142,29 @@ td.url{word-break:break-all;max-width:420px;}
       </table></div>
       <div class="empty hidden" id="usersEmpty">No accounts yet.</div>
     </section>
+    <!-- BUGS -->
+    <section id="page-bugs" class="hidden">
+      <div class="ptitle">Bug reports</div>
+      <div class="psub">Review reported bugs. Mark fixed and award up to 10 link tokens — the reporter gets a notification.</div>
+      <div class="scroll"><table>
+        <thead><tr><th>Bug</th><th>By</th><th>When</th><th>Status</th><th>Resolve</th></tr></thead>
+        <tbody id="bugsBody"></tbody>
+      </table></div>
+      <div class="empty hidden" id="bugsEmpty">No bug reports yet.</div>
+    </section>
+    <!-- MESSAGES -->
+    <section id="page-messages" class="hidden">
+      <div class="ptitle">Message a user</div>
+      <div class="psub">Send a notification to any account. Start typing a username to autocomplete.</div>
+      <div style="max-width:460px;">
+        <div style="position:relative;">
+          <input id="msgUser" type="text" placeholder="Username" autocomplete="off" style="letter-spacing:0;">
+          <div id="msgSuggest" class="suggest hidden"></div>
+        </div>
+        <textarea id="msgText" placeholder="Your message…" style="width:100%;min-height:110px;resize:vertical;margin-top:10px;padding:13px 15px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:11px;color:#fff;font-size:14px;font-family:inherit;outline:none;letter-spacing:0;"></textarea>
+        <button class="btn" id="msgSend" style="margin-top:10px;">Send message</button>
+      </div>
+    </section>
     <div class="msg" id="msg"></div>
   </main>
 </div>
@@ -171,18 +200,21 @@ td.url{word-break:break-all;max-width:420px;}
   }
 
   // ---- nav ----
+  var allUsernames=[];
   function nav(page){
-    ['overview','reports','blocked','accounts'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
+    ['overview','reports','blocked','bugs','accounts','messages'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
     if(page==='overview')loadStats();
     if(page==='reports')loadReports();
     if(page==='blocked')loadBlocked();
+    if(page==='bugs')loadBugs();
     if(page==='accounts')loadUsers();
+    if(page==='messages')loadUsers();
     clr($('msg'));
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
 
-  function loadAll(){loadStats();loadReports();loadBlocked();loadUsers();}
+  function loadAll(){loadStats();loadReports();loadBlocked();loadBugs();loadUsers();}
 
   function loadStats(){
     api('/api/admin/stats').then(function(res){
@@ -190,9 +222,10 @@ td.url{word-break:break-all;max-width:420px;}
       if(!res.ok)return;
       var d=res.data;
       if(d.pendingReports>0){$('navPending').textContent=d.pendingReports;$('navPending').classList.remove('hidden');}else{$('navPending').classList.add('hidden');}
+      if(d.openBugs>0){$('navBugs').textContent=d.openBugs;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
       $('stats').innerHTML=[
         ['Accounts',d.accounts],['Active links',d.activeLinks],['Total links',d.totalLinks],
-        ['Blocked',d.blockedCount],['Pending',d.pendingReports!=null?d.pendingReports:0],['Reports',d.reportsCount]
+        ['Blocked',d.blockedCount],['Pending',d.pendingReports!=null?d.pendingReports:0],['Open bugs',d.openBugs!=null?d.openBugs:0]
       ].map(function(x){return '<div class="stat"><div class="n">'+x[1]+'</div><div class="l">'+x[0]+'</div></div>';}).join('');
     });
   }
@@ -243,6 +276,7 @@ td.url{word-break:break-all;max-width:420px;}
     api('/api/admin/users').then(function(res){
       if(!res.ok)return;
       var users=res.data.users||[];
+      allUsernames=users.map(function(u){return u.username;});
       var tb=$('usersBody');tb.innerHTML='';
       $('usersEmpty').classList.toggle('hidden',users.length>0);
       users.forEach(function(u){
@@ -269,6 +303,82 @@ td.url{word-break:break-all;max-width:420px;}
       });
     });
   }
+
+  function loadBugs(){
+    api('/api/admin/bugs').then(function(res){
+      if(!res.ok)return;
+      var bugs=res.data.bugs||[];
+      if(res.data.open>0){$('navBugs').textContent=res.data.open;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
+      var tb=$('bugsBody');tb.innerHTML='';
+      $('bugsEmpty').classList.toggle('hidden',bugs.length>0);
+      bugs.forEach(function(bg){
+        var tr=document.createElement('tr');
+        var statusPill=bg.status==='open'?'<span class="pill" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.5)">open</span>'
+          :bg.status==='fixed'?'<span class="pill" style="background:rgba(34,197,94,0.25);border-color:rgba(34,197,94,0.5)">fixed'+(bg.tokens?' · '+bg.tokens+' tokens':'')+'</span>'
+          :'<span class="pill" style="opacity:.6">dismissed</span>';
+        var action=bg.status==='open'
+          ? '<input class="bugtok" type="number" value="5" min="0" max="10" style="width:52px;padding:6px 8px;letter-spacing:0;"> <button class="btn sm" data-act="fix">Fix + give</button> <button class="btn ghost sm" data-act="dismiss">Dismiss</button>'
+          : '';
+        tr.innerHTML='<td style="max-width:360px;">'+esc(bg.text)+'</td>'+
+          '<td><span class="pill">'+esc(bg.by||'?')+'</span></td>'+
+          '<td class="muted" style="white-space:nowrap;">'+esc(when(bg.at))+'</td>'+
+          '<td>'+statusPill+'</td>'+
+          '<td style="white-space:nowrap;">'+action+'</td>';
+        var tok=tr.querySelector('.bugtok'),fix=tr.querySelector('[data-act="fix"]'),dis=tr.querySelector('[data-act="dismiss"]');
+        if(fix)fix.onclick=function(){
+          var amt=Math.max(0,Math.min(10,parseInt(tok.value,10)||0));
+          fix.disabled=true;
+          api('/api/admin/bug-resolve',{method:'POST',body:{id:bg.id,tokens:amt}}).then(function(r){
+            if(r.ok){ok('Bug fixed — awarded '+r.data.tokens+' token(s).');loadBugs();loadStats();loadUsers();}
+            else{fix.disabled=false;err(r.data.error||'Failed.');}
+          });
+        };
+        if(dis)dis.onclick=function(){dis.disabled=true;api('/api/admin/bug-dismiss',{method:'POST',body:{id:bg.id}}).then(function(r){if(r.ok){ok('Bug dismissed.');loadBugs();loadStats();}else{dis.disabled=false;err(r.data.error||'Failed.');}});};
+        tb.appendChild(tr);
+      });
+    });
+  }
+
+  // ---- messages: username autocomplete (prefix match) ----
+  var msgHl=-1;
+  function renderSuggest(){
+    var q=$('msgUser').value.trim().toLowerCase();
+    var box=$('msgSuggest');
+    if(!q){box.classList.add('hidden');box.innerHTML='';return;}
+    var matches=allUsernames.filter(function(u){return u.toLowerCase().indexOf(q)===0;}).slice(0,8);
+    if(!matches.length){box.classList.add('hidden');box.innerHTML='';return;}
+    msgHl=-1;
+    box.innerHTML=matches.map(function(u,i){
+      return '<div class="s" data-u="'+esc(u)+'"><b>'+esc(u.slice(0,q.length))+'</b>'+esc(u.slice(q.length))+'</div>';
+    }).join('');
+    box.classList.remove('hidden');
+    Array.prototype.forEach.call(box.querySelectorAll('.s'),function(el){
+      el.onclick=function(){$('msgUser').value=el.getAttribute('data-u');box.classList.add('hidden');$('msgText').focus();};
+    });
+  }
+  $('msgUser').addEventListener('input',renderSuggest);
+  $('msgUser').addEventListener('keydown',function(e){
+    var box=$('msgSuggest'),items=box.querySelectorAll('.s');
+    if(box.classList.contains('hidden')||!items.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();msgHl=Math.min(items.length-1,msgHl+1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();msgHl=Math.max(0,msgHl-1);}
+    else if(e.key==='Enter'){if(msgHl>=0){e.preventDefault();$('msgUser').value=items[msgHl].getAttribute('data-u');box.classList.add('hidden');return;}}
+    else if(e.key==='Escape'){box.classList.add('hidden');return;}
+    else return;
+    Array.prototype.forEach.call(items,function(el,i){el.classList.toggle('hl',i===msgHl);});
+  });
+  document.addEventListener('click',function(e){if(e.target!==$('msgUser'))$('msgSuggest').classList.add('hidden');});
+  $('msgSend').onclick=function(){
+    var u=$('msgUser').value.trim(),t=$('msgText').value.trim();
+    if(!u){err('Pick a username.');return;}
+    if(!t){err('Enter a message.');return;}
+    var b=$('msgSend');b.disabled=true;
+    api('/api/admin/message',{method:'POST',body:{username:u,text:t}}).then(function(r){
+      b.disabled=false;
+      if(r.ok){$('msgText').value='';$('msgUser').value='';ok('Message sent to '+u+'.');}
+      else err(r.data.error||'Could not send (user exists?).');
+    });
+  };
 
   $('blockBtn').onclick=function(){
     var u=$('blockUrl').value.trim();if(!u)return;

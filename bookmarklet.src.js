@@ -66,6 +66,9 @@ body{background:var(--bg);color:var(--text);overflow:hidden;position:relative;tr
 input{width:100%;padding:13px 15px;background:var(--field);border:1px solid var(--border);border-radius:11px;outline:none;color:var(--text);font-size:14.5px;margin-bottom:13px;letter-spacing:.3px;}
 input::placeholder{color:var(--muted);}
 input:focus{border-color:var(--text);}
+textarea{width:100%;min-height:120px;resize:vertical;padding:13px 15px;background:var(--field);border:1px solid var(--border);border-radius:11px;outline:none;color:var(--text);font-size:14px;line-height:1.5;font-family:inherit;}
+textarea::placeholder{color:var(--muted);}
+textarea:focus{border-color:var(--text);}
 
 /* APP */
 .app{width:100%;height:100%;display:flex;background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
@@ -177,6 +180,7 @@ input:focus{border-color:var(--text);}
       <div class="brand"><span class="d"></span>voidEXT</div>
       <button class="navitem active" data-nav="links"><span class="ic">✦</span> Links</button>
       <button class="navitem" data-nav="report"><span class="ic">⚑</span> Report</button>
+      <button class="navitem" data-nav="bug"><span class="ic">🐞</span> Bug</button>
       <button class="navitem" data-nav="notifs"><span class="ic">🔔</span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
       <button class="navitem" data-nav="vault"><span class="ic">◍</span> Vault</button>
       <button class="navitem" data-nav="account"><span class="ic">◐</span> Account</button>
@@ -220,6 +224,13 @@ input:focus{border-color:var(--text);}
         <ul class="links" id="reportList" style="margin-top:6px;"></ul>
         <div class="empty" id="reportEmpty">No links to report — generate some first.</div>
         <button class="btn" id="reportBtn" style="margin-top:14px;">Report selected</button>
+      </section>
+      <!-- BUG -->
+      <section id="page-bug" class="hidden">
+        <div class="ptitle">Report a Bug</div>
+        <div class="psub">Found something broken? Tell us what happened. Helpful reports can earn you up to <b>10 link tokens</b> once reviewed.</div>
+        <textarea id="bugText" placeholder="Describe the bug — what you did, what you expected, what happened instead..."></textarea>
+        <button class="btn" id="bugBtn" style="margin-top:12px;">Submit bug report</button>
       </section>
       <!-- NOTIFICATIONS -->
       <section id="page-notifs" class="hidden">
@@ -304,7 +315,7 @@ input:focus{border-color:var(--text);}
   function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');}
 
   function nav(page){
-    ['links','report','notifs','vault','account','settings','help'].forEach(function(p){
+    ['links','report','bug','notifs','vault','account','settings','help'].forEach(function(p){
       $('page-'+p).classList.toggle('hidden',p!==page);
     });
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
@@ -451,6 +462,18 @@ input:focus{border-color:var(--text);}
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   };
 
+  // bug report
+  $('bugBtn').onclick=function(){
+    var t=$('bugText').value.trim();
+    if(t.length<5){msg('Describe the bug in a bit more detail.','err');return;}
+    var b=$('bugBtn');b.disabled=true;msg('Submitting...','');
+    api('/api/bug',{method:'POST',body:{text:t}}).then(function(res){
+      b.disabled=false;
+      if(!res.ok){msg(res.data.error||'Could not submit.','err');return;}
+      $('bugText').value='';msg('Thanks! Your bug report was submitted for review.','ok');
+    }).catch(function(){b.disabled=false;msg('Network error.','err');});
+  };
+
   // notifications
   function setBadge(n){
     state.unread=n;
@@ -459,15 +482,18 @@ input:focus{border-color:var(--text);}
   }
   function renderNotifs(){
     var L=$('notifList');L.innerHTML='';
-    var list=(state.notifications||[]).slice().reverse();
+    // Only show UNREAD notifications — once read they leave the list.
+    var list=(state.notifications||[]).filter(function(n){return !n.read;}).slice().reverse();
     $('notifEmpty').classList.toggle('hidden',list.length>0);
     list.forEach(function(n){
-      var d=document.createElement('div');d.className='notif'+(n.read?'':' unread');
+      var d=document.createElement('div');d.className='notif unread';
       d.innerHTML='<div class="nt">'+(n.text||'').replace(/</g,'&lt;')+'</div><div class="nd">'+new Date(n.at).toLocaleString()+'</div>';
       L.appendChild(d);
     });
   }
   function openNotifs(){
+    // Render the unread ones for this view, then mark them read so they won't
+    // reappear next time (and clear the badge).
     renderNotifs();
     if(state.unread>0){
       api('/api/notifications/read',{method:'POST'});
