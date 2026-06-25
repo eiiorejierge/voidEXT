@@ -186,9 +186,6 @@ textarea:focus{border-color:var(--text);}
 .loader .lbrand{font-weight:700;font-size:30px;letter-spacing:10px;padding-left:10px;background:linear-gradient(100deg,var(--muted) 20%,var(--text) 50%,var(--muted) 80%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandIn .7s ease both .3s,sheen 2.4s linear infinite 1s;}
 @keyframes brandIn{0%{opacity:0;letter-spacing:26px;filter:blur(9px);}100%{opacity:1;letter-spacing:10px;filter:blur(0);}}
 @keyframes sheen{0%{background-position:130% 0;}100%{background-position:-130% 0;}}
-.loader .ltext{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--muted);opacity:0;animation:fadeUp .6s ease forwards .65s,lpulse 1.7s ease-in-out infinite 1.25s;}
-@keyframes fadeUp{0%{opacity:0;transform:translateY(9px);}100%{opacity:.7;transform:translateY(0);}}
-@keyframes lpulse{0%,100%{opacity:.4;}50%{opacity:.85;}}
 .updbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--text);color:var(--bg);font-size:11.5px;text-align:center;padding:8px 12px;letter-spacing:.3px;font-weight:500;cursor:default;}
 .updbar b{font-weight:700;}
 ::-webkit-scrollbar{width:7px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
@@ -210,7 +207,6 @@ textarea:focus{border-color:var(--text);}
   <div class="warp"></div>
   <div class="orbit"><span class="ringline"></span><span class="planet"></span></div>
   <div class="lbrand">NEBULA</div>
-  <div class="ltext">entering the nebula</div>
 </div>
 <div class="shell">
 
