@@ -143,14 +143,52 @@ textarea:focus{border-color:var(--text);}
 .msg.err{background:rgba(239,68,68,0.92);color:#fff;}
 .msg.ok{background:var(--btn-bg);color:var(--btn-fg);}
 .hidden{display:none!important;}
-/* LOADING SCREEN */
-.loader{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);transition:opacity .35s ease;}
-.loader.fade{opacity:0;pointer-events:none;}
-.loader .lring{width:58px;height:58px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--text);animation:lspin .85s linear infinite;}
+/* MESSAGES — conversation list + chat thread */
+.convo{display:flex;align-items:center;gap:12px;background:var(--field);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer;transition:.15s;}
+.convo:hover{border-color:var(--text);}
+.convo .av{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--side);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none;text-transform:uppercase;}
+.convo .cmid{flex:1;min-width:0;}
+.convo .cname{font-size:14px;font-weight:600;}
+.convo .cprev{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.convo .cprev.un{color:var(--text);font-weight:600;}
+.convo .cmeta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none;}
+.convo .ctime{font-size:10.5px;color:var(--muted);white-space:nowrap;}
+.convo .cunread{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.chathead{display:flex;align-items:center;gap:11px;margin-bottom:14px;}
+.chatback{background:transparent;border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:9px;font-size:22px;line-height:1;cursor:pointer;font-family:inherit;flex:none;display:flex;align-items:center;justify-content:center;padding-bottom:3px;}
+.chatback:hover{border-color:var(--text);}
+.chatwho{font-size:18px;font-weight:700;letter-spacing:.5px;}
+.chatscroll{height:46vh;min-height:200px;max-height:430px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px;}
+.bub{max-width:76%;padding:9px 13px;border-radius:15px;font-size:13.5px;line-height:1.45;word-break:break-word;white-space:pre-wrap;}
+.bub .bt{display:block;font-size:10px;margin-top:5px;letter-spacing:.3px;opacity:.6;}
+.bub.them{align-self:flex-start;background:var(--field);border:1px solid var(--border);border-bottom-left-radius:5px;}
+.bub.them .bt{color:var(--muted);opacity:1;}
+.bub.me{align-self:flex-end;background:var(--btn-bg);color:var(--btn-fg);border-bottom-right-radius:5px;}
+.chatcompose{display:flex;gap:9px;align-items:center;margin-top:12px;}
+.chatcompose input{margin-bottom:0;flex:1;}
+.chatcompose .btn{flex:none;}
+.chatempty{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;}
+/* LOADING SCREEN — cinematic intro "cutscene" */
+.loader{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:var(--bg);overflow:hidden;transition:opacity .55s ease,transform .55s ease;}
+.loader.fade{opacity:0;transform:scale(1.08);pointer-events:none;}
+/* white-hot warp burst that flashes out from the centre */
+.loader .warp{position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%) scale(0);background:radial-gradient(circle,var(--text) 0%,transparent 70%);opacity:0;animation:warp 1.5s ease-out forwards;}
+@keyframes warp{0%{opacity:0;transform:translate(-50%,-50%) scale(0);}10%{opacity:.95;}40%{opacity:.4;}100%{opacity:0;transform:translate(-50%,-50%) scale(70);}}
+/* orbit: a planet with a spinning ring, scales + whirls into place */
+.loader .orbit{position:relative;width:92px;height:92px;animation:orbIn .9s cubic-bezier(.2,1.25,.4,1) both;}
+.loader .orbit::before{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--border);}
+@keyframes orbIn{0%{opacity:0;transform:scale(.2) rotate(-140deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
+.loader .ringline{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;border-top-color:var(--text);border-right-color:var(--text);animation:lspin .8s linear infinite;}
+.loader .planet{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--text);box-shadow:0 0 22px 5px var(--text);animation:pulseGlow 1.5s ease-in-out infinite;}
+@keyframes pulseGlow{0%,100%{transform:scale(.82);opacity:.8;}50%{transform:scale(1.12);opacity:1;}}
 @keyframes lspin{to{transform:rotate(360deg);}}
-.loader .lbrand{font-weight:700;font-size:22px;letter-spacing:4px;}
-.loader .ltext{color:var(--muted);font-size:12.5px;letter-spacing:1px;animation:lpulse 1.6s ease-in-out infinite;}
-@keyframes lpulse{0%,100%{opacity:.45;}50%{opacity:1;}}
+/* brand: blurred wide letters snap in, then a light sheen sweeps across */
+.loader .lbrand{font-weight:700;font-size:30px;letter-spacing:10px;padding-left:10px;background:linear-gradient(100deg,var(--muted) 20%,var(--text) 50%,var(--muted) 80%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandIn .7s ease both .3s,sheen 2.4s linear infinite 1s;}
+@keyframes brandIn{0%{opacity:0;letter-spacing:26px;filter:blur(9px);}100%{opacity:1;letter-spacing:10px;filter:blur(0);}}
+@keyframes sheen{0%{background-position:130% 0;}100%{background-position:-130% 0;}}
+.loader .ltext{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--muted);opacity:0;animation:fadeUp .6s ease forwards .65s,lpulse 1.7s ease-in-out infinite 1.25s;}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(9px);}100%{opacity:.7;transform:translateY(0);}}
+@keyframes lpulse{0%,100%{opacity:.4;}50%{opacity:.85;}}
 .updbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--text);color:var(--bg);font-size:11.5px;text-align:center;padding:8px 12px;letter-spacing:.3px;font-weight:500;cursor:default;}
 .updbar b{font-weight:700;}
 ::-webkit-scrollbar{width:7px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
@@ -169,9 +207,10 @@ textarea:focus{border-color:var(--text);}
 <div class="stars s2"></div>
 <div id="updateBar" class="updbar hidden"></div>
 <div id="loader" class="loader">
-  <div class="lring"></div>
-  <div class="lbrand">Nebula</div>
-  <div class="ltext">Entering the nebula…</div>
+  <div class="warp"></div>
+  <div class="orbit"><span class="ringline"></span><span class="planet"></span></div>
+  <div class="lbrand">NEBULA</div>
+  <div class="ltext">entering the nebula</div>
 </div>
 <div class="shell">
 
@@ -200,7 +239,7 @@ textarea:focus{border-color:var(--text);}
       <button class="navitem active" data-nav="links"><span class="ic">✦</span> Links</button>
       <button class="navitem" data-nav="report"><span class="ic">⚑</span> Report</button>
       <button class="navitem" data-nav="bug"><span class="ic">🐞</span> Bug</button>
-      <button class="navitem" data-nav="messages"><span class="ic">✉</span> Messages</button>
+      <button class="navitem" data-nav="messages"><span class="ic">✉</span> Messages <span class="badge hidden" id="msgBadge">0</span></button>
       <button class="navitem" data-nav="notifs"><span class="ic">🔔</span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
       <button class="navitem" data-nav="vault"><span class="ic">◍</span> Vault</button>
       <button class="navitem" data-nav="account"><span class="ic">◐</span> Account</button>
@@ -254,14 +293,36 @@ textarea:focus{border-color:var(--text);}
       </section>
       <!-- MESSAGES -->
       <section id="page-messages" class="hidden">
-        <div class="ptitle">Send a Message</div>
-        <div class="psub">Message another user — it lands in their notifications. Start typing a username to autocomplete.</div>
-        <div style="position:relative;max-width:420px;">
-          <input id="msgUser" type="text" placeholder="Username" autocomplete="off" style="letter-spacing:0;">
-          <div id="msgSuggest" class="suggest hidden"></div>
+        <!-- INBOX: list of conversations -->
+        <div id="msgInbox">
+          <div class="ptitle">Messages</div>
+          <div class="psub">Your conversations. Tap one to open the thread.</div>
+          <div class="actions"><button class="btn" id="msgNew">New message</button></div>
+          <div id="convoList" style="margin-top:16px;"></div>
+          <div class="empty" id="convoEmpty">No conversations yet — start one.</div>
         </div>
-        <textarea id="msgText" placeholder="Your message…" style="max-width:420px;min-height:110px;margin-top:10px;"></textarea>
-        <div style="max-width:420px;"><button class="btn" id="msgSend" style="margin-top:10px;">Send message</button></div>
+        <!-- NEW: pick someone to message -->
+        <div id="msgNewPane" class="hidden">
+          <div class="chathead"><button class="chatback" id="newBack" type="button">‹</button><div class="chatwho">New message</div></div>
+          <div style="position:relative;max-width:420px;margin-top:6px;">
+            <input id="msgUser" type="text" placeholder="To: username" autocomplete="off" style="letter-spacing:0;">
+            <div id="msgSuggest" class="suggest hidden"></div>
+          </div>
+          <button class="btn" id="newStart" style="margin-top:12px;">Start conversation</button>
+        </div>
+        <!-- THREAD: the conversation itself -->
+        <div id="msgThread" class="hidden chatwrap">
+          <div class="chathead">
+            <button class="chatback" id="msgBack" type="button">‹</button>
+            <div class="chatwho" id="threadWith">—</div>
+          </div>
+          <div class="chatscroll" id="threadMsgs"></div>
+          <div class="chatempty hidden" id="threadEmpty">No messages yet — say hi.</div>
+          <div class="chatcompose">
+            <input id="threadInput" type="text" placeholder="Message…" autocomplete="off" style="letter-spacing:0;">
+            <button class="btn" id="threadSend" type="button">Send</button>
+          </div>
+        </div>
       </section>
       <!-- NOTIFICATIONS -->
       <section id="page-notifs" class="hidden">
@@ -354,7 +415,7 @@ textarea:focus{border-color:var(--text);}
     if(page==='account')renderAccount();
     if(page==='vault')loadVault();
     if(page==='report')renderReport();
-    if(page==='messages')openMessages();
+    if(page==='messages')openMessages(); else stopMsgPoll();
     if(page==='notifs')openNotifs();
     clearMsg();
   }
@@ -382,7 +443,7 @@ textarea:focus{border-color:var(--text);}
         b.disabled=false;
         if(!res.ok){msg(res.data.error||'Something went wrong.','err');return;}
         setToken(res.data.token);state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];
-        clearMsg();showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);
+        clearMsg();showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();
       })
       .catch(function(){b.disabled=false;msg('Network error — is the server reachable?','err');});
   };
@@ -506,11 +567,128 @@ textarea:focus{border-color:var(--text);}
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   };
 
-  // messages — same approach as the admin panel (username autocomplete + send)
-  var msgUsernames=[], msgHl=-1;
+  // messages — texting-style: an inbox of conversations, each opening a thread
+  // of chat bubbles you reply into. Messages live in the thread (server side),
+  // NOT in the recipient's notifications. The open thread polls for new lines.
+  var msgUsernames=[], msgHl=-1, msgPoll=null, threadPartner=null, threadSig='';
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function relTime(ts){
+    var d=Date.now()-ts;
+    if(d<60000)return 'now';
+    if(d<3600000)return Math.floor(d/60000)+'m';
+    if(d<86400000)return Math.floor(d/3600000)+'h';
+    if(d<604800000)return Math.floor(d/86400000)+'d';
+    return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  }
+  function showMsgView(v){
+    $('msgInbox').classList.toggle('hidden',v!=='inbox');
+    $('msgNewPane').classList.toggle('hidden',v!=='new');
+    $('msgThread').classList.toggle('hidden',v!=='thread');
+  }
+  function setMsgBadge(n){
+    var b=$('msgBadge');
+    if(n>0){b.textContent=n>99?'99+':n;b.classList.remove('hidden');}else{b.classList.add('hidden');}
+  }
+  function refreshMsgBadge(){
+    api('/api/messages/unread').then(function(res){if(res.ok)setMsgBadge(res.data.unread||0);});
+  }
+
   function openMessages(){
     api('/api/users').then(function(res){ if(res.ok) msgUsernames=res.data.usernames||[]; });
+    threadPartner=null;
+    showMsgView('inbox');
+    loadInbox();
+    startMsgPoll();
   }
+  function loadInbox(){
+    api('/api/messages').then(function(res){
+      if(!res.ok)return;
+      setMsgBadge(res.data.unread||0);
+      renderConvos(res.data.conversations||[]);
+    });
+  }
+  function renderConvos(list){
+    var L=$('convoList');L.innerHTML='';
+    $('convoEmpty').classList.toggle('hidden',list.length>0);
+    list.forEach(function(c){
+      var row=document.createElement('div');row.className='convo';
+      var prev=(c.last.mine?'You: ':'')+(c.last.text||'');
+      row.innerHTML='<div class="av">'+esc((c.with||'?').charAt(0))+'</div>'+
+        '<div class="cmid"><div class="cname">'+esc(c.with)+'</div>'+
+        '<div class="cprev'+(c.unread?' un':'')+'">'+esc(prev)+'</div></div>'+
+        '<div class="cmeta"><div class="ctime">'+relTime(c.last.at)+'</div>'+
+        (c.unread?'<div class="cunread">'+(c.unread>99?'99+':c.unread)+'</div>':'')+'</div>';
+      row.onclick=function(){openThread(c.with);};
+      L.appendChild(row);
+    });
+  }
+  function openThread(name){
+    threadPartner=name;threadSig='';
+    $('threadWith').textContent=name;
+    $('threadMsgs').innerHTML='';
+    $('threadEmpty').classList.add('hidden');
+    showMsgView('thread');
+    fetchThread(true);
+    setTimeout(function(){$('threadInput').focus();},60);
+  }
+  function fetchThread(scroll){
+    if(!threadPartner)return;
+    api('/api/messages/thread',{method:'POST',body:{with:threadPartner}}).then(function(res){
+      if(!res.ok||threadPartner==null)return;
+      renderThread(res.data.messages||[],scroll);
+      setMsgBadge(0); // opening/viewing marks this thread read; refresh global count
+      refreshMsgBadge();
+    });
+  }
+  function renderThread(messages,forceScroll){
+    var sig=messages.map(function(m){return m.id;}).join(',');
+    if(sig===threadSig&&!forceScroll)return; // nothing new
+    var box=$('threadMsgs');
+    var atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<40;
+    threadSig=sig;
+    box.innerHTML='';
+    $('threadEmpty').classList.toggle('hidden',messages.length>0);
+    messages.forEach(function(m){
+      var b=document.createElement('div');b.className='bub '+(m.mine?'me':'them');
+      b.innerHTML=esc(m.text)+'<span class="bt">'+relTime(m.at)+'</span>';
+      box.appendChild(b);
+    });
+    if(forceScroll||atBottom)box.scrollTop=box.scrollHeight;
+  }
+  function sendThreadMsg(){
+    var t=$('threadInput').value.trim();
+    if(!t||!threadPartner)return;
+    var inp=$('threadInput');inp.value='';inp.focus();
+    api('/api/message',{method:'POST',body:{to:threadPartner,text:t}}).then(function(res){
+      if(!res.ok){msg(res.data.error||'Could not send.','err');inp.value=t;return;}
+      fetchThread(true);
+    }).catch(function(){msg('Network error.','err');inp.value=t;});
+  }
+  $('threadSend').onclick=sendThreadMsg;
+  $('threadInput').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendThreadMsg();}});
+  $('msgBack').onclick=function(){threadPartner=null;showMsgView('inbox');loadInbox();};
+  $('msgNew').onclick=function(){$('msgUser').value='';$('msgSuggest').classList.add('hidden');showMsgView('new');setTimeout(function(){$('msgUser').focus();},60);};
+  $('newBack').onclick=function(){showMsgView('inbox');};
+  $('newStart').onclick=function(){
+    var to=$('msgUser').value.trim();
+    if(!to){msg('Pick a username.','err');return;}
+    openThread(to);
+  };
+
+  function startMsgPoll(){
+    stopMsgPoll();
+    msgPoll=setInterval(function(){
+      if($('page-messages').classList.contains('hidden')){stopMsgPoll();return;}
+      if(threadPartner)fetchThread(false); else loadInbox();
+    },4000);
+  }
+  function stopMsgPoll(){ if(msgPoll){clearInterval(msgPoll);msgPoll=null;} }
+
+  // keep the sidebar message badge fresh app-wide (light poll, runs once logged in)
+  var badgePoll=null;
+  function startBadgePoll(){ if(badgePoll)return; refreshMsgBadge(); badgePoll=setInterval(refreshMsgBadge,12000); }
+
+
   function renderSuggest(){
     var q=$('msgUser').value.trim().toLowerCase(), box=$('msgSuggest');
     if(!q){box.classList.add('hidden');box.innerHTML='';return;}
@@ -520,31 +698,21 @@ textarea:focus{border-color:var(--text);}
     box.innerHTML=matches.map(function(u){return '<div class="s" data-u="'+u.replace(/"/g,'&quot;')+'"><b>'+u.slice(0,q.length).replace(/</g,'&lt;')+'</b>'+u.slice(q.length).replace(/</g,'&lt;')+'</div>';}).join('');
     box.classList.remove('hidden');
     Array.prototype.forEach.call(box.querySelectorAll('.s'),function(el){
-      el.onclick=function(){$('msgUser').value=el.getAttribute('data-u');box.classList.add('hidden');$('msgText').focus();};
+      el.onclick=function(){openThread(el.getAttribute('data-u'));};
     });
   }
   $('msgUser').addEventListener('input',renderSuggest);
   $('msgUser').addEventListener('keydown',function(e){
     var box=$('msgSuggest'),items=box.querySelectorAll('.s');
+    if(e.key==='Enter'&&box.classList.contains('hidden')){e.preventDefault();$('newStart').click();return;}
     if(box.classList.contains('hidden')||!items.length)return;
     if(e.key==='ArrowDown'){e.preventDefault();msgHl=Math.min(items.length-1,msgHl+1);}
     else if(e.key==='ArrowUp'){e.preventDefault();msgHl=Math.max(0,msgHl-1);}
-    else if(e.key==='Enter'){if(msgHl>=0){e.preventDefault();$('msgUser').value=items[msgHl].getAttribute('data-u');box.classList.add('hidden');return;}}
+    else if(e.key==='Enter'){e.preventDefault();openThread(items[msgHl>=0?msgHl:0].getAttribute('data-u'));return;}
     else if(e.key==='Escape'){box.classList.add('hidden');return;}
     else return;
     Array.prototype.forEach.call(items,function(el,i){el.classList.toggle('hl',i===msgHl);});
   });
-  $('msgSend').onclick=function(){
-    var to=$('msgUser').value.trim(), t=$('msgText').value.trim();
-    if(!to){msg('Pick a username.','err');return;}
-    if(!t){msg('Enter a message.','err');return;}
-    var b=$('msgSend');b.disabled=true;msg('Sending...','');
-    api('/api/message',{method:'POST',body:{to:to,text:t}}).then(function(res){
-      b.disabled=false;
-      if(!res.ok){msg(res.data.error||'Could not send.','err');return;}
-      $('msgUser').value='';$('msgText').value='';msg('Message sent to '+to+'.','ok');
-    }).catch(function(){b.disabled=false;msg('Network error.','err');});
-  };
 
   // notifications — every notification has its own "Mark as read" button, which
   // tells the server to stop displaying it. The bell badge = how many remain.
@@ -612,6 +780,7 @@ textarea:focus{border-color:var(--text);}
 
   $('logoutBtn').onclick=function(){
     api('/api/logout',{method:'POST'});
+    stopMsgPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);threadPartner=null;
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
   };
 
@@ -631,17 +800,23 @@ textarea:focus{border-color:var(--text);}
     }).catch(function(){});
   }
 
+  // Hold the cutscene on screen for a minimum beat so the intro animation always
+  // plays, even when the session data comes back instantly, then fade + remove.
+  var LOADER_AT=Date.now(), LOADER_MIN=2000;
   function hideLoader(){
-    var l=$('loader');if(!l||l.classList.contains('fade'))return;
-    l.classList.add('fade');
-    setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l);},400);
+    var l=$('loader');if(!l||l._hiding)return;l._hiding=true;
+    var wait=Math.max(0,LOADER_MIN-(Date.now()-LOADER_AT));
+    setTimeout(function(){
+      l.classList.add('fade');
+      setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l);},600);
+    },wait);
   }
 
   (function init(){
     setMode('login');applyTheme('void');checkVersion();
     if(token()){
       api('/api/me').then(function(res){
-        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);}
+        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();}
         else{setToken('');showAuth();}
         hideLoader();
       }).catch(function(){showAuth();hideLoader();});

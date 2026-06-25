@@ -86,6 +86,9 @@ const server = http.createServer(async (req, res) => {
   // static
   let rel = decodeURIComponent(pathname);
   if (rel === '/') rel = '/index.html';
+  // Clean URLs (mirrors Vercel's cleanUrls): /admin -> /admin.html, so links
+  // like <a href="/admin"> resolve to the file when served from this host.
+  if (!path.extname(rel)) rel = rel.replace(/\/$/, '') + '.html';
   const filePath = path.normalize(path.join(PUBLIC_DIR, rel));
   if (!filePath.startsWith(PUBLIC_DIR)) {
     res.statusCode = 403;
