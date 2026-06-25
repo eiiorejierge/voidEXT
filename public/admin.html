@@ -99,6 +99,7 @@ td.url{word-break:break-all;max-width:420px;}
     <button class="navitem" data-nav="bugs"><span class="ic">🐞</span> Bugs <span class="badge hidden" id="navBugs">0</span></button>
     <button class="navitem" data-nav="accounts"><span class="ic">◐</span> Accounts</button>
     <button class="navitem" data-nav="messages"><span class="ic">✉</span> Messages</button>
+    <button class="navitem" data-nav="announce"><span class="ic">❖</span> Announce</button>
     <div class="spacer"></div>
     <button class="navitem" id="refreshBtn"><span class="ic">↻</span> Refresh</button>
     <button class="navitem" id="logoutBtn"><span class="ic">⏻</span> Lock</button>
@@ -165,6 +166,18 @@ td.url{word-break:break-all;max-width:420px;}
         <button class="btn" id="msgSend" style="margin-top:10px;">Send message</button>
       </div>
     </section>
+    <!-- ANNOUNCE -->
+    <section id="page-announce" class="hidden">
+      <div class="ptitle">Announce to everyone</div>
+      <div class="psub">Broadcast a message into <b>every</b> account's notifications inbox. Use it for updates, feedback, and notices.</div>
+      <div style="max-width:560px;">
+        <textarea id="annText" placeholder="Your announcement to all users…" style="width:100%;min-height:120px;resize:vertical;padding:13px 15px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:11px;color:#fff;font-size:14px;font-family:inherit;outline:none;letter-spacing:0;"></textarea>
+        <button class="btn" id="annSend" style="margin-top:10px;">Send to everyone</button>
+      </div>
+      <div style="margin-top:26px;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Past announcements</div>
+      <div id="annList" style="margin-top:10px;"></div>
+      <div class="empty" id="annEmpty">No announcements yet.</div>
+    </section>
     <div class="msg" id="msg"></div>
   </main>
 </div>
@@ -202,7 +215,7 @@ td.url{word-break:break-all;max-width:420px;}
   // ---- nav ----
   var allUsernames=[];
   function nav(page){
-    ['overview','reports','blocked','bugs','accounts','messages'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
+    ['overview','reports','blocked','bugs','accounts','messages','announce'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
     if(page==='overview')loadStats();
     if(page==='reports')loadReports();
@@ -210,6 +223,7 @@ td.url{word-break:break-all;max-width:420px;}
     if(page==='bugs')loadBugs();
     if(page==='accounts')loadUsers();
     if(page==='messages')loadUsers();
+    if(page==='announce')loadAnnouncements();
     clr($('msg'));
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
@@ -379,6 +393,31 @@ td.url{word-break:break-all;max-width:420px;}
       else err(r.data.error||'Could not send (user exists?).');
     });
   };
+
+  // ---- announcements ----
+  $('annSend').onclick=function(){
+    var t=$('annText').value.trim();
+    if(!t){err('Enter an announcement.');return;}
+    var b=$('annSend');b.disabled=true;
+    api('/api/admin/announce',{method:'POST',body:{text:t}}).then(function(r){
+      b.disabled=false;
+      if(r.ok){$('annText').value='';ok('Announced to '+r.data.recipients+' account(s).');loadAnnouncements();}
+      else err(r.data.error||'Could not announce.');
+    });
+  };
+  function loadAnnouncements(){
+    api('/api/admin/announcements').then(function(r){
+      if(!r.ok)return;
+      var list=r.data.announcements||[],L=$('annList');L.innerHTML='';
+      $('annEmpty').classList.toggle('hidden',list.length>0);
+      list.forEach(function(a){
+        var d=document.createElement('div');d.className='card';
+        d.innerHTML='<div style="font-size:13px;line-height:1.5;">'+esc(a.text)+'</div>'+
+          '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:7px;">'+when(a.at)+' · sent to '+a.recipients+' account(s)</div>';
+        L.appendChild(d);
+      });
+    });
+  }
 
   $('blockBtn').onclick=function(){
     var u=$('blockUrl').value.trim();if(!u)return;

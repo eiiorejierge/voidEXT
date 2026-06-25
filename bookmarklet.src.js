@@ -78,7 +78,8 @@ textarea:focus{border-color:var(--text);}
 .navitem{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:none;background:transparent;color:var(--muted);font-size:14px;font-weight:600;border-radius:10px;cursor:pointer;transition:.18s;text-align:left;font-family:inherit;letter-spacing:.3px;margin-bottom:4px;}
 .navitem:hover{background:var(--field);color:var(--text);}
 .navitem.active{background:var(--btn-bg);color:var(--btn-fg);}
-.navitem .ic{width:18px;text-align:center;}
+.navitem .ic{width:18px;height:18px;flex:none;display:inline-flex;align-items:center;justify-content:center;}
+.navitem .ic svg{width:16px;height:16px;display:block;}
 .side .spacer{flex:1;}
 .navitem.logout{color:var(--muted);}
 .navitem.logout:hover{background:rgba(239,68,68,0.16);color:var(--text);}
@@ -91,6 +92,8 @@ textarea:focus{border-color:var(--text);}
 .notif{display:flex;gap:10px;align-items:flex-start;background:var(--field);border:1px solid var(--border);border-radius:11px;padding:13px 15px;margin-bottom:9px;}
 .notif .body{flex:1;}
 .notif .nt{font-size:13px;line-height:1.5;}
+.notif.ann{border-color:var(--text);background:var(--card);}
+.ntag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--text);color:var(--bg);margin-right:7px;vertical-align:1px;}
 .notif .nd{font-size:11px;color:var(--muted);margin-top:6px;}
 .notif .mark{flex:none;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap;font-family:inherit;}
 .notif .mark:hover{border-color:var(--text);color:var(--text);}
@@ -268,17 +271,17 @@ textarea:focus{border-color:var(--text);}
   <div id="app" class="app hidden">
     <aside class="side">
       <div class="brand"><span class="d"></span>Nebula</div>
-      <button class="navitem active" data-nav="links"><span class="ic">✦</span> Links</button>
-      <button class="navitem" data-nav="report"><span class="ic">⚑</span> Report</button>
-      <button class="navitem" data-nav="bug"><span class="ic">🐞</span> Bug</button>
-      <button class="navitem" data-nav="messages"><span class="ic">✉</span> Messages <span class="badge hidden" id="msgBadge">0</span></button>
-      <button class="navitem" data-nav="notifs"><span class="ic">🔔</span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
-      <button class="navitem" data-nav="vault"><span class="ic">◍</span> Vault</button>
-      <button class="navitem" data-nav="account"><span class="ic">◐</span> Account</button>
-      <button class="navitem" data-nav="settings"><span class="ic">⚙</span> Settings</button>
-      <button class="navitem" data-nav="help"><span class="ic">?</span> Help</button>
+      <button class="navitem active" data-nav="links"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span> Links</button>
+      <button class="navitem" data-nav="report"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2 3.5L17 11H5"/></svg></span> Report</button>
+      <button class="navitem" data-nav="bug"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8a3 3 0 0 1 6 0"/><rect x="8" y="8" width="8" height="9" rx="4"/><path d="M12 8.5v8.5M4 11h4M16 11h4M4.5 16.5h3.5M16 16.5h3.5M5 7l2 1.5M19 7l-2 1.5"/></svg></span> Bug</button>
+      <button class="navitem" data-nav="messages"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7 7 0 0 1-9.5 6.5L5 19.5l1.4-4A7 7 0 1 1 20 11.5z"/></svg></span> Messages <span class="badge hidden" id="msgBadge">0</span></button>
+      <button class="navitem" data-nav="notifs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 19.5a2 2 0 0 0 3 0"/></svg></span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
+      <button class="navitem" data-nav="vault"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></span> Vault</button>
+      <button class="navitem" data-nav="account"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span> Account</button>
+      <button class="navitem" data-nav="settings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span> Settings</button>
+      <button class="navitem" data-nav="help"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.7 1.2c0 1.6-2.2 2-2.2 3.3"/><path d="M12 17.2v.01"/></svg></span> Help</button>
       <div class="spacer"></div>
-      <button class="navitem logout" id="logoutBtn"><span class="ic">⏻</span> Log out</button>
+      <button class="navitem logout" id="logoutBtn"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V5.5A1.5 1.5 0 0 0 12.5 4H6A1.5 1.5 0 0 0 4.5 5.5v13A1.5 1.5 0 0 0 6 20h6.5a1.5 1.5 0 0 0 1.5-1.5V16"/><path d="M9.5 12h10M16.5 9l3 3-3 3"/></svg></span> Log out</button>
     </aside>
     <main class="main">
       <!-- LINKS -->
@@ -387,6 +390,15 @@ textarea:focus{border-color:var(--text);}
           <div class="inforow"><span class="k">Member since</span><span class="v" id="acSince">—</span></div>
           <div class="inforow"><span class="k">Link tokens</span><span class="v" id="acRemain">—</span></div>
           <div class="inforow"><span class="k">Theme</span><span class="v" id="acTheme">—</span></div>
+        </div>
+        <span class="flabel" style="margin-top:26px;">Send a link token</span>
+        <div class="psub" style="margin-bottom:12px;">Gift one of your link tokens to another user — max 1 per person per hour.</div>
+        <div class="info" style="max-width:360px;">
+          <div style="position:relative;">
+            <input id="giftUser" type="text" placeholder="Username" autocomplete="off" style="letter-spacing:0;">
+            <div id="giftSuggest" class="suggest hidden"></div>
+          </div>
+          <button class="btn" id="giftBtn" style="width:100%;">Send 1 token</button>
         </div>
         <span class="flabel" style="margin-top:26px;">Change password</span>
         <div class="info" style="max-width:360px;">
@@ -561,7 +573,46 @@ textarea:focus{border-color:var(--text);}
     var rem=(a.remaining==null?(a.limit||5):a.remaining);
     $('acRemain').textContent=rem+' link token'+(rem===1?'':'s');
     $('acTheme').textContent=state.settings.theme;
+    api('/api/users').then(function(res){ if(res.ok) giftUsers=res.data.usernames||[]; });
   }
+
+  // gift a link token to another user (autocomplete + send; server caps 1/hr/person)
+  var giftUsers=[], giftHl=-1;
+  function giftSuggest(){
+    var q=$('giftUser').value.trim().toLowerCase(), box=$('giftSuggest');
+    if(!q){box.classList.add('hidden');box.innerHTML='';return;}
+    var matches=giftUsers.filter(function(u){return u.toLowerCase().indexOf(q)===0&&u.toLowerCase()!==(state.username||'').toLowerCase();}).slice(0,8);
+    if(!matches.length){box.classList.add('hidden');box.innerHTML='';return;}
+    giftHl=-1;
+    box.innerHTML=matches.map(function(u){return '<div class="s" data-u="'+u.replace(/"/g,'&quot;')+'"><b>'+u.slice(0,q.length).replace(/</g,'&lt;')+'</b>'+u.slice(q.length).replace(/</g,'&lt;')+'</div>';}).join('');
+    box.classList.remove('hidden');
+    Array.prototype.forEach.call(box.querySelectorAll('.s'),function(el){el.onclick=function(){$('giftUser').value=el.getAttribute('data-u');box.classList.add('hidden');};});
+  }
+  function sendGift(){
+    var to=$('giftUser').value.trim();
+    if(!to){msg('Pick a username.','err');return;}
+    var b=$('giftBtn');b.disabled=true;msg('Sending token...','');
+    api('/api/send-token',{method:'POST',body:{to:to}}).then(function(res){
+      b.disabled=false;
+      if(!res.ok){msg(res.data.error||'Could not send.','err');return;}
+      if(res.data.account){state.account=res.data.account;renderAccount();}
+      $('giftUser').value='';$('giftSuggest').classList.add('hidden');
+      msg('Sent 1 token to '+res.data.sentTo+'.','ok');
+    }).catch(function(){b.disabled=false;msg('Network error.','err');});
+  }
+  $('giftUser').addEventListener('input',giftSuggest);
+  $('giftUser').addEventListener('keydown',function(e){
+    var box=$('giftSuggest'),items=box.querySelectorAll('.s');
+    if(e.key==='Enter'&&box.classList.contains('hidden')){e.preventDefault();sendGift();return;}
+    if(box.classList.contains('hidden')||!items.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();giftHl=Math.min(items.length-1,giftHl+1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();giftHl=Math.max(0,giftHl-1);}
+    else if(e.key==='Enter'){e.preventDefault();$('giftUser').value=items[giftHl>=0?giftHl:0].getAttribute('data-u');box.classList.add('hidden');return;}
+    else if(e.key==='Escape'){box.classList.add('hidden');return;}
+    else return;
+    Array.prototype.forEach.call(items,function(el,i){el.classList.toggle('hl',i===giftHl);});
+  });
+  $('giftBtn').onclick=sendGift;
 
   // report page
   function renderReport(){
@@ -796,9 +847,10 @@ textarea:focus{border-color:var(--text);}
     $('notifEmpty').classList.toggle('hidden',list.length>0);
     setBadge((state.notifications||[]).length);
     list.forEach(function(n){
-      var d=document.createElement('div');d.className='notif';
+      var d=document.createElement('div');d.className='notif'+(n.from==='announcement'?' ann':'');
       var body=document.createElement('div');body.className='body';
-      body.innerHTML='<div class="nt">'+(n.text||'').replace(/</g,'&lt;')+'</div><div class="nd">'+new Date(n.at).toLocaleString()+'</div>';
+      var tag=n.from==='announcement'?'<span class="ntag">Announcement</span>':'';
+      body.innerHTML='<div class="nt">'+tag+(n.text||'').replace(/</g,'&lt;')+'</div><div class="nd">'+new Date(n.at).toLocaleString()+'</div>';
       var mark=document.createElement('button');mark.className='mark';mark.type='button';mark.textContent='Mark as read';
       mark.onclick=function(){
         mark.disabled=true;mark.textContent='…';
@@ -866,7 +918,7 @@ textarea:focus{border-color:var(--text);}
       if(res.ok&&res.data.version&&isNewer(res.data.version,BUILT_VERSION)){
         latestVersion=res.data.version;
         var bar=$('updateBar');
-        bar.innerHTML='⬆ Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+latestVersion+'</b> · tap to update';
+        bar.innerHTML='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:5px;"><path d="M12 19V6M6 12l6-6 6 6"/></svg>Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+latestVersion+'</b> · tap to update';
         bar.classList.remove('hidden');
         bar.onclick=openUpdate;
       }
