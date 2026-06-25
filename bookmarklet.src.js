@@ -116,8 +116,14 @@ textarea:focus{border-color:var(--text);}
 .bar > i{display:block;height:100%;background:var(--text);transition:width .3s;}
 .links{list-style:none;margin:18px 0 6px;display:flex;flex-direction:column;gap:9px;}
 .links li{display:flex;align-items:center;gap:10px;background:var(--field);border:1px solid var(--border);border-radius:11px;padding:12px 14px;}
+.links li.pinned{border-left:3px solid var(--text);}
 .links a{flex:1;color:var(--text);font-size:12.5px;text-decoration:none;word-break:break-all;opacity:.92;}
 .links a:hover{text-decoration:underline;opacity:1;}
+.lact{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;transition:.2s;padding:0;}
+.lact:hover{border-color:var(--text);color:var(--text);}
+.lact svg{width:14px;height:14px;display:block;}
+.lact.on{background:var(--text);color:var(--bg);border-color:var(--text);}
+.lact.confirm{background:#ef4444;color:#fff;border-color:#ef4444;}
 .blk{flex:none;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap;transition:.2s;font-family:inherit;}
 .blk:hover{border-color:var(--text);color:var(--text);}
 .blk.confirm{background:var(--text);color:var(--bg);border-color:var(--text);}
@@ -430,7 +436,7 @@ textarea:focus{border-color:var(--text);}
 (function(){
   var API='${API_BASE}', TOKEN_KEY='voidext_token', BUILT_VERSION='__VERSION__';
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
-  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],notifications:[],unread:0,reportSel:{}};
+  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],unread:0,reportSel:{}};
 
   var $=function(id){return document.getElementById(id);};
   function token(){try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}}
@@ -489,7 +495,7 @@ textarea:focus{border-color:var(--text);}
       .then(function(res){
         b.disabled=false;
         if(!res.ok){msg(res.data.error||'Something went wrong.','err');return;}
-        setToken(res.data.token);state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];
+        setToken(res.data.token);state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.pinned=res.data.pinned||[];state.notifications=res.data.notifications||[];
         clearMsg();showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();
       })
       .catch(function(){b.disabled=false;msg('Network error — is the server reachable?','err');});
@@ -502,6 +508,7 @@ textarea:focus{border-color:var(--text);}
       b.disabled=false;
       if(res.status===401){setToken('');showAuth();setMode('login');msg('Session expired — log in again.','err');return;}
       if(res.data.links)state.links=res.data.links;
+      if(res.data.pinned)state.pinned=res.data.pinned;
       renderLinks(state.links);updateMeter(res.data);
       if(!res.ok){msg(res.data.error||'Could not get a link.','err');return;}
       if(res.data.added===null){msg(res.data.note||'No new links available.','err');return;}
@@ -537,11 +544,39 @@ textarea:focus{border-color:var(--text);}
       var rem=(state.account.remaining==null?(state.account.limit||5):state.account.remaining);
       $('meter').textContent=rem+' link token'+(rem===1?'':'s');
     }
-    links.forEach(function(url,idx){
-      var li=document.createElement('li');
-      var a=document.createElement('a');a.href=url;a.target=state.settings.openInNewTab?'_blank':'_top';a.rel='noopener noreferrer';a.textContent='Link '+(idx+1);
-      li.appendChild(a);L.appendChild(li);
+    var pinSet={};(state.pinned||[]).forEach(function(u){pinSet[u]=true;});
+    var ordered=links.slice().sort(function(a,b){
+      var pa=pinSet[a]?1:0,pb=pinSet[b]?1:0;
+      if(pa!==pb)return pb-pa;                 // pinned to the top
+      return links.indexOf(a)-links.indexOf(b);// otherwise keep original order
     });
+    var PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg>';
+    var TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>';
+    ordered.forEach(function(url,idx){
+      var li=document.createElement('li');if(pinSet[url])li.className='pinned';
+      var a=document.createElement('a');a.href=url;a.target=state.settings.openInNewTab?'_blank':'_top';a.rel='noopener noreferrer';a.textContent='Link '+(idx+1);
+      var pin=document.createElement('button');pin.type='button';pin.className='lact'+(pinSet[url]?' on':'');pin.title=pinSet[url]?'Unpin':'Pin';pin.innerHTML=PIN;
+      pin.onclick=function(){togglePin(url,!pinSet[url]);};
+      var del=document.createElement('button');del.type='button';del.className='lact';del.title='Delete';del.innerHTML=TRASH;
+      del.onclick=function(){
+        if(del.getAttribute('data-c')==='1'){deleteLink(url);return;}
+        del.setAttribute('data-c','1');del.classList.add('confirm');del.title='Click again to delete';
+        setTimeout(function(){del.removeAttribute('data-c');del.classList.remove('confirm');del.title='Delete';},2500);
+      };
+      li.appendChild(a);li.appendChild(pin);li.appendChild(del);L.appendChild(li);
+    });
+  }
+  function togglePin(url,pin){
+    api('/api/links/pin',{method:'POST',body:{url:url,pinned:pin}}).then(function(res){
+      if(!res.ok){msg(res.data.error||'Could not update.','err');return;}
+      state.links=res.data.links||state.links;state.pinned=res.data.pinned||[];renderLinks(state.links);
+    }).catch(function(){msg('Network error.','err');});
+  }
+  function deleteLink(url){
+    api('/api/links/delete',{method:'POST',body:{url:url}}).then(function(res){
+      if(!res.ok){msg(res.data.error||'Could not delete.','err');return;}
+      state.links=res.data.links||[];state.pinned=res.data.pinned||[];renderLinks(state.links);msg('Link deleted.','ok');
+    }).catch(function(){msg('Network error.','err');});
   }
 
   // settings page
@@ -962,7 +997,7 @@ textarea:focus{border-color:var(--text);}
     setMode('login');applyTheme('void');checkVersion();
     if(token()){
       api('/api/me').then(function(res){
-        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();}
+        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.pinned=res.data.pinned||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();}
         else{setToken('');showAuth();}
         hideLoader();
       }).catch(function(){showAuth();hideLoader();});
