@@ -164,6 +164,15 @@ textarea:focus{border-color:var(--text);}
 .bub.them{align-self:flex-start;background:var(--field);border:1px solid var(--border);border-bottom-left-radius:5px;}
 .bub.them .bt{color:var(--muted);opacity:1;}
 .bub.me{align-self:flex-end;background:var(--btn-bg);color:var(--btn-fg);border-bottom-right-radius:5px;}
+.bub.typing{display:flex;gap:5px;align-items:center;padding:13px 15px;}
+.bub.typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block;animation:typedot 1.2s infinite ease-in-out;}
+.bub.typing span:nth-child(2){animation-delay:.18s;}
+.bub.typing span:nth-child(3){animation-delay:.36s;}
+@keyframes typedot{0%,60%,100%{transform:translateY(0);opacity:.35;}30%{transform:translateY(-5px);opacity:1;}}
+.pdot{width:9px;height:9px;border-radius:50%;background:#9ca3af;display:inline-block;flex:none;}
+.pdot.on{background:#22c55e;box-shadow:0 0 7px rgba(34,197,94,.65);}
+.pstatus{font-size:11px;color:var(--muted);letter-spacing:.3px;}
+.convo .cname{display:flex;align-items:center;gap:7px;}
 .chatcompose{display:flex;gap:9px;align-items:center;margin-top:12px;}
 .chatcompose input{margin-bottom:0;flex:1;}
 .chatcompose .btn{flex:none;}
@@ -311,6 +320,8 @@ textarea:focus{border-color:var(--text);}
           <div class="chathead">
             <button class="chatback" id="msgBack" type="button">‹</button>
             <div class="chatwho" id="threadWith">—</div>
+            <span class="pdot" id="threadDot"></span>
+            <span class="pstatus" id="threadStatus"></span>
           </div>
           <div class="chatscroll" id="threadMsgs"></div>
           <div class="chatempty hidden" id="threadEmpty">No messages yet — say hi.</div>
@@ -576,6 +587,19 @@ textarea:focus{border-color:var(--text);}
     if(d<604800000)return Math.floor(d/86400000)+'d';
     return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
   }
+  function msgTime(ts){
+    var d=new Date(ts),now=new Date();
+    var t=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    if(d.toDateString()===now.toDateString())return t;
+    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+', '+t;
+  }
+  function showTyping(on){
+    var box=$('threadMsgs'),ex=box.querySelector('.bub.typing');
+    if(on){
+      if(!ex){ex=document.createElement('div');ex.className='bub them typing';ex.innerHTML='<span></span><span></span><span></span>';box.appendChild(ex);
+        if(box.scrollHeight-box.scrollTop-box.clientHeight<80)box.scrollTop=box.scrollHeight;}
+    }else if(ex){ex.parentNode.removeChild(ex);}
+  }
   function showMsgView(v){
     $('msgInbox').classList.toggle('hidden',v!=='inbox');
     $('msgNewPane').classList.toggle('hidden',v!=='new');
@@ -610,7 +634,7 @@ textarea:focus{border-color:var(--text);}
       var row=document.createElement('div');row.className='convo';
       var prev=(c.last.mine?'You: ':'')+(c.last.text||'');
       row.innerHTML='<div class="av">'+esc((c.with||'?').charAt(0))+'</div>'+
-        '<div class="cmid"><div class="cname">'+esc(c.with)+'</div>'+
+        '<div class="cmid"><div class="cname"><span class="pdot'+(c.online?' on':'')+'"></span>'+esc(c.with)+'</div>'+
         '<div class="cprev'+(c.unread?' un':'')+'">'+esc(prev)+'</div></div>'+
         '<div class="cmeta"><div class="ctime">'+relTime(c.last.at)+'</div>'+
         (c.unread?'<div class="cunread">'+(c.unread>99?'99+':c.unread)+'</div>':'')+'</div>';
@@ -623,6 +647,7 @@ textarea:focus{border-color:var(--text);}
     $('threadWith').textContent=name;
     $('threadMsgs').innerHTML='';
     $('threadEmpty').classList.add('hidden');
+    $('threadDot').className='pdot';$('threadStatus').textContent='';
     showMsgView('thread');
     fetchThread(true);
     setTimeout(function(){$('threadInput').focus();},60);
@@ -632,13 +657,19 @@ textarea:focus{border-color:var(--text);}
     api('/api/messages/thread',{method:'POST',body:{with:threadPartner}}).then(function(res){
       if(!res.ok||threadPartner==null)return;
       renderThread(res.data.messages||[],scroll);
+      setPresence(!!res.data.online);
+      showTyping(!!res.data.typing);
       setMsgBadge(0); // opening/viewing marks this thread read; refresh global count
       refreshMsgBadge();
     });
   }
+  function setPresence(online){
+    $('threadDot').className='pdot'+(online?' on':'');
+    $('threadStatus').textContent=online?'Online':'Offline';
+  }
   function renderThread(messages,forceScroll){
     var sig=messages.map(function(m){return m.id;}).join(',');
-    if(sig===threadSig&&!forceScroll)return; // nothing new
+    if(sig===threadSig&&!forceScroll)return; // nothing new (keeps typing bubble intact)
     var box=$('threadMsgs');
     var atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<40;
     threadSig=sig;
@@ -646,7 +677,8 @@ textarea:focus{border-color:var(--text);}
     $('threadEmpty').classList.toggle('hidden',messages.length>0);
     messages.forEach(function(m){
       var b=document.createElement('div');b.className='bub '+(m.mine?'me':'them');
-      b.innerHTML=esc(m.text)+'<span class="bt">'+relTime(m.at)+'</span>';
+      var who=m.mine?'You':esc(m.from||threadPartner);
+      b.innerHTML=esc(m.text)+'<span class="bt">'+who+' · '+msgTime(m.at)+'</span>';
       box.appendChild(b);
     });
     if(forceScroll||atBottom)box.scrollTop=box.scrollHeight;
@@ -662,6 +694,13 @@ textarea:focus{border-color:var(--text);}
   }
   $('threadSend').onclick=sendThreadMsg;
   $('threadInput').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendThreadMsg();}});
+  // tell the other side we're typing (throttled — at most one ping every 2.5s)
+  var lastTypingPing=0;
+  $('threadInput').addEventListener('input',function(){
+    if(!threadPartner||!$('threadInput').value)return;
+    var now=Date.now();if(now-lastTypingPing<2500)return;lastTypingPing=now;
+    api('/api/messages/typing',{method:'POST',body:{with:threadPartner}});
+  });
   $('msgBack').onclick=function(){threadPartner=null;showMsgView('inbox');loadInbox();};
   $('msgNew').onclick=function(){$('msgUser').value='';$('msgSuggest').classList.add('hidden');showMsgView('new');setTimeout(function(){$('msgUser').focus();},60);};
   $('newBack').onclick=function(){showMsgView('inbox');};
@@ -680,9 +719,11 @@ textarea:focus{border-color:var(--text);}
   }
   function stopMsgPoll(){ if(msgPoll){clearInterval(msgPoll);msgPoll=null;} }
 
-  // keep the sidebar message badge fresh app-wide (light poll, runs once logged in)
+  // keep the sidebar message badge fresh + broadcast our presence (heartbeat),
+  // app-wide on a light interval once logged in.
   var badgePoll=null;
-  function startBadgePoll(){ if(badgePoll)return; refreshMsgBadge(); badgePoll=setInterval(refreshMsgBadge,12000); }
+  function heartbeat(){ api('/api/heartbeat',{method:'POST'}); }
+  function startBadgePoll(){ if(badgePoll)return; heartbeat();refreshMsgBadge(); badgePoll=setInterval(function(){heartbeat();refreshMsgBadge();},12000); }
 
 
   function renderSuggest(){
