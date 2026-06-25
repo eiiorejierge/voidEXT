@@ -4,7 +4,8 @@
   "private": true,
   "description": "Nebula — bookmarklet-driven link rotator with account auth, backed by a Vercel site.",
   "scripts": {
-    "dev": "node dev-server.js",
+    "start": "node server.js",
+    "dev": "node server.js",
     "build:bookmarklet": "node build-bookmarklet.js"
   },
   "engines": {

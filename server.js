@@ -1,11 +1,15 @@
 // =============================================================================
-// Local dev server (no Vercel CLI needed)
+// Standalone HTTP server — runs the whole app from one Node process.
 // -----------------------------------------------------------------------------
-// Serves the static site in public/ and routes /api/* through lib/core.js,
-// mirroring how Vercel runs it in production. Run: node dev-server.js
+// Serves the static site in public/ and routes /api/* through lib/core.js, the
+// same handler the Vercel serverless functions use. This is what runs on
+// long-lived hosts like Railway / Render: `npm start` -> `node server.js`,
+// binding to process.env.PORT.
 //
 // Without a KV/Upstash store configured (env vars), accounts live in memory and
-// reset when you stop the process — fine for local testing.
+// reset when the process restarts — fine for local testing, NOT for production.
+// On Railway, provision an Upstash Redis and set UPSTASH_REDIS_REST_URL /
+// UPSTASH_REDIS_REST_TOKEN so accounts persist across restarts/deploys.
 // =============================================================================
 
 const http = require('http');
@@ -98,5 +102,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[Nebula] Dev server: http://localhost:${PORT}`);
+  console.log(`[Nebula] Server listening on http://localhost:${PORT}`);
 });

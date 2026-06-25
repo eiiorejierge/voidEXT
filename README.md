@@ -12,7 +12,7 @@ api/[...path].js     Vercel serverless function (catch-all) — the API
 lib/core.js          Framework-agnostic request handler (auth, rotation, reports)
 lib/store.js         Storage layer (Vercel KV / Upstash Redis REST, in-memory fallback)
 lib/links.js         The master link pool (server-side only)
-dev-server.js        Local Node server that mirrors Vercel for testing
+server.js            Standalone Node server (local dev + Railway/Render hosting)
 public/index.html    Landing page + bookmarklet installer
 bookmarklet.src.js   Readable bookmarklet source
 bookmarklet.min.js   Compiled one-line "javascript:..." bookmarklet
@@ -42,6 +42,33 @@ vercel.json          Vercel config (CORS headers, clean URLs)
 3. *(Optional)* Set `ADMIN_KEY` in the project env vars to protect the admin endpoints.
 4. Deploy. Your site is at `https://<your-project>.vercel.app`.
 
+## Deploy to Railway
+
+The whole app also runs as a single long-lived Node process (`server.js`), so it
+deploys to Railway with no code changes — `npm start` runs `node server.js`,
+which serves both the static site and `/api/*` on `process.env.PORT`.
+
+1. Push this repo to GitHub and create a new project at
+   [railway.app/new](https://railway.app/new) → **Deploy from GitHub repo**.
+   Railway auto-detects Node via Nixpacks; `railway.json` pins the start command.
+   There are **no npm dependencies** (pure Node builtins), so the build just
+   needs Node ≥18 — no native build step.
+2. **Add a Redis store for persistence.** Railway's built-in Redis is TCP-only,
+   but this app talks to the **Upstash REST API**. Easiest path: add the
+   **Upstash Redis** plugin (or a free database at [upstash.com](https://upstash.com)),
+   then set these service **Variables**:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+
+   *(Without them the app still boots, but accounts live in memory and reset on
+   every restart/redeploy.)*
+3. *(Optional)* Set `ADMIN_KEY` to protect the admin endpoints.
+4. Deploy, then under **Settings → Networking** generate a public domain. Your
+   site is at `https://<your-service>.up.railway.app`.
+
+> Render works the same way: a **Web Service**, build command `npm install`
+> (a no-op here), start command `node server.js`, plus the same Upstash vars.
+
 ### Point the bookmarklet at your deployment
 
 Edit the `API_BASE` constant at the top of `bookmarklet.src.js`:
@@ -62,11 +89,11 @@ button to your bookmarks bar, or copy the code from the page.
 ## Local testing
 
 ```bash
-node dev-server.js            # http://localhost:3000  (no KV needed; in-memory)
+npm start                     # http://localhost:3000  (no KV needed; in-memory)
 ```
 
 Point `API_BASE` at `http://localhost:3000`, rebuild, and test. End-to-end flow
-(signup → login → generate → report) all works against the dev server.
+(signup → login → generate → report) all works against the local server.
 
 ## API
 
