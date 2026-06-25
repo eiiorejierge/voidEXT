@@ -73,7 +73,7 @@ const server = http.createServer(async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify(json));
     } catch (err) {
-      console.error('[voidEXT] error:', err);
+      console.error('[Nebula] error:', err);
       res.statusCode = 500;
       return res.end(JSON.stringify({ error: 'Server error.' }));
     }
@@ -98,5 +98,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[voidEXT] Dev server: http://localhost:${PORT}`);
+  console.log(`[Nebula] Dev server: http://localhost:${PORT}`);
 });

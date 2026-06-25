@@ -1,9 +1,9 @@
 /* =============================================================================
- * voidEXT bookmarklet (readable source)
+ * Nebula bookmarklet (readable source)
  * -----------------------------------------------------------------------------
  * Large black & white space-themed app popup (starfield, sidebar menu) that
  * works end to end:
- *   - Log in / Sign up against the voidEXT site
+ *   - Log in / Sign up against the Nebula site
  *   - Links page: generate your daily set (5/day), copy-all, open-all, report
  *   - Settings page: theme + behavior toggles, saved to your account
  *   - Account page: username, member-since, daily usage
@@ -16,8 +16,8 @@
   // <<< CONFIG >>> Point this at your deployed Vercel site (no trailing slash).
   const API_BASE = 'https://void-ext.vercel.app';
 
-  const OVERLAY_ID = 'voidext-overlay';
-  const WRAPPER_ID = 'voidext-wrapper';
+  const OVERLAY_ID = 'nebula-overlay';
+  const WRAPPER_ID = 'nebula-wrapper';
 
   const existingOverlay = document.getElementById(OVERLAY_ID);
   if (existingOverlay) {
@@ -30,7 +30,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>voidEXT</title>
+<title>Nebula</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -170,8 +170,8 @@ textarea:focus{border-color:var(--text);}
 <div id="updateBar" class="updbar hidden"></div>
 <div id="loader" class="loader">
   <div class="lring"></div>
-  <div class="lbrand">voidEXT</div>
-  <div class="ltext">Entering the void…</div>
+  <div class="lbrand">Nebula</div>
+  <div class="ltext">Entering the nebula…</div>
 </div>
 <div class="shell">
 
@@ -179,8 +179,8 @@ textarea:focus{border-color:var(--text);}
   <div id="authWrap" class="authcard">
     <div class="brandhead">
       <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="11" ry="4"/></svg></div>
-      <h2>voidEXT</h2>
-      <p>Enter the void</p>
+      <h2>Nebula</h2>
+      <p>Enter the nebula</p>
     </div>
     <div class="tabs">
       <div class="tab active" id="tabLogin">Log in</div>
@@ -196,7 +196,7 @@ textarea:focus{border-color:var(--text);}
   <!-- APP -->
   <div id="app" class="app hidden">
     <aside class="side">
-      <div class="brand"><span class="d"></span>voidEXT</div>
+      <div class="brand"><span class="d"></span>Nebula</div>
       <button class="navitem active" data-nav="links"><span class="ic">✦</span> Links</button>
       <button class="navitem" data-nav="report"><span class="ic">⚑</span> Report</button>
       <button class="navitem" data-nav="bug"><span class="ic">🐞</span> Bug</button>
@@ -226,7 +226,7 @@ textarea:focus{border-color:var(--text);}
       <!-- SETTINGS -->
       <section id="page-settings" class="hidden">
         <div class="ptitle">Settings</div>
-        <div class="psub">Personalize your void. Saved to your account.</div>
+        <div class="psub">Personalize your nebula. Saved to your account.</div>
         <span class="flabel">Theme</span>
         <div class="themes">
           <button class="swatch void" data-theme-pick="void"><span>Void</span></button>
@@ -286,7 +286,7 @@ textarea:focus{border-color:var(--text);}
       <!-- ACCOUNT -->
       <section id="page-account" class="hidden">
         <div class="ptitle">Account</div>
-        <div class="psub">Your void credentials.</div>
+        <div class="psub">Your nebula credentials.</div>
         <div class="info">
           <div class="inforow"><span class="k">Username</span><span class="v" id="acUser">—</span></div>
           <div class="inforow"><span class="k">Member since</span><span class="v" id="acSince">—</span></div>
@@ -303,14 +303,14 @@ textarea:focus{border-color:var(--text);}
       <!-- HELP -->
       <section id="page-help" class="hidden">
         <div class="ptitle">Help</div>
-        <div class="psub">How voidEXT works.</div>
+        <div class="psub">How Nebula works.</div>
         <div class="info">
           <p style="line-height:1.7;margin-bottom:12px;">• Hit <b>Generate Links</b> on the Links page to pull your daily set (5 per day). Your set is saved — it loads automatically next time.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• Click <b>Link 1</b>, <b>Link 2</b>… to open them. Use <b>Open all</b> to launch every link at once.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• If a link is dead or blocked, tap <b>blocked</b> on it — it's pulled from everyone's rotation and reported.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
           <p style="line-height:1.7;color:var(--muted);">Links are stored on the server and shown as labels so the URLs don't leak over your shoulder.</p>
-          <p style="margin-top:16px;color:var(--muted);font-size:12px;">voidEXT <b>v__VERSION__</b></p>
+          <p style="margin-top:16px;color:var(--muted);font-size:12px;">Nebula <b>v__VERSION__</b></p>
         </div>
       </section>
       <div class="msg" id="msg"></div>
@@ -625,7 +625,7 @@ textarea:focus{border-color:var(--text);}
     api('/api/version').then(function(res){
       if(res.ok&&res.data.version&&isNewer(res.data.version,BUILT_VERSION)){
         var bar=$('updateBar');
-        bar.innerHTML='⬆ Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+res.data.version+'</b> · reinstall voidEXT from the site to update';
+        bar.innerHTML='⬆ Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+res.data.version+'</b> · reinstall Nebula from the site to update';
         bar.classList.remove('hidden');
       }
     }).catch(function(){});

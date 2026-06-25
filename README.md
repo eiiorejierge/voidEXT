@@ -1,4 +1,4 @@
-# voidEXT
+# Nebula
 
 A beach-themed **bookmarklet** backed by a **Vercel website**. Users sign up / log
 in through the popup, then generate a rotating batch of links pulled from a
