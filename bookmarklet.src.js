@@ -88,10 +88,16 @@ textarea:focus{border-color:var(--text);}
 .rep-item .chk{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;font-size:13px;}
 .rep-item.sel .chk{background:var(--text);color:var(--bg);border-color:var(--text);}
 .rep-item .lbl{flex:1;font-size:13px;}
-.notif{background:var(--field);border:1px solid var(--border);border-radius:11px;padding:13px 15px;margin-bottom:9px;}
-.notif.unread{border-color:var(--text);}
+.notif{display:flex;gap:10px;align-items:flex-start;background:var(--field);border:1px solid var(--border);border-radius:11px;padding:13px 15px;margin-bottom:9px;}
+.notif .body{flex:1;}
 .notif .nt{font-size:13px;line-height:1.5;}
 .notif .nd{font-size:11px;color:var(--muted);margin-top:6px;}
+.notif .mark{flex:none;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:11px;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap;font-family:inherit;}
+.notif .mark:hover{border-color:var(--text);color:var(--text);}
+.suggest{position:absolute;top:100%;left:0;right:0;background:var(--bg);border:1px solid var(--border);border-radius:11px;margin-top:4px;max-height:200px;overflow:auto;z-index:20;}
+.suggest .s{padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);}
+.suggest .s:hover,.suggest .s.hl{background:var(--field);}
+.suggest .s b{font-weight:700;}
 .main{flex:1;padding:30px 32px;overflow-y:auto;position:relative;}
 .ptitle{font-size:22px;font-weight:700;letter-spacing:.5px;}
 .psub{color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:22px;letter-spacing:.3px;}
@@ -181,6 +187,7 @@ textarea:focus{border-color:var(--text);}
       <button class="navitem active" data-nav="links"><span class="ic">✦</span> Links</button>
       <button class="navitem" data-nav="report"><span class="ic">⚑</span> Report</button>
       <button class="navitem" data-nav="bug"><span class="ic">🐞</span> Bug</button>
+      <button class="navitem" data-nav="messages"><span class="ic">✉</span> Messages</button>
       <button class="navitem" data-nav="notifs"><span class="ic">🔔</span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
       <button class="navitem" data-nav="vault"><span class="ic">◍</span> Vault</button>
       <button class="navitem" data-nav="account"><span class="ic">◐</span> Account</button>
@@ -231,6 +238,17 @@ textarea:focus{border-color:var(--text);}
         <div class="psub">Found something broken? Tell us what happened. Helpful reports can earn you up to <b>10 link tokens</b> once reviewed.</div>
         <textarea id="bugText" placeholder="Describe the bug — what you did, what you expected, what happened instead..."></textarea>
         <button class="btn" id="bugBtn" style="margin-top:12px;">Submit bug report</button>
+      </section>
+      <!-- MESSAGES -->
+      <section id="page-messages" class="hidden">
+        <div class="ptitle">Send a Message</div>
+        <div class="psub">Message another user — it lands in their notifications. Start typing a username to autocomplete.</div>
+        <div style="position:relative;max-width:420px;">
+          <input id="msgUser" type="text" placeholder="Username" autocomplete="off" style="letter-spacing:0;">
+          <div id="msgSuggest" class="suggest hidden"></div>
+        </div>
+        <textarea id="msgText" placeholder="Your message…" style="max-width:420px;min-height:110px;margin-top:10px;"></textarea>
+        <div style="max-width:420px;"><button class="btn" id="msgSend" style="margin-top:10px;">Send message</button></div>
       </section>
       <!-- NOTIFICATIONS -->
       <section id="page-notifs" class="hidden">
@@ -315,7 +333,7 @@ textarea:focus{border-color:var(--text);}
   function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');}
 
   function nav(page){
-    ['links','report','bug','notifs','vault','account','settings','help'].forEach(function(p){
+    ['links','report','bug','messages','notifs','vault','account','settings','help'].forEach(function(p){
       $('page-'+p).classList.toggle('hidden',p!==page);
     });
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
@@ -323,6 +341,7 @@ textarea:focus{border-color:var(--text);}
     if(page==='account')renderAccount();
     if(page==='vault')loadVault();
     if(page==='report')renderReport();
+    if(page==='messages')openMessages();
     if(page==='notifs')openNotifs();
     clearMsg();
   }
@@ -350,7 +369,7 @@ textarea:focus{border-color:var(--text);}
         b.disabled=false;
         if(!res.ok){msg(res.data.error||'Something went wrong.','err');return;}
         setToken(res.data.token);state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];
-        clearMsg();showApp();renderLinks(state.links);setBadge(res.data.unread||0);
+        clearMsg();showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);
       })
       .catch(function(){b.disabled=false;msg('Network error — is the server reachable?','err');});
   };
@@ -474,35 +493,77 @@ textarea:focus{border-color:var(--text);}
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   };
 
-  // notifications
+  // messages — same approach as the admin panel (username autocomplete + send)
+  var msgUsernames=[], msgHl=-1;
+  function openMessages(){
+    api('/api/users').then(function(res){ if(res.ok) msgUsernames=res.data.usernames||[]; });
+  }
+  function renderSuggest(){
+    var q=$('msgUser').value.trim().toLowerCase(), box=$('msgSuggest');
+    if(!q){box.classList.add('hidden');box.innerHTML='';return;}
+    var matches=msgUsernames.filter(function(u){return u.toLowerCase().indexOf(q)===0;}).slice(0,8);
+    if(!matches.length){box.classList.add('hidden');box.innerHTML='';return;}
+    msgHl=-1;
+    box.innerHTML=matches.map(function(u){return '<div class="s" data-u="'+u.replace(/"/g,'&quot;')+'"><b>'+u.slice(0,q.length).replace(/</g,'&lt;')+'</b>'+u.slice(q.length).replace(/</g,'&lt;')+'</div>';}).join('');
+    box.classList.remove('hidden');
+    Array.prototype.forEach.call(box.querySelectorAll('.s'),function(el){
+      el.onclick=function(){$('msgUser').value=el.getAttribute('data-u');box.classList.add('hidden');$('msgText').focus();};
+    });
+  }
+  $('msgUser').addEventListener('input',renderSuggest);
+  $('msgUser').addEventListener('keydown',function(e){
+    var box=$('msgSuggest'),items=box.querySelectorAll('.s');
+    if(box.classList.contains('hidden')||!items.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();msgHl=Math.min(items.length-1,msgHl+1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();msgHl=Math.max(0,msgHl-1);}
+    else if(e.key==='Enter'){if(msgHl>=0){e.preventDefault();$('msgUser').value=items[msgHl].getAttribute('data-u');box.classList.add('hidden');return;}}
+    else if(e.key==='Escape'){box.classList.add('hidden');return;}
+    else return;
+    Array.prototype.forEach.call(items,function(el,i){el.classList.toggle('hl',i===msgHl);});
+  });
+  $('msgSend').onclick=function(){
+    var to=$('msgUser').value.trim(), t=$('msgText').value.trim();
+    if(!to){msg('Pick a username.','err');return;}
+    if(!t){msg('Enter a message.','err');return;}
+    var b=$('msgSend');b.disabled=true;msg('Sending...','');
+    api('/api/message',{method:'POST',body:{to:to,text:t}}).then(function(res){
+      b.disabled=false;
+      if(!res.ok){msg(res.data.error||'Could not send.','err');return;}
+      $('msgUser').value='';$('msgText').value='';msg('Message sent to '+to+'.','ok');
+    }).catch(function(){b.disabled=false;msg('Network error.','err');});
+  };
+
+  // notifications — every notification has its own "Mark as read" button, which
+  // tells the server to stop displaying it. The bell badge = how many remain.
   function setBadge(n){
-    state.unread=n;
     var b=$('navBadge');
     if(n>0){b.textContent=n;b.classList.remove('hidden');}else{b.classList.add('hidden');}
   }
   function renderNotifs(){
     var L=$('notifList');L.innerHTML='';
-    // Only show UNREAD notifications — once read they leave the list.
-    var list=(state.notifications||[]).filter(function(n){return !n.read;}).slice().reverse();
+    var list=(state.notifications||[]).slice().reverse();
     $('notifEmpty').classList.toggle('hidden',list.length>0);
+    setBadge((state.notifications||[]).length);
     list.forEach(function(n){
-      var d=document.createElement('div');d.className='notif unread';
-      d.innerHTML='<div class="nt">'+(n.text||'').replace(/</g,'&lt;')+'</div><div class="nd">'+new Date(n.at).toLocaleString()+'</div>';
-      L.appendChild(d);
+      var d=document.createElement('div');d.className='notif';
+      var body=document.createElement('div');body.className='body';
+      body.innerHTML='<div class="nt">'+(n.text||'').replace(/</g,'&lt;')+'</div><div class="nd">'+new Date(n.at).toLocaleString()+'</div>';
+      var mark=document.createElement('button');mark.className='mark';mark.type='button';mark.textContent='Mark as read';
+      mark.onclick=function(){
+        mark.disabled=true;mark.textContent='…';
+        api('/api/notifications/dismiss',{method:'POST',body:{id:n.id}}).then(function(res){
+          if(res.ok){
+            state.notifications=res.data.notifications||(state.notifications||[]).filter(function(x){return x.id!==n.id;});
+            renderNotifs();
+          }else{mark.disabled=false;mark.textContent='Mark as read';msg(res.data.error||'Could not update.','err');}
+        }).catch(function(){mark.disabled=false;mark.textContent='Mark as read';msg('Network error.','err');});
+      };
+      d.appendChild(body);d.appendChild(mark);L.appendChild(d);
     });
   }
-  function openNotifs(){
-    // Render the unread ones for this view, then mark them read so they won't
-    // reappear next time (and clear the badge).
-    renderNotifs();
-    if(state.unread>0){
-      api('/api/notifications/read',{method:'POST'});
-      (state.notifications||[]).forEach(function(n){n.read=true;});
-      setBadge(0);
-    }
-  }
+  function openNotifs(){ renderNotifs(); }
   $('notifClear').onclick=function(){
-    api('/api/notifications/clear',{method:'POST'}).then(function(){state.notifications=[];renderNotifs();setBadge(0);msg('Cleared.','ok');});
+    api('/api/notifications/clear',{method:'POST'}).then(function(){state.notifications=[];renderNotifs();msg('Cleared.','ok');});
   };
   function refreshNotifs(){
     api('/api/notifications').then(function(res){
@@ -561,7 +622,7 @@ textarea:focus{border-color:var(--text);}
     setMode('login');applyTheme('void');checkVersion();
     if(token()){
       api('/api/me').then(function(res){
-        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge(res.data.unread||0);}
+        if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);}
         else{setToken('');showAuth();}
       }).catch(function(){showAuth();});
     }else{showAuth();}
