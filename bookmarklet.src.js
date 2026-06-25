@@ -198,8 +198,18 @@ textarea:focus{border-color:var(--text);}
 .loader .lbrand{font-weight:700;font-size:30px;letter-spacing:10px;padding-left:10px;background:linear-gradient(100deg,var(--muted) 20%,var(--text) 50%,var(--muted) 80%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandIn .7s ease both .3s,sheen 2.4s linear infinite 1s;}
 @keyframes brandIn{0%{opacity:0;letter-spacing:26px;filter:blur(9px);}100%{opacity:1;letter-spacing:10px;filter:blur(0);}}
 @keyframes sheen{0%{background-position:130% 0;}100%{background-position:-130% 0;}}
-.updbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--text);color:var(--bg);font-size:11.5px;text-align:center;padding:8px 12px;letter-spacing:.3px;font-weight:500;cursor:default;}
+.updbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--text);color:var(--bg);font-size:11.5px;text-align:center;padding:8px 12px;letter-spacing:.3px;font-weight:500;cursor:pointer;}
+.updbar:hover{filter:brightness(.92);}
 .updbar b{font-weight:700;}
+.updmodal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:18px;}
+.updcard{position:relative;width:100%;max-width:440px;max-height:88%;overflow-y:auto;background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:26px 24px;}
+.updclose{position:absolute;top:12px;right:14px;width:28px;height:28px;border-radius:8px;background:var(--field);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;}
+.updclose:hover{background:rgba(239,68,68,0.7);color:#fff;}
+.updh{font-size:20px;font-weight:700;letter-spacing:.5px;}
+.updver{color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:16px;}
+.updsteps{margin:0 0 16px 18px;font-size:13px;line-height:1.8;color:var(--text);}
+.updsteps b{font-weight:700;}
+.updbox{background:var(--field);border:1px dashed var(--border);border-radius:11px;padding:13px;font-family:ui-monospace,monospace;font-size:10.5px;max-height:130px;overflow:auto;word-break:break-all;color:var(--muted);user-select:all;}
 ::-webkit-scrollbar{width:7px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
 @media(max-width:640px){
   .app{flex-direction:column;}
@@ -215,6 +225,20 @@ textarea:focus{border-color:var(--text);}
 <div class="stars"></div>
 <div class="stars s2"></div>
 <div id="updateBar" class="updbar hidden"></div>
+<div id="updModal" class="updmodal hidden">
+  <div class="updcard">
+    <div class="updclose" id="updClose">&#x2715;</div>
+    <div class="updh">Update Nebula</div>
+    <div class="updver" id="updVer">—</div>
+    <ol class="updsteps">
+      <li>Right-click your <b>Nebula</b> bookmark and choose <b>Edit</b>.</li>
+      <li>Select everything in the <b>URL</b> field and replace it with the code below.</li>
+      <li>Save, then re-open Nebula. Done — no website needed.</li>
+    </ol>
+    <div class="updbox" id="updCode">Loading latest version…</div>
+    <button class="btn" id="updCopy" style="width:100%;margin-top:12px;">Copy new bookmarklet</button>
+  </div>
+</div>
 <div id="loader" class="loader">
   <div class="warp"></div>
   <div class="orbit"><span class="ringline"></span><span class="planet"></span></div>
@@ -382,6 +406,7 @@ textarea:focus{border-color:var(--text);}
           <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
           <p style="line-height:1.7;color:var(--muted);">Links are stored on the server and shown as labels so the URLs don't leak over your shoulder.</p>
           <p style="margin-top:16px;color:var(--muted);font-size:12px;">Nebula <b>v__VERSION__</b></p>
+          <button class="btn ghost" id="helpUpdate" style="margin-top:14px;">Update Nebula</button>
         </div>
       </section>
       <div class="msg" id="msg"></div>
@@ -835,15 +860,39 @@ textarea:focus{border-color:var(--text);}
     for(var i=0;i<3;i++){var x=pa[i]||0,y=pb[i]||0;if(x>y)return true;if(x<y)return false;}
     return false;
   }
+  var latestVersion=null;
   function checkVersion(){
     api('/api/version').then(function(res){
       if(res.ok&&res.data.version&&isNewer(res.data.version,BUILT_VERSION)){
+        latestVersion=res.data.version;
         var bar=$('updateBar');
-        bar.innerHTML='⬆ Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+res.data.version+'</b> · reinstall Nebula from the site to update';
+        bar.innerHTML='⬆ Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+latestVersion+'</b> · tap to update';
         bar.classList.remove('hidden');
+        bar.onclick=openUpdate;
       }
     }).catch(function(){});
   }
+  function openUpdate(){
+    $('updVer').textContent='v'+BUILT_VERSION+'  →  v'+(latestVersion||'?');
+    $('updCode').textContent='Loading latest version…';
+    $('updModal').classList.remove('hidden');
+    api('/api/bookmarklet').then(function(res){
+      if(res.ok&&res.data.code){
+        $('updCode').textContent=res.data.code;
+        if(res.data.version)$('updVer').textContent='v'+BUILT_VERSION+'  →  v'+res.data.version;
+      }else{$('updCode').textContent='Could not load the latest code. Try again, or reinstall from the site.';}
+    }).catch(function(){$('updCode').textContent='Network error — could not load the latest code.';});
+  }
+  $('helpUpdate').onclick=openUpdate;
+  $('updClose').onclick=function(){$('updModal').classList.add('hidden');};
+  $('updModal').onclick=function(e){if(e.target===$('updModal'))$('updModal').classList.add('hidden');};
+  $('updCopy').onclick=function(){
+    var text=$('updCode').textContent||'';
+    if(!text||text.indexOf('javascript:')!==0){msg('Nothing to copy yet.','err');return;}
+    function done(){msg('Copied! Paste it over your bookmark’s URL.','ok');}
+    function fallback(){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){msg('Copy failed — select the code and copy manually.','err');}document.body.removeChild(ta);}
+    try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fallback);}else fallback();}catch(e){fallback();}
+  };
 
   // Hold the cutscene on screen for a minimum beat so the intro animation always
   // plays, even when the session data comes back instantly, then fade + remove.
