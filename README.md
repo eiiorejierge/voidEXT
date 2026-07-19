@@ -1,9 +1,9 @@
 # Nebula
 
-A beach-themed **bookmarklet** backed by a **Vercel website**. Users sign up / log
-in through the popup, then generate a rotating batch of links pulled from a
-private server-side vault. The full link list never ships to the client — the
-popup only ever sees a small rotating slice, and only after authentication.
+An editorial, celestial-themed **bookmarklet** backed by a **Vercel website**.
+Users sign up or log in through the popup, then generate rotating links pulled
+from a private server-side vault. The full link list never ships to the client —
+the popup only sees a user's current set, and only after authentication.
 
 ## What's here
 
@@ -23,14 +23,17 @@ vercel.json          Vercel config (CORS headers, clean URLs)
 ## Features
 
 - **Signup + login** in the popup (passwords hashed with scrypt, token auth).
-- **Link rotation** — `Generate Links` returns a batch of 10, cycling through the pool.
+- **Link rotation** — generate up to 5 links per UTC day, one at a time, while
+  pinned links and refunded bonus tokens stay attached to the account.
 - **Blocked-link reporting** — every link has a `blocked` button; tapping it pulls
   the link from *everyone's* rotation and logs it for review (you asked to be alerted
   about dead links). Restore it later via the admin endpoint if it comes back.
 - **No native dialogs** — there are zero `alert()`/`confirm()`/`prompt()` calls, so you
   never see the `"<site> says..."` browser chrome. Everything renders inside the popup.
-- **Daily quota** — built in (`10/day`, old set replaced on refresh) but **disabled for
-  testing right now**. Flip `RATE_LIMIT_ENABLED` in `lib/core.js` to turn it back on.
+- **Daily quota** — enabled at `5/day`, with extra tokens available through
+  refunds, bug-report awards, gifts, or admin grants.
+- **Three coordinated interfaces** — a responsive public installer, the full
+  in-page bookmarklet app, and a mobile-ready admin control room.
 
 ## Deploy to Vercel
 
