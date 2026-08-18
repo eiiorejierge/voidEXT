@@ -1,9 +1,9 @@
 /* =============================================================================
- * VoidEXT bookmarklet (readable source)
+ * Scale XT bookmarklet (readable source)
  * -----------------------------------------------------------------------------
  * Editorial celestial app popup (orbit field, sidebar menu) that
  * works end to end:
- *   - Log in / Sign up against the VoidEXT site
+ *   - Log in / Sign up against the Scale XT site
  *   - Links page: generate your daily set (5/day), copy-all, open-all, report
  *   - Settings page: theme + behavior toggles, saved to your account
  *   - Account page: username, member-since, daily usage
@@ -15,6 +15,7 @@
 (function () {
   // <<< CONFIG >>> Point this at your deployed site (no trailing slash).
   const API_BASE = 'https://void-ext.vercel.app';
+  const APP_URL = API_BASE + '/app.html?v=__VERSION__';
 
   const OVERLAY_ID = 'nebula-overlay';
   const WRAPPER_ID = 'nebula-wrapper';
@@ -30,10 +31,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoidEXT</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Scale XT</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 body{--a1:#a855f7;--a2:#ec4899;--a3:#38bdf8;--grad:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);--grad3:linear-gradient(115deg,#818cf8 0%,#c084fc 32%,#f472b6 62%,#38bdf8 100%);--glow:rgba(168,85,247,0.5);--btn-bg:var(--grad);--btn-fg:#fff;--danger:#fb3b6b;}
@@ -382,7 +380,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   .authcard{margin:18px;padding:30px 25px;}.brandhead h2{font-size:43px;}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}
-/* __VOIDEXT_V2__ */
+/* __SCALE XT_V2__ */
 </style>
 </head>
 <body data-theme="void">
@@ -395,12 +393,12 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 <div id="updModal" class="updmodal hidden">
   <div class="updcard">
     <div class="updclose" id="updClose">&#x2715;</div>
-    <div class="updh">Update VoidEXT</div>
+    <div class="updh">Update Scale XT</div>
     <div class="updver" id="updVer">—</div>
     <ol class="updsteps">
-      <li>Right-click your <b>VoidEXT</b> bookmark and choose <b>Edit</b>.</li>
+      <li>Right-click your <b>Scale XT</b> bookmark and choose <b>Edit</b>.</li>
       <li>Select everything in the <b>URL</b> field and replace it with the code below.</li>
-      <li>Save, then re-open VoidEXT. Done — no website needed.</li>
+      <li>Save, then re-open Scale XT. Done — no website needed.</li>
     </ol>
     <div class="updbox" id="updCode">Loading latest version…</div>
     <button class="btn" id="updCopy" style="width:100%;margin-top:12px;">Copy new bookmarklet</button>
@@ -409,7 +407,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 <div id="loader" class="loader">
   <div class="warp"></div>
   <div class="orbit"><span class="ringline"></span><span class="planet"></span></div>
-  <div class="lbrand">VoidEXT</div>
+  <div class="lbrand">Scale XT</div>
 </div>
 <div class="shell">
 
@@ -417,7 +415,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   <div id="authWrap" class="authcard">
     <div class="brandhead">
       <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="11" ry="4"/></svg></div>
-      <h2>VoidEXT</h2>
+      <h2>Scale XT</h2>
       <p>Your private link workspace</p>
     </div>
     <div class="tabs">
@@ -429,15 +427,16 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <input id="password" type="password" placeholder="Password" autocomplete="off" required>
       <button type="submit" class="btn" id="authBtn" style="width:100%;">Log in</button>
     </form>
+    <div class="authmsg" id="authMsg" role="status" aria-live="polite"></div>
   </div>
 
   <!-- APP -->
   <div id="app" class="app hidden">
     <aside class="side">
-      <div class="brand"><span class="d"></span><span class="nm">VoidEXT</span></div>
+      <div class="brand"><span class="d"></span><span class="nm">Scale XT</span></div>
       <button class="navitem active" data-nav="links"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span> Links</button>
       <button class="navitem" data-nav="report"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2 3.5L17 11H5"/></svg></span> Report</button>
-      <button class="navitem" data-nav="bug"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8a3 3 0 0 1 6 0"/><rect x="8" y="8" width="8" height="9" rx="4"/><path d="M12 8.5v8.5M4 11h4M16 11h4M4.5 16.5h3.5M16 16.5h3.5M5 7l2 1.5M19 7l-2 1.5"/></svg></span> Bug</button>
+      <button class="navitem" data-nav="bug"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5h14v10H9l-4 3v-13z"/><path d="M8 9h8M8 12h5"/></svg></span> Support <span class="badge hidden" id="bugBadge">0</span></button>
       <button class="navitem" data-nav="messages"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7 7 0 0 1-9.5 6.5L5 19.5l1.4-4A7 7 0 1 1 20 11.5z"/></svg></span> Messages <span class="badge hidden" id="msgBadge">0</span></button>
       <button class="navitem" data-nav="notifs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 19.5a2 2 0 0 0 3 0"/></svg></span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
       <button class="navitem" data-nav="vault"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></span> Vault</button>
@@ -450,7 +449,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <main class="main">
       <!-- LINKS -->
       <section id="page-links" class="home-page">
-        <div class="home-kicker"><span class="live-dot"></span>Private routing is online</div><div class="ptitle">Where do you want to go?</div>
+        <div class="home-kicker"><span class="live-dot"></span>Five private destinations, ready when you are</div><div class="ptitle">Where do you want to go?</div>
         <div class="psub">Generate a private route from the live vault. Your destinations stay attached to your account.</div>
         <div class="actions route-composer">
           <button class="btn composer-btn" id="genBtn">Generate a route <span aria-hidden="true">up</span></button>
@@ -491,12 +490,26 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         <div class="empty" id="reportEmpty">No links to report — generate some first.</div>
         <button class="btn" id="reportBtn" style="margin-top:14px;">Report selected</button>
       </section>
-      <!-- BUG -->
+      <!-- SUPPORT -->
       <section id="page-bug" class="hidden">
-        <div class="ptitle">Report a Bug</div>
-        <div class="psub">Found something broken? Tell us what happened. Helpful reports can earn you up to <b>10 link tokens</b> once reviewed.</div>
-        <textarea id="bugText" placeholder="Describe the bug — what you did, what you expected, what happened instead..."></textarea>
-        <button class="btn" id="bugBtn" style="margin-top:12px;">Submit bug report</button>
+        <div id="supportInbox">
+          <div class="support-top"><div><div class="ptitle">Support</div><div class="psub">Bug reports stay organized as conversations, so you can reply until the issue is confirmed fixed.</div></div><button class="btn" id="supportNewBtn">New report</button></div>
+          <div id="supportList" class="support-list"></div>
+          <div class="empty" id="supportEmpty">No reports yet. If something breaks, start a report here.</div>
+        </div>
+        <div id="supportNew" class="hidden">
+          <div class="chathead"><button class="chatback" id="supportNewBack" type="button">‹</button><div class="chatwho">New bug report</div></div>
+          <label class="flabel" for="bugTitleInput">Short title</label>
+          <input id="bugTitleInput" type="text" maxlength="80" placeholder="What is broken?">
+          <label class="flabel" for="bugText">Details</label>
+          <textarea id="bugText" placeholder="What did you do, what did you expect, and what happened instead?"></textarea>
+          <button class="btn" id="bugBtn" style="margin-top:12px;">Send report</button>
+        </div>
+        <div id="supportThread" class="hidden">
+          <div class="chathead"><button class="chatback" id="supportBack" type="button">‹</button><div><div class="chatwho" id="supportThreadTitle">Bug report</div><div class="pstatus" id="supportThreadStatus"></div></div></div>
+          <div class="support-thread" id="supportMessages"></div>
+          <div class="chatcompose"><input id="supportReply" type="text" placeholder="Reply to support..." autocomplete="off"><button class="btn" id="supportReplyBtn">Send</button></div>
+        </div>
       </section>
       <!-- MESSAGES -->
       <section id="page-messages" class="hidden">
@@ -556,7 +569,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <!-- ACCOUNT -->
       <section id="page-account" class="hidden">
         <div class="ptitle">Account</div>
-        <div class="psub">Your VoidEXT credentials.</div>
+        <div class="psub">Your Scale XT credentials.</div>
         <div class="info">
           <div class="inforow"><span class="k">Username</span><span class="v" id="acUser">—</span></div>
           <div class="inforow"><span class="k">Member since</span><span class="v" id="acSince">—</span></div>
@@ -582,15 +595,15 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <!-- HELP -->
       <section id="page-help" class="hidden">
         <div class="ptitle">Help</div>
-        <div class="psub">How VoidEXT works.</div>
+        <div class="psub">How Scale XT works.</div>
         <div class="info">
           <p style="line-height:1.7;margin-bottom:12px;">• Hit <b>Generate Links</b> on the Links page to pull your daily set (5 per day). Your set is saved — it loads automatically next time.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• Click <b>Link 1</b>, <b>Link 2</b>… to open them. Use <b>Open all</b> to launch every link at once.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• If a link is dead or blocked, tap <b>blocked</b> on it — it's pulled from everyone's rotation and reported.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
           <p style="line-height:1.7;color:var(--muted);">Links are stored on the server and shown as labels so the URLs don't leak over your shoulder.</p>
-          <p style="margin-top:16px;color:var(--muted);font-size:12px;">VoidEXT <b>v__VERSION__</b></p>
-          <button class="btn ghost" id="helpUpdate" style="margin-top:14px;">Update VoidEXT</button>
+          <p style="margin-top:16px;color:var(--muted);font-size:12px;">Scale XT <b>v__VERSION__</b></p>
+          <button class="btn ghost" id="helpUpdate" style="margin-top:14px;">Update Scale XT</button>
         </div>
       </section>
       <div class="msg" id="msg"></div>
@@ -600,15 +613,15 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 
 <script>
 (function(){
-  var API='${API_BASE}', TOKEN_KEY='voidext_token', BUILT_VERSION='__VERSION__';
+  var API=window.location.origin, TOKEN_KEY='voidext_token', BUILT_VERSION='__VERSION__';
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
   var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],unread:0,reportSel:{}};
 
   var $=function(id){return document.getElementById(id);};
   function token(){try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}}
   function setToken(t){try{t?localStorage.setItem(TOKEN_KEY,t):localStorage.removeItem(TOKEN_KEY);}catch(e){}}
-  function msg(t,k){var m=$('msg');m.className='msg show '+(k||'');m.textContent=t;if(k!=='err')setTimeout(function(){if(m.textContent===t)clearMsg();},2600);}
-  function clearMsg(){var m=$('msg');m.className='msg';m.textContent='';}
+  function msg(t,k){var m=!$('authWrap').classList.contains('hidden')?$('authMsg'):$('msg');m.className=(m.id==='authMsg'?'authmsg':'msg')+' show '+(k||'');m.textContent=t;if(k!=='err')setTimeout(function(){if(m.textContent===t)clearMsg();},2600);}
+  function clearMsg(){var a=$('authMsg'),m=$('msg');a.className='authmsg';a.textContent='';m.className='msg';m.textContent='';}
   function fmtDate(ts){if(!ts)return '—';return new Date(ts).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}
 
   function api(path,opts){
@@ -634,6 +647,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     if(page==='account')renderAccount();
     if(page==='vault')loadVault();
     if(page==='report')renderReport();
+    if(page==='bug')openSupport();else stopSupportPoll();
     if(page==='messages')openMessages(); else stopMsgPoll();
     if(page==='notifs')openNotifs();
     clearMsg();
@@ -854,17 +868,77 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   };
 
-  // bug report
+  // Support tickets: list, full conversation, replies, and lightweight polling.
+  var supportItems=[],supportId=null,supportPoll=null,supportSig='';
+  function supportOpenStatus(status){return status!=='fixed'&&status!=='dismissed';}
+  function supportLabel(status){return status==='waiting'?'Waiting for you':status==='fixed'?'Fixed':status==='dismissed'?'Closed':'Open';}
+  function setSupportBadge(count){var badge=$('bugBadge');if(count>0){badge.textContent=count>99?'99+':count;badge.classList.remove('hidden');}else badge.classList.add('hidden');}
+  function showSupportView(view){
+    $('supportInbox').classList.toggle('hidden',view!=='inbox');
+    $('supportNew').classList.toggle('hidden',view!=='new');
+    $('supportThread').classList.toggle('hidden',view!=='thread');
+  }
+  function openSupport(){supportId=null;supportSig='';showSupportView('inbox');loadSupportList();}
+  function loadSupportList(){
+    api('/api/bugs').then(function(res){
+      if(!res.ok)return;
+      supportItems=res.data.bugs||[];setSupportBadge(res.data.unread||0);
+      var list=$('supportList');list.innerHTML='';
+      $('supportEmpty').classList.toggle('hidden',supportItems.length>0);
+      supportItems.forEach(function(item){
+        var row=document.createElement('button');row.type='button';row.className='support-row'+(item.unread?' unread':'');
+        var preview=item.lastMessage&&item.lastMessage.text?item.lastMessage.text:'No replies yet';
+        row.innerHTML='<span class="support-row-top"><b>'+esc(item.title)+'</b><time>'+relTime(item.updatedAt)+'</time></span>'+
+          '<span class="support-preview">'+esc(preview)+'</span><span class="support-row-foot"><i class="'+esc(item.status)+'">'+esc(supportLabel(item.status))+'</i><span>'+(item.messageCount||0)+' message'+(item.messageCount===1?'':'s')+'</span></span>';
+        row.onclick=function(){openSupportThread(item.id);};list.appendChild(row);
+      });
+    });
+  }
+  function refreshSupportBadge(){api('/api/bugs').then(function(res){if(res.ok)setSupportBadge(res.data.unread||0);});}
+  function openSupportThread(id,quiet){
+    supportId=id;showSupportView('thread');
+    api('/api/bugs/thread',{method:'POST',body:{id:id}}).then(function(res){
+      if(!res.ok||supportId!==id){if(!quiet)msg(res.data.error||'Could not open report.','err');return;}
+      renderSupportThread(res.data.bug,quiet);refreshSupportBadge();if(!quiet)startSupportPoll();
+    });
+  }
+  function renderSupportThread(ticket,quiet){
+    var sig=(ticket.messages||[]).map(function(item){return item.id;}).join(',')+'|'+ticket.status;
+    if(quiet&&sig===supportSig)return;supportSig=sig;
+    $('supportThreadTitle').textContent=ticket.title||'Bug report';
+    $('supportThreadStatus').textContent=supportLabel(ticket.status)+' · opened '+new Date(ticket.at).toLocaleDateString();
+    var box=$('supportMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<50;box.innerHTML='';
+    (ticket.messages||[]).forEach(function(item){
+      var bubble=document.createElement('div');bubble.className='support-bubble '+(item.from==='user'?'mine':'theirs')+(item.system?' system':'');
+      bubble.innerHTML='<div>'+esc(item.text)+'</div><span>'+(item.from==='user'?'You':esc(item.fromName||'Scale XT support'))+' · '+msgTime(item.at)+'</span>';box.appendChild(bubble);
+    });
+    if(nearBottom||!box._painted)box.scrollTop=box.scrollHeight;box._painted=true;
+    $('supportReply').placeholder=supportOpenStatus(ticket.status)?'Reply to support...':'Reply to reopen this report...';
+  }
+  function sendSupportReply(){
+    var text=$('supportReply').value.trim();if(!text||!supportId)return;
+    var button=$('supportReplyBtn');button.disabled=true;
+    api('/api/bugs/reply',{method:'POST',body:{id:supportId,text:text}}).then(function(res){
+      button.disabled=false;if(!res.ok){msg(res.data.error||'Could not send reply.','err');return;}
+      $('supportReply').value='';renderSupportThread(res.data.bug);loadSupportList();
+    }).catch(function(){button.disabled=false;msg('Network error.','err');});
+  }
+  function startSupportPoll(){stopSupportPoll();supportPoll=setInterval(function(){if($('page-bug').classList.contains('hidden')||!supportId){stopSupportPoll();return;}openSupportThread(supportId,true);},7000);}
+  function stopSupportPoll(){if(supportPoll){clearInterval(supportPoll);supportPoll=null;}}
+  $('supportNewBtn').onclick=function(){$('bugTitleInput').value='';$('bugText').value='';showSupportView('new');setTimeout(function(){$('bugTitleInput').focus();},40);};
+  $('supportNewBack').onclick=function(){showSupportView('inbox');loadSupportList();};
+  $('supportBack').onclick=function(){stopSupportPoll();supportId=null;supportSig='';showSupportView('inbox');loadSupportList();};
   $('bugBtn').onclick=function(){
-    var t=$('bugText').value.trim();
-    if(t.length<5){msg('Describe the bug in a bit more detail.','err');return;}
-    var b=$('bugBtn');b.disabled=true;msg('Submitting...','');
-    api('/api/bug',{method:'POST',body:{text:t}}).then(function(res){
-      b.disabled=false;
-      if(!res.ok){msg(res.data.error||'Could not submit.','err');return;}
-      $('bugText').value='';msg('Thanks! Your bug report was submitted for review.','ok');
-    }).catch(function(){b.disabled=false;msg('Network error.','err');});
+    var title=$('bugTitleInput').value.trim(),text=$('bugText').value.trim();
+    if(text.length<5){msg('Describe the bug in a bit more detail.','err');return;}
+    var button=$('bugBtn');button.disabled=true;msg('Sending report...','');
+    api('/api/bug',{method:'POST',body:{title:title,text:text}}).then(function(res){
+      button.disabled=false;if(!res.ok){msg(res.data.error||'Could not submit.','err');return;}
+      $('bugTitleInput').value='';$('bugText').value='';msg('Report sent. You can keep replying here.','ok');openSupportThread(res.data.bug.id);
+    }).catch(function(){button.disabled=false;msg('Network error.','err');});
   };
+  $('supportReplyBtn').onclick=sendSupportReply;
+  $('supportReply').addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();sendSupportReply();}});
 
   // messages — texting-style: an inbox of conversations, each opening a thread
   // of chat bubbles you reply into. Messages live in the thread (server side),
@@ -1012,7 +1086,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       if($('page-messages').classList.contains('hidden')){stopMsgPoll();return;}
       tick++;
       if(threadPartner)fetchThread(false); else if(tick%2===0)loadInbox();
-    },1500);
+    },4000);
   }
   function stopMsgPoll(){ if(msgPoll){clearInterval(msgPoll);msgPoll=null;} }
 
@@ -1020,7 +1094,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   // app-wide on a light interval once logged in.
   var badgePoll=null;
   function heartbeat(){ api('/api/heartbeat',{method:'POST'}); }
-  function startBadgePoll(){ if(badgePoll)return; heartbeat();refreshMsgBadge(); badgePoll=setInterval(function(){heartbeat();refreshMsgBadge();},12000); }
+  function startBadgePoll(){ if(badgePoll)return; heartbeat();refreshMsgBadge();refreshSupportBadge(); badgePoll=setInterval(function(){heartbeat();refreshMsgBadge();refreshSupportBadge();},12000); }
 
 
   function renderSuggest(){
@@ -1115,7 +1189,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 
   $('logoutBtn').onclick=function(){
     api('/api/logout',{method:'POST'});
-    stopMsgPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);threadPartner=null;
+    stopMsgPoll();stopSupportPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);setSupportBadge(0);threadPartner=null;supportId=null;
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
   };
 
@@ -1159,16 +1233,13 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fallback);}else fallback();}catch(e){fallback();}
   };
 
-  // Hold the cutscene on screen for a minimum beat so the intro animation always
-  // plays, even when the session data comes back instantly, then fade + remove.
-  var LOADER_AT=Date.now(), LOADER_MIN=2000;
+  // Remove the loader as soon as the real session check is complete.
   function hideLoader(){
     var l=$('loader');if(!l||l._hiding)return;l._hiding=true;
-    var wait=Math.max(0,LOADER_MIN-(Date.now()-LOADER_AT));
-    setTimeout(function(){
+    requestAnimationFrame(function(){
       l.classList.add('fade');
-      setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l);},600);
-    },wait);
+      setTimeout(function(){if(l.parentNode)l.parentNode.removeChild(l);},160);
+    });
   }
 
   (function init(){
@@ -1192,22 +1263,24 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   const overlay = document.createElement('div');
   overlay.id = OVERLAY_ID;
   overlay.style.cssText =
-    'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.68);backdrop-filter:blur(7px) saturate(.9);-webkit-backdrop-filter:blur(7px) saturate(.9);z-index:99999999;opacity:0;transition:opacity .25s ease;display:flex;justify-content:center;align-items:center;';
+    'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(2,5,6,0.82);z-index:99999999;opacity:0;transition:opacity .16s ease;display:flex;justify-content:center;align-items:center;';
 
   const wrapper = document.createElement('div');
   wrapper.id = WRAPPER_ID;
   wrapper.style.cssText =
-    'position:relative;width:min(980px,94vw);height:min(690px,90vh);background:#212121;border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,0.48),0 0 0 1px rgba(255,255,255,0.08);overflow:hidden;transform:scale(0.97) translateY(8px);transition:transform .28s cubic-bezier(0.2,0.8,0.2,1);';
+    'position:relative;width:min(980px,94vw);height:min(690px,90vh);background:#050505;border-radius:8px;box-shadow:0 30px 100px rgba(0,0,0,0.68),0 0 0 1px #333;overflow:hidden;transform:scale(0.985) translateY(4px);transition:transform .16s ease-out;';
 
   const closeBtn = document.createElement('div');
   closeBtn.innerHTML = '&#x2715;';
   closeBtn.style.cssText =
-    'position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:#2f2f2f;color:#c7c7c7;font-family:Manrope,system-ui,sans-serif;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.16s;z-index:100000000;user-select:none;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
-  closeBtn.addEventListener('mouseenter', function () { closeBtn.style.background = '#424242'; closeBtn.style.color = '#fff'; });
-  closeBtn.addEventListener('mouseleave', function () { closeBtn.style.background = '#2f2f2f'; closeBtn.style.color = '#c7c7c7'; });
+    'position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:4px;border:1px solid #333;background:#0b0b0b;color:#8a8a8a;font-family:Consolas,monospace;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.12s;z-index:100000000;user-select:none;';
+  closeBtn.addEventListener('mouseenter', function () { closeBtn.style.background = '#fff'; closeBtn.style.color = '#000'; });
+  closeBtn.addEventListener('mouseleave', function () { closeBtn.style.background = '#0b0b0b'; closeBtn.style.color = '#8a8a8a'; });
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'width:100%;height:100%;border:none;background:transparent;';
+  iframe.title = 'Scale XT';
+  iframe.src = APP_URL;
+  iframe.style.cssText = 'width:100%;height:100%;border:none;background:#050505;';
 
   wrapper.appendChild(closeBtn);
   wrapper.appendChild(iframe);
@@ -1219,19 +1292,15 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     wrapper.style.transform = 'scale(1) translateY(0)';
   });
 
-  const doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.open();
-  doc.write(htmlContent);
-  doc.close();
 
   function closePopup(el) {
     const targetOverlay = el || overlay;
     const targetWrapper = targetOverlay.querySelector('#' + WRAPPER_ID);
-    if (targetWrapper) targetWrapper.style.transform = 'scale(0.97)';
+    if (targetWrapper) targetWrapper.style.transform = 'scale(0.985)';
     targetOverlay.style.opacity = '0';
     setTimeout(function () {
       if (targetOverlay.parentNode) targetOverlay.parentNode.removeChild(targetOverlay);
-    }, 250);
+    }, 170);
   }
   function closeExisting(el) { closePopup(el); }
 

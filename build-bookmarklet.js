@@ -11,19 +11,72 @@
 // =============================================================================
 const fs = require('fs');
 const path = require('path');
+const { minify: minifyHtml } = require('html-minifier-terser');
+const { minify: minifyJs } = require('terser');
 
 const VERSION = require('./lib/version.js');
+const MAX_BOOKMARKLET_LENGTH = 80000;
 
-let src = fs.readFileSync(path.join(__dirname, 'bookmarklet.src.js'), 'utf8');
-const UI_CSS = fs.readFileSync(path.join(__dirname, 'public', 'bookmarklet-v2.css'), 'utf8').trim();
-src = src.replace('/* __VOIDEXT_V2__ */', UI_CSS);
+async function build() {
+let src = fs.readFileSync(path.join(__dirname, 'bookmarklet.src.js'), 'utf8').replace(/\r\n/g, '\n');
+const uiCss = fs.readFileSync(path.join(__dirname, 'public', 'bookmarklet-scale.css'), 'utf8').trim();
+// Remove the superseded Celestial theme layer before adding the current UI.
+src = src.replace(/\/\* CELESTIAL ALMANAC[\s\S]*?(?=\/\* __SCALE XT_V2__ \*\/)/, '');
+src = src.replace('/* __SCALE XT_V2__ */', uiCss);
+
 
 // Stamp the current version in (the bookmarklet's "installed" version).
 src = src.replace(/__VERSION__/g, VERSION);
 
-// Drop the leading /* ... */ banner comment for compactness.
+// Minify the HTML, CSS, and scripts inside the embedded document first.
+const htmlStartToken = 'const htmlContent = `';
+const htmlEndToken = '`;\n\n  // --------------------------------------------------------------------------\n  // Overlay + iframe shell';
+const htmlStart = src.indexOf(htmlStartToken);
+const htmlEnd = src.indexOf(htmlEndToken, htmlStart + htmlStartToken.length);
+if (htmlStart === -1 || htmlEnd === -1) {
+  throw new Error('Could not locate the embedded bookmarklet HTML.');
+}
+const apiExpression = '${API_BASE}';
+const apiSentinel = '__SCALE XT_API_BASE_EXPRESSION__';
+const embeddedHtml = src
+  .slice(htmlStart + htmlStartToken.length, htmlEnd)
+  .replace(new RegExp('\\$\\{API_BASE\\}', 'g'), apiSentinel);
+const compactHtml = await minifyHtml(embeddedHtml, {
+  collapseWhitespace: true,
+  removeComments: true,
+  minifyCSS: { level: 2 },
+  minifyJS: { compress: { passes: 2 }, mangle: true },
+});
+
+// Publish the full UI as a normal static page. The bookmarklet launcher only
+// opens this page in an overlay, keeping the saved javascript: URL very small.
+const appHtml = compactHtml.replace(new RegExp(apiSentinel, 'g'), 'https://void-ext.vercel.app');
+fs.writeFileSync(path.join(__dirname, 'public', 'app.html'), appHtml);
+
+const escapedHtml = compactHtml
+  .replace(/\\/g, '\\\\')
+  .replace(/`/g, '\\`')
+  .replace(/\$\{/g, '\\${')
+  .replace(new RegExp(apiSentinel, 'g'), apiExpression);
+src = src.slice(0, htmlStart + htmlStartToken.length) + escapedHtml + src.slice(htmlEnd);
+
+// Minify the outer launcher after its embedded document is safely escaped.
 const body = src.replace(/^\/\*[\s\S]*?\*\/\s*/, '').trim();
-const bookmarklet = 'javascript:' + encodeURIComponent(body);
+const minified = await minifyJs(body, {
+  compress: { passes: 2 },
+  mangle: true,
+  format: { comments: false, semicolons: true },
+});
+if (!minified.code) throw new Error('Terser did not produce bookmarklet code.');
+try {
+  new Function(minified.code);
+} catch (error) {
+  throw new Error('Generated bookmarklet is invalid: ' + error.message);
+}
+const bookmarklet = 'javascript:' + minified.code;
+if (bookmarklet.length > MAX_BOOKMARKLET_LENGTH) {
+  throw new Error(`Bookmarklet is ${bookmarklet.length} characters; limit is ${MAX_BOOKMARKLET_LENGTH}.`);
+}
 
 // 1) repo copy + 2) served copy
 fs.writeFileSync(path.join(__dirname, 'bookmarklet.min.js'), bookmarklet);
@@ -40,7 +93,8 @@ fs.writeFileSync(
 // 3) inject into the landing page (idempotent — replaces the marked block)
 const indexPath = path.join(__dirname, 'public', 'index.html');
 let html = fs.readFileSync(indexPath, 'utf8');
-const injected = `<script id="bm-data">window.__BOOKMARKLET__=${JSON.stringify(bookmarklet)};</script>`;
+const serializedBookmarklet = JSON.stringify(bookmarklet).replace(/</g, '\\u003c');
+const injected = `<script id="bm-data">window.__BOOKMARKLET__=${serializedBookmarklet};</script>`;
 const re = /<script id="bm-data">[\s\S]*?<\/script>/;
 if (re.test(html)) {
   html = html.replace(re, injected);
@@ -51,3 +105,10 @@ if (re.test(html)) {
 fs.writeFileSync(indexPath, html);
 
 console.log('Wrote bookmarklet.min.js v' + VERSION + ' (' + bookmarklet.length + ' chars) + injected into landing page.');
+
+}
+
+build().catch((error) => {
+  console.error(error.stack || error.message || error);
+  process.exit(1);
+});

@@ -1,4 +1,4 @@
-# VoidEXT
+# Scale XT
 
 An editorial, celestial-themed **bookmarklet** backed by a **Vercel website**.
 Users sign up or log in through the popup, then generate rotating links pulled

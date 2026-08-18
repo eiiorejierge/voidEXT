@@ -1,14 +1,19 @@
 {
   "name": "voidext",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "private": true,
-  "description": "VoidEXT - private bookmarklet-driven link rotation with account authentication.",
+  "description": "Scale XT - private bookmarklet-driven link rotation with account authentication.",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build:bookmarklet": "node build-bookmarklet.js"
+    "build:bookmarklet": "node build-bookmarklet.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.50.0"
   }
 }

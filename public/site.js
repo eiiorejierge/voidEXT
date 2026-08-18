@@ -37,6 +37,33 @@
 
   checkSystemHealth();
 
+  function loadLatestAnnouncement() {
+    var rail = document.getElementById('announcementRail');
+    if (!rail) return;
+    fetch('/api/announcements', { cache: 'no-store' }).then(function (response) {
+      return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+    }).then(function (result) {
+      var item = result.ok && result.data && result.data.announcements && result.data.announcements[0];
+      if (!item) return;
+      var dismissed = '';
+      try { dismissed = sessionStorage.getItem('scale_xt_announcement_dismissed') || ''; } catch (error) {}
+      if (dismissed === item.id) return;
+      document.getElementById('announcementTitle').textContent = item.title || 'General announcement';
+      document.getElementById('announcementText').textContent = item.text || '';
+      document.getElementById('announcementDate').textContent = new Date(item.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      rail.dataset.id = item.id || '';
+      rail.classList.remove('hidden');
+    }).catch(function () {});
+  }
+
+  document.getElementById('announcementDismiss').addEventListener('click', function () {
+    var rail = document.getElementById('announcementRail');
+    try { sessionStorage.setItem('scale_xt_announcement_dismissed', rail.dataset.id || 'dismissed'); } catch (error) {}
+    rail.classList.add('hidden');
+  });
+
+  loadLatestAnnouncement();
+
   function copyBookmarklet(button) {
     if (!bookmarklet) {
       if (status) status.textContent = 'The bookmarklet is still loading. Refresh and try once more.';

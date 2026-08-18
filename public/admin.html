@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoidEXT · Admin</title>
+<title>Scale XT · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -94,7 +94,7 @@ td.url{word-break:break-all;max-width:420px;}
 <!-- GATE -->
 <div id="gate" class="gatewrap">
   <div class="card gate">
-    <h2>VoidEXT Admin — enter code</h2>
+    <h2>Scale XT Admin — enter code</h2>
     <input id="keyInput" type="password" placeholder="Admin code" inputmode="numeric" autocomplete="off">
     <div class="msg" id="gateMsg"></div>
     <div style="margin-top:14px;"><button class="btn" id="enterBtn" style="width:100%;">Unlock</button></div>
@@ -106,9 +106,9 @@ td.url{word-break:break-all;max-width:420px;}
   <aside class="side">
     <div class="brand"><span class="d"></span><span class="nm">ADMIN</span></div>
     <button class="navitem active" data-nav="overview"><span class="ic">01</span> Overview</button>
-    <button class="navitem" data-nav="reports"><span class="ic">02</span> Reports <span class="badge hidden" id="navPending">0</span></button>
-    <button class="navitem" data-nav="blocked"><span class="ic">03</span> Blocked</button>
-    <button class="navitem" data-nav="bugs"><span class="ic">04</span> Bugs <span class="badge hidden" id="navBugs">0</span></button>
+    <button class="navitem" data-nav="pool"><span class="ic">02</span> Link pool</button>
+    <button class="navitem" data-nav="reports"><span class="ic">03</span> Reports <span class="badge hidden" id="navPending">0</span></button>
+    <button class="navitem" data-nav="bugs"><span class="ic">04</span> Support <span class="badge hidden" id="navBugs">0</span></button>
     <button class="navitem" data-nav="accounts"><span class="ic">05</span> Accounts</button>
     <button class="navitem" data-nav="messages"><span class="ic">06</span> Messages</button>
     <button class="navitem" data-nav="announce"><span class="ic">07</span> Announce</button>
@@ -134,16 +134,22 @@ td.url{word-break:break-all;max-width:420px;}
       </table></div>
       <div class="empty hidden" id="reportsEmpty">No reports yet.</div>
     </section>
-    <!-- BLOCKED -->
-    <section id="page-blocked" class="hidden">
-      <div class="ptitle">Blocked links</div>
-      <div class="psub">Links removed from rotation. Unblock to restore, or block one manually.</div>
-      <div class="row" style="margin-bottom:6px;">
-        <input id="blockUrl" type="text" placeholder="https://… block a URL manually">
-        <button class="btn sm" id="blockBtn">Block</button>
+    <!-- LINK POOL -->
+    <section id="page-pool" class="hidden">
+      <div class="ptitle">Link pool</div>
+      <div class="psub">Add destinations, pause them temporarily, remove them from rotation, or restore them later. Custom links can also be deleted permanently.</div>
+      <div class="pool-metrics" id="poolMetrics"></div>
+      <div class="pool-add">
+        <label for="poolAddInput">Add one or many URLs</label>
+        <textarea id="poolAddInput" placeholder="https://example.com&#10;https://another.example.com"></textarea>
+        <div class="pool-add-foot"><span>Separate URLs with a new line, comma, or space.</span><button class="btn" id="poolAddBtn">Add to pool</button></div>
       </div>
-      <div class="scroll"><table><tbody id="blockedBody"></tbody></table></div>
-      <div class="empty hidden" id="blockedEmpty">No blocked links. Clean vault. ✦</div>
+      <div class="pool-toolbar">
+        <input id="poolSearch" type="search" placeholder="Search links..." autocomplete="off">
+        <select id="poolFilter" aria-label="Filter links"><option value="all">All links</option><option value="active">Active</option><option value="paused">Paused</option><option value="removed">Removed</option><option value="custom">Custom only</option></select>
+      </div>
+      <div id="poolList" class="pool-list"></div>
+      <div class="empty hidden" id="poolEmpty">No links match this filter.</div>
     </section>
     <!-- ACCOUNTS -->
     <section id="page-accounts" class="hidden">
@@ -155,15 +161,39 @@ td.url{word-break:break-all;max-width:420px;}
       </table></div>
       <div class="empty hidden" id="usersEmpty">No accounts yet.</div>
     </section>
-    <!-- BUGS -->
+    <!-- SUPPORT INBOX -->
     <section id="page-bugs" class="hidden">
-      <div class="ptitle">Bug reports</div>
-      <div class="psub">Review reported bugs. Mark fixed and award up to 10 link tokens — the reporter gets a notification.</div>
-      <div class="scroll"><table>
-        <thead><tr><th>Bug</th><th>By</th><th>When</th><th>Status</th><th>Resolve</th></tr></thead>
-        <tbody id="bugsBody"></tbody>
-      </table></div>
-      <div class="empty hidden" id="bugsEmpty">No bug reports yet.</div>
+      <div class="ptitle">Support inbox</div>
+      <div class="psub">Every bug report is its own conversation. Open a ticket, reply in context, change its status, and confirm the fix with the reporter.</div>
+      <div class="support-shell">
+        <aside class="ticket-queue">
+          <div class="ticket-tools">
+            <input id="bugSearch" type="search" placeholder="Search reports..." autocomplete="off">
+            <select id="bugFilter" aria-label="Filter bug reports"><option value="open">Needs attention</option><option value="all">All reports</option><option value="fixed">Fixed</option><option value="dismissed">Closed</option></select>
+          </div>
+          <div id="bugList" class="ticket-list"></div>
+          <div class="empty hidden" id="bugsEmpty">No reports match this filter.</div>
+        </aside>
+        <article class="ticket-detail">
+          <div class="ticket-blank" id="bugDetailEmpty"><b>Select a report</b><span>The full conversation will open here.</span></div>
+          <div id="bugDetail" class="hidden">
+            <header class="ticket-head">
+              <div><span class="ticket-id" id="bugId"></span><h2 id="bugTitle"></h2><p id="bugMeta"></p></div>
+              <span class="ticket-status" id="bugStatus"></span>
+            </header>
+            <div class="ticket-messages" id="bugMessages"></div>
+            <div class="ticket-compose">
+              <textarea id="bugReply" placeholder="Reply to the reporter..."></textarea>
+              <div class="ticket-actions">
+                <button class="btn" id="bugReplyBtn">Send reply</button>
+                <label class="reward-label">Reward <input id="bugTokens" type="number" value="5" min="0" max="10"></label>
+                <button class="btn ghost" id="bugFixBtn">Mark fixed</button>
+                <button class="btn danger" id="bugCloseBtn">Close</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
     </section>
     <!-- MESSAGES -->
     <section id="page-messages" class="hidden">
@@ -182,9 +212,13 @@ td.url{word-break:break-all;max-width:420px;}
     <section id="page-announce" class="hidden">
       <div class="ptitle">Announce to everyone</div>
       <div class="psub">Broadcast a message into <b>every</b> account's notifications inbox. Use it for updates, feedback, and notices.</div>
-      <div style="max-width:560px;">
-        <textarea id="annText" placeholder="Your announcement to all users…" style="width:100%;min-height:120px;resize:vertical;padding:13px 15px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);border-radius:11px;color:#fff;font-size:14px;font-family:inherit;outline:none;letter-spacing:0;"></textarea>
-        <button class="btn" id="annSend" style="margin-top:10px;">Send to everyone</button>
+      <div class="announce-composer">
+        <label for="annTitle">Headline</label>
+        <input id="annTitle" type="text" maxlength="80" value="General announcement" placeholder="General announcement">
+        <label for="annText">Message</label>
+        <textarea id="annText" placeholder="What should everyone know?"></textarea>
+        <button class="btn" id="annSend">Publish everywhere</button>
+        <p>This appears on the home page immediately and is also delivered to every account.</p>
       </div>
       <div style="margin-top:26px;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Past announcements</div>
       <div id="annList" style="margin-top:10px;"></div>
@@ -227,12 +261,12 @@ td.url{word-break:break-all;max-width:420px;}
   // ---- nav ----
   var allUsernames=[];
   function nav(page){
-    ['overview','reports','blocked','bugs','accounts','messages','announce'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
+    ['overview','pool','reports','bugs','accounts','messages','announce'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
     if(page==='overview')loadStats();
+    if(page==='pool')loadPool();
     if(page==='reports')loadReports();
-    if(page==='blocked')loadBlocked();
-    if(page==='bugs')loadBugs();
+    if(page==='bugs')loadBugs();else stopBugPoll();
     if(page==='accounts')loadUsers();
     if(page==='messages')loadUsers();
     if(page==='announce')loadAnnouncements();
@@ -240,7 +274,7 @@ td.url{word-break:break-all;max-width:420px;}
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
 
-  function loadAll(){loadStats();loadReports();loadBlocked();loadBugs();loadUsers();}
+  function loadAll(){loadStats();loadPool();loadReports();loadBugs();loadUsers();}
 
   function loadStats(){
     api('/api/admin/stats').then(function(res){
@@ -248,10 +282,12 @@ td.url{word-break:break-all;max-width:420px;}
       if(!res.ok)return;
       var d=res.data;
       if(d.pendingReports>0){$('navPending').textContent=d.pendingReports;$('navPending').classList.remove('hidden');}else{$('navPending').classList.add('hidden');}
-      if(d.openBugs>0){$('navBugs').textContent=d.openBugs;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
+      var supportCount=d.bugUnread||d.openBugs||0;
+      if(supportCount>0){$('navBugs').textContent=supportCount;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
       $('stats').innerHTML=[
         ['Accounts',d.accounts],['Active links',d.activeLinks],['Total links',d.totalLinks],
-        ['Blocked',d.blockedCount],['Pending',d.pendingReports!=null?d.pendingReports:0],['Open bugs',d.openBugs!=null?d.openBugs:0]
+        ['Paused',d.blockedCount],['Removed',d.removedCount||0],['Custom',d.customLinks||0],
+        ['Pending reports',d.pendingReports!=null?d.pendingReports:0],['Open support',d.openBugs!=null?d.openBugs:0],['Unread support',d.bugUnread||0]
       ].map(function(x){return '<div class="stat"><div class="n">'+x[1]+'</div><div class="l">'+x[0]+'</div></div>';}).join('');
     });
   }
@@ -282,21 +318,65 @@ td.url{word-break:break-all;max-width:420px;}
     });
   }
 
-  function loadBlocked(){
-    api('/api/admin/blocked').then(function(res){
+  var poolItems=[];
+  function loadPool(){
+    api('/api/admin/pool').then(function(res){
       if(!res.ok)return;
-      var blocked=res.data.blocked||[];
-      var tb=$('blockedBody');tb.innerHTML='';
-      $('blockedEmpty').classList.toggle('hidden',blocked.length>0);
-      blocked.forEach(function(url){
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td class="url"><a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url)+'</a></td>'+
-          '<td style="text-align:right;white-space:nowrap;"><button class="btn ghost sm">Unblock</button></td>';
-        tr.querySelector('button').onclick=function(){api('/api/admin/unblock',{method:'POST',body:{url:url}}).then(function(r){if(r.ok){loadBlocked();loadStats();ok('Restored to rotation.');}});};
-        tb.appendChild(tr);
-      });
+      poolItems=res.data.links||[];
+      $('poolMetrics').innerHTML=[
+        ['Active',res.data.active||0],['Total',res.data.total||0],['Paused',res.data.paused||0],
+        ['Removed',res.data.removed||0],['Custom',res.data.custom||0]
+      ].map(function(item){return '<div><b>'+item[1]+'</b><span>'+item[0]+'</span></div>';}).join('');
+      renderPool();
     });
   }
+  function renderPool(){
+    var q=$('poolSearch').value.trim().toLowerCase(),filter=$('poolFilter').value;
+    var list=poolItems.filter(function(item){
+      var matches=!q||item.url.toLowerCase().indexOf(q)>=0;
+      var visible=filter==='all'||item.status===filter||(filter==='custom'&&item.source==='custom');
+      return matches&&visible;
+    });
+    var box=$('poolList');box.innerHTML='';
+    $('poolEmpty').classList.toggle('hidden',list.length>0);
+    list.forEach(function(item){
+      var row=document.createElement('article');row.className='pool-row '+item.status;
+      var primary=item.status==='active'
+        ? '<button class="btn ghost sm" data-action="block">Pause</button>'
+        :item.status==='paused'
+          ? '<button class="btn ghost sm" data-action="unblock">Resume</button>'
+          :'<button class="btn ghost sm" data-action="link-restore">Restore</button>';
+      var remove=item.status!=='removed'?'<button class="btn danger sm" data-action="link-remove">Remove</button>':'';
+      var del=item.source==='custom'?'<button class="pool-delete" data-action="link-delete" title="Delete custom link permanently">Delete</button>':'';
+      row.innerHTML='<div class="pool-state"><i></i><span>'+esc(item.status)+'</span></div>'+
+        '<div class="pool-url"><a href="'+esc(item.url)+'" target="_blank" rel="noopener">'+esc(item.url)+'</a><small>'+esc(item.source)+'</small></div>'+
+        '<div class="pool-actions">'+primary+remove+del+'</div>';
+      Array.prototype.forEach.call(row.querySelectorAll('[data-action]'),function(button){
+        button.onclick=function(){
+          button.disabled=true;
+          api('/api/admin/'+button.getAttribute('data-action'),{method:'POST',body:{url:item.url}}).then(function(result){
+            if(result.ok){ok('Link pool updated.');loadPool();loadStats();}
+            else{button.disabled=false;err(result.data.error||'Could not update the link.');}
+          }).catch(function(){button.disabled=false;err('Network error.');});
+        };
+      });
+      box.appendChild(row);
+    });
+  }
+  $('poolSearch').addEventListener('input',renderPool);
+  $('poolFilter').addEventListener('change',renderPool);
+  $('poolAddBtn').onclick=function(){
+    var text=$('poolAddInput').value.trim();
+    if(!text){err('Enter at least one URL.');return;}
+    var button=$('poolAddBtn');button.disabled=true;
+    api('/api/admin/link-add',{method:'POST',body:{text:text}}).then(function(result){
+      button.disabled=false;
+      if(!result.ok){err(result.data.error||'Could not add links.');return;}
+      $('poolAddInput').value='';
+      ok('Added '+result.data.added+' new link(s)'+(result.data.restored?' and restored '+result.data.restored+'.':'.'));
+      loadPool();loadStats();
+    }).catch(function(){button.disabled=false;err('Network error.');});
+  };
 
   function loadUsers(){
     api('/api/admin/users').then(function(res){
@@ -330,40 +410,120 @@ td.url{word-break:break-all;max-width:420px;}
     });
   }
 
+  var bugItems=[],activeBugId=null,bugPoll=null;
+  function supportOpen(status){return status!=='fixed'&&status!=='dismissed';}
+  function supportLabel(status){return status==='waiting'?'Waiting for user':status==='fixed'?'Fixed':status==='dismissed'?'Closed':'Needs reply';}
+  function stopBugPoll(){if(bugPoll){clearInterval(bugPoll);bugPoll=null;}}
+  function startBugPoll(){
+    stopBugPoll();
+    bugPoll=setInterval(function(){
+      if($('page-bugs').classList.contains('hidden')||!activeBugId){stopBugPoll();return;}
+      openBug(activeBugId,true);
+    },6000);
+  }
   function loadBugs(){
     api('/api/admin/bugs').then(function(res){
       if(!res.ok)return;
-      var bugs=res.data.bugs||[];
-      if(res.data.open>0){$('navBugs').textContent=res.data.open;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
-      var tb=$('bugsBody');tb.innerHTML='';
-      $('bugsEmpty').classList.toggle('hidden',bugs.length>0);
-      bugs.forEach(function(bg){
-        var tr=document.createElement('tr');
-        var statusPill=bg.status==='open'?'<span class="pill" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.5)">open</span>'
-          :bg.status==='fixed'?'<span class="pill" style="background:rgba(34,197,94,0.25);border-color:rgba(34,197,94,0.5)">fixed'+(bg.tokens?' · '+bg.tokens+' tokens':'')+'</span>'
-          :'<span class="pill" style="opacity:.6">dismissed</span>';
-        var action=bg.status==='open'
-          ? '<input class="bugtok" type="number" value="5" min="0" max="10" style="width:52px;padding:6px 8px;letter-spacing:0;"> <button class="btn sm" data-act="fix">Fix + give</button> <button class="btn ghost sm" data-act="dismiss">Dismiss</button>'
-          : '';
-        tr.innerHTML='<td style="max-width:360px;">'+esc(bg.text)+'</td>'+
-          '<td><span class="pill">'+esc(bg.by||'?')+'</span></td>'+
-          '<td class="muted" style="white-space:nowrap;">'+esc(when(bg.at))+'</td>'+
-          '<td>'+statusPill+'</td>'+
-          '<td style="white-space:nowrap;">'+action+'</td>';
-        var tok=tr.querySelector('.bugtok'),fix=tr.querySelector('[data-act="fix"]'),dis=tr.querySelector('[data-act="dismiss"]');
-        if(fix)fix.onclick=function(){
-          var amt=Math.max(0,Math.min(10,parseInt(tok.value,10)||0));
-          fix.disabled=true;
-          api('/api/admin/bug-resolve',{method:'POST',body:{id:bg.id,tokens:amt}}).then(function(r){
-            if(r.ok){ok('Bug fixed — awarded '+r.data.tokens+' token(s).');loadBugs();loadStats();loadUsers();}
-            else{fix.disabled=false;err(r.data.error||'Failed.');}
-          });
-        };
-        if(dis)dis.onclick=function(){dis.disabled=true;api('/api/admin/bug-dismiss',{method:'POST',body:{id:bg.id}}).then(function(r){if(r.ok){ok('Bug dismissed.');loadBugs();loadStats();}else{dis.disabled=false;err(r.data.error||'Failed.');}});};
-        tb.appendChild(tr);
-      });
+      bugItems=res.data.bugs||[];
+      var count=res.data.unread||res.data.open||0;
+      if(count>0){$('navBugs').textContent=count;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
+      renderBugList();
+      if(!activeBugId&&bugItems.length)openBug(bugItems[0].id);
     });
   }
+  function renderBugList(){
+    var q=$('bugSearch').value.trim().toLowerCase(),filter=$('bugFilter').value;
+    var items=bugItems.filter(function(item){
+      var open=supportOpen(item.status);
+      var visible=filter==='all'||(filter==='open'&&open)||item.status===filter;
+      var hay=(item.title+' '+item.by+' '+((item.lastMessage&&item.lastMessage.text)||'')).toLowerCase();
+      return visible&&(!q||hay.indexOf(q)>=0);
+    });
+    var list=$('bugList');list.innerHTML='';
+    $('bugsEmpty').classList.toggle('hidden',items.length>0);
+    items.forEach(function(item){
+      var button=document.createElement('button');
+      button.type='button';
+      button.className='ticket-row'+(item.id===activeBugId?' active':'')+(item.unread?' unread':'');
+      var preview=item.lastMessage&&item.lastMessage.text?item.lastMessage.text:'No messages yet';
+      button.innerHTML='<span class="ticket-row-top"><b>'+esc(item.title)+'</b><time>'+esc(when(item.updatedAt))+'</time></span>'+
+        '<span class="ticket-preview">'+esc(preview)+'</span>'+
+        '<span class="ticket-row-foot"><i class="'+esc(item.status)+'">'+esc(supportLabel(item.status))+'</i><span>'+esc(item.by||'?')+(item.unread?' · '+item.unread+' new':'')+'</span></span>';
+      button.onclick=function(){openBug(item.id);};
+      list.appendChild(button);
+    });
+  }
+  function openBug(id,quiet){
+    activeBugId=id;
+    renderBugList();
+    if(!quiet){
+      $('bugDetailEmpty').classList.add('hidden');
+      $('bugDetail').classList.remove('hidden');
+      $('bugMessages').innerHTML='<div class="ticket-loading">Opening conversation...</div>';
+    }
+    api('/api/admin/bug-thread',{method:'POST',body:{id:id}}).then(function(res){
+      if(!res.ok){if(!quiet)err(res.data.error||'Could not open report.');return;}
+      if(activeBugId!==id)return;
+      renderBugThread(res.data.bug);
+      if(!quiet)startBugPoll();
+      loadBugs();
+    });
+  }
+  function renderBugThread(bug){
+    $('bugId').textContent='TICKET / '+String(bug.id||'').toUpperCase();
+    $('bugTitle').textContent=bug.title||'Bug report';
+    $('bugMeta').textContent='Reported by '+(bug.by||'?')+' · '+when(bug.at)+' · '+(bug.messageCount||0)+' message(s)';
+    $('bugStatus').textContent=supportLabel(bug.status);
+    $('bugStatus').className='ticket-status '+bug.status;
+    var box=$('bugMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80;
+    box.innerHTML='';
+    (bug.messages||[]).forEach(function(message){
+      var bubble=document.createElement('div');
+      bubble.className='ticket-bubble '+(message.from==='admin'?'admin':'user')+(message.system?' system':'');
+      bubble.innerHTML='<div>'+esc(message.text)+'</div><span>'+esc(message.fromName||message.from)+' · '+esc(when(message.at))+'</span>';
+      box.appendChild(bubble);
+    });
+    if(nearBottom||!box._painted)box.scrollTop=box.scrollHeight;
+    box._painted=true;
+    $('bugFixBtn').disabled=bug.status==='fixed';
+    var closed=!supportOpen(bug.status);
+    $('bugCloseBtn').textContent=closed?'Reopen':'Close';
+    $('bugCloseBtn').className=closed?'btn ghost':'btn danger';
+    $('bugDetail').dataset.status=bug.status;
+  }
+  $('bugSearch').addEventListener('input',renderBugList);
+  $('bugFilter').addEventListener('change',renderBugList);
+  $('bugReplyBtn').onclick=function(){
+    var text=$('bugReply').value.trim();
+    if(!text||!activeBugId){err('Enter a reply.');return;}
+    var button=$('bugReplyBtn');button.disabled=true;
+    api('/api/admin/bug-reply',{method:'POST',body:{id:activeBugId,text:text,status:'waiting'}}).then(function(res){
+      button.disabled=false;
+      if(!res.ok){err(res.data.error||'Could not send reply.');return;}
+      $('bugReply').value='';renderBugThread(res.data.bug);loadBugs();ok('Reply sent.');
+    }).catch(function(){button.disabled=false;err('Network error.');});
+  };
+  $('bugFixBtn').onclick=function(){
+    if(!activeBugId)return;
+    var tokens=Math.max(0,Math.min(10,parseInt($('bugTokens').value,10)||0));
+    var button=$('bugFixBtn');button.disabled=true;
+    api('/api/admin/bug-resolve',{method:'POST',body:{id:activeBugId,tokens:tokens}}).then(function(res){
+      if(!res.ok){button.disabled=false;err(res.data.error||'Could not mark fixed.');return;}
+      renderBugThread(res.data.bug);loadBugs();loadStats();loadUsers();ok('Marked fixed and awarded '+tokens+' token(s).');
+    });
+  };
+  $('bugCloseBtn').onclick=function(){
+    if(!activeBugId)return;
+    var closed=!supportOpen($('bugDetail').dataset.status);
+    var endpoint=closed?'/api/admin/bug-reply':'/api/admin/bug-dismiss';
+    var body=closed?{id:activeBugId,text:'This report has been reopened for another look.',status:'open'}:{id:activeBugId};
+    var button=$('bugCloseBtn');button.disabled=true;
+    api(endpoint,{method:'POST',body:body}).then(function(res){
+      button.disabled=false;
+      if(!res.ok){err(res.data.error||'Could not update report.');return;}
+      renderBugThread(res.data.bug);loadBugs();loadStats();ok(closed?'Report reopened.':'Report closed.');
+    });
+  };
 
   // ---- messages: username autocomplete (prefix match) ----
   var msgHl=-1;
@@ -408,42 +568,39 @@ td.url{word-break:break-all;max-width:420px;}
 
   // ---- announcements ----
   $('annSend').onclick=function(){
-    var t=$('annText').value.trim();
-    if(!t){err('Enter an announcement.');return;}
-    var b=$('annSend');b.disabled=true;
-    api('/api/admin/announce',{method:'POST',body:{text:t}}).then(function(r){
-      b.disabled=false;
-      if(r.ok){$('annText').value='';ok('Announced to '+r.data.recipients+' account(s).');loadAnnouncements();}
-      else err(r.data.error||'Could not announce.');
-    });
+    var title=$('annTitle').value.trim()||'General announcement';
+    var text=$('annText').value.trim();
+    if(!text){err('Enter an announcement.');return;}
+    var button=$('annSend');button.disabled=true;
+    api('/api/admin/announce',{method:'POST',body:{title:title,text:text}}).then(function(result){
+      button.disabled=false;
+      if(result.ok){
+        $('annText').value='';$('annTitle').value='General announcement';
+        ok('Published to the home page and '+result.data.recipients+' account(s).');
+        loadAnnouncements();
+      }else err(result.data.error||'Could not publish.');
+    }).catch(function(){button.disabled=false;err('Network error.');});
   };
   function loadAnnouncements(){
-    api('/api/admin/announcements').then(function(r){
-      if(!r.ok)return;
-      var list=r.data.announcements||[],L=$('annList');L.innerHTML='';
+    api('/api/admin/announcements').then(function(result){
+      if(!result.ok)return;
+      var list=result.data.announcements||[],container=$('annList');container.innerHTML='';
       $('annEmpty').classList.toggle('hidden',list.length>0);
-      list.forEach(function(a){
-        var d=document.createElement('div');d.className='card';
-        d.innerHTML='<div style="font-size:13px;line-height:1.5;">'+esc(a.text)+'</div>'+
-          '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:7px;">'+when(a.at)+' · sent to '+a.recipients+' account(s)</div>';
-        L.appendChild(d);
+      list.forEach(function(announcement){
+        var item=document.createElement('article');item.className='announcement-card';
+        item.innerHTML='<span>PUBLIC ANNOUNCEMENT</span><h3>'+esc(announcement.title||'General announcement')+'</h3>'+
+          '<p>'+esc(announcement.text)+'</p><footer>'+esc(when(announcement.at))+' · delivered to '+(announcement.recipients||0)+' account(s)</footer>';
+        container.appendChild(item);
       });
     });
   }
-
-  $('blockBtn').onclick=function(){
-    var u=$('blockUrl').value.trim();if(!u)return;
-    api('/api/admin/block',{method:'POST',body:{url:u}}).then(function(r){
-      if(r.ok){$('blockUrl').value='';loadBlocked();loadStats();ok('Link blocked.');}else err(r.data.error||'Could not block.');
-    });
-  };
   $('clearReportsBtn').onclick=function(){api('/api/admin/clear-reports',{method:'POST'}).then(function(r){if(r.ok){loadReports();loadStats();ok('Reports cleared.');}});};
   $('refreshBtn').onclick=loadAll;
   $('logoutBtn').onclick=lock;
 
   function ok(t){msg($('msg'),t,'ok');setTimeout(function(){clr($('msg'));},2500);}
   function err(t){msg($('msg'),t,'err');}
-  function lock(){setKey('');$('dash').classList.add('hidden');$('gate').classList.remove('hidden');$('keyInput').value='';}
+  function lock(){stopBugPoll();activeBugId=null;setKey('');$('dash').classList.add('hidden');$('gate').classList.remove('hidden');$('keyInput').value='';}
 
   if(key()){
     api('/api/admin/stats').then(function(res){
