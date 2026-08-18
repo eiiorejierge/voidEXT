@@ -1,9 +1,9 @@
 /* =============================================================================
- * Nebula bookmarklet (readable source)
+ * VoidEXT bookmarklet (readable source)
  * -----------------------------------------------------------------------------
  * Editorial celestial app popup (orbit field, sidebar menu) that
  * works end to end:
- *   - Log in / Sign up against the Nebula site
+ *   - Log in / Sign up against the VoidEXT site
  *   - Links page: generate your daily set (5/day), copy-all, open-all, report
  *   - Settings page: theme + behavior toggles, saved to your account
  *   - Account page: username, member-since, daily usage
@@ -30,10 +30,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nebula</title>
+<title>VoidEXT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 body{--a1:#a855f7;--a2:#ec4899;--a3:#38bdf8;--grad:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);--grad3:linear-gradient(115deg,#818cf8 0%,#c084fc 32%,#f472b6 62%,#38bdf8 100%);--glow:rgba(168,85,247,0.5);--btn-bg:var(--grad);--btn-fg:#fff;--danger:#fb3b6b;}
@@ -382,6 +382,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   .authcard{margin:18px;padding:30px 25px;}.brandhead h2{font-size:43px;}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}
+/* __VOIDEXT_V2__ */
 </style>
 </head>
 <body data-theme="void">
@@ -394,12 +395,12 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 <div id="updModal" class="updmodal hidden">
   <div class="updcard">
     <div class="updclose" id="updClose">&#x2715;</div>
-    <div class="updh">Update Nebula</div>
+    <div class="updh">Update VoidEXT</div>
     <div class="updver" id="updVer">—</div>
     <ol class="updsteps">
-      <li>Right-click your <b>Nebula</b> bookmark and choose <b>Edit</b>.</li>
+      <li>Right-click your <b>VoidEXT</b> bookmark and choose <b>Edit</b>.</li>
       <li>Select everything in the <b>URL</b> field and replace it with the code below.</li>
-      <li>Save, then re-open Nebula. Done — no website needed.</li>
+      <li>Save, then re-open VoidEXT. Done — no website needed.</li>
     </ol>
     <div class="updbox" id="updCode">Loading latest version…</div>
     <button class="btn" id="updCopy" style="width:100%;margin-top:12px;">Copy new bookmarklet</button>
@@ -416,7 +417,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   <div id="authWrap" class="authcard">
     <div class="brandhead">
       <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="11" ry="4"/></svg></div>
-      <h2>Nebula</h2>
+      <h2>VoidEXT</h2>
       <p>Your private link ritual</p>
     </div>
     <div class="tabs">
@@ -433,7 +434,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   <!-- APP -->
   <div id="app" class="app hidden">
     <aside class="side">
-      <div class="brand"><span class="d"></span><span class="nm">Nebula</span></div>
+      <div class="brand"><span class="d"></span><span class="nm">VoidEXT</span></div>
       <button class="navitem active" data-nav="links"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span> Links</button>
       <button class="navitem" data-nav="report"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2 3.5L17 11H5"/></svg></span> Report</button>
       <button class="navitem" data-nav="bug"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8a3 3 0 0 1 6 0"/><rect x="8" y="8" width="8" height="9" rx="4"/><path d="M12 8.5v8.5M4 11h4M16 11h4M4.5 16.5h3.5M16 16.5h3.5M5 7l2 1.5M19 7l-2 1.5"/></svg></span> Bug</button>
@@ -450,7 +451,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <!-- LINKS -->
       <section id="page-links">
         <div class="ptitle">Your Links</div>
-        <div class="psub">Five fresh coordinates a day, plus any returned tokens.</div>
+        <div class="psub">Five active destinations a day, plus any returned tokens.</div>
         <div class="actions">
           <button class="btn" id="genBtn">Generate a link</button>
           <button class="btn ghost" id="copyBtn">Copy all</button>
@@ -466,8 +467,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         <div class="psub">Choose the atmosphere that feels right. Saved to your account.</div>
         <span class="flabel">Theme</span>
         <div class="themes">
-          <button class="swatch void" data-theme-pick="void"><span>Night</span></button>
-          <button class="swatch nebula" data-theme-pick="nebula"><span>Moss</span></button>
+          <button class="swatch void" data-theme-pick="void"><span>Core</span></button>
+          <button class="swatch nebula" data-theme-pick="nebula"><span>Slate</span></button>
           <button class="swatch eclipse" data-theme-pick="eclipse"><span>Paper</span></button>
         </div>
         <div class="trow"><span>Open links in new tab</span><button class="switch" id="setNewTab"></button></div>
@@ -547,7 +548,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <!-- ACCOUNT -->
       <section id="page-account" class="hidden">
         <div class="ptitle">Account</div>
-        <div class="psub">Your nebula credentials.</div>
+        <div class="psub">Your VoidEXT credentials.</div>
         <div class="info">
           <div class="inforow"><span class="k">Username</span><span class="v" id="acUser">—</span></div>
           <div class="inforow"><span class="k">Member since</span><span class="v" id="acSince">—</span></div>
@@ -573,15 +574,15 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <!-- HELP -->
       <section id="page-help" class="hidden">
         <div class="ptitle">Help</div>
-        <div class="psub">How Nebula works.</div>
+        <div class="psub">How VoidEXT works.</div>
         <div class="info">
           <p style="line-height:1.7;margin-bottom:12px;">• Hit <b>Generate Links</b> on the Links page to pull your daily set (5 per day). Your set is saved — it loads automatically next time.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• Click <b>Link 1</b>, <b>Link 2</b>… to open them. Use <b>Open all</b> to launch every link at once.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• If a link is dead or blocked, tap <b>blocked</b> on it — it's pulled from everyone's rotation and reported.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
           <p style="line-height:1.7;color:var(--muted);">Links are stored on the server and shown as labels so the URLs don't leak over your shoulder.</p>
-          <p style="margin-top:16px;color:var(--muted);font-size:12px;">Nebula <b>v__VERSION__</b></p>
-          <button class="btn ghost" id="helpUpdate" style="margin-top:14px;">Update Nebula</button>
+          <p style="margin-top:16px;color:var(--muted);font-size:12px;">VoidEXT <b>v__VERSION__</b></p>
+          <button class="btn ghost" id="helpUpdate" style="margin-top:14px;">Update VoidEXT</button>
         </div>
       </section>
       <div class="msg" id="msg"></div>
@@ -1171,19 +1172,19 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   const overlay = document.createElement('div');
   overlay.id = OVERLAY_ID;
   overlay.style.cssText =
-    'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(12,22,16,0.76);backdrop-filter:blur(8px) saturate(.8);-webkit-backdrop-filter:blur(8px) saturate(.8);z-index:99999999;opacity:0;transition:opacity .25s ease;display:flex;justify-content:center;align-items:center;';
+    'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(4,5,6,0.82);backdrop-filter:blur(8px) saturate(.8);-webkit-backdrop-filter:blur(8px) saturate(.8);z-index:99999999;opacity:0;transition:opacity .25s ease;display:flex;justify-content:center;align-items:center;';
 
   const wrapper = document.createElement('div');
   wrapper.id = WRAPPER_ID;
   wrapper.style.cssText =
-    'position:relative;width:min(980px,94vw);height:min(690px,90vh);background:transparent;border-radius:8px;box-shadow:0 38px 100px -28px rgba(0,0,0,0.72),0 0 0 1px rgba(242,239,229,0.16);overflow:hidden;transform:scale(0.97) translateY(8px);transition:transform .28s cubic-bezier(0.2,0.8,0.2,1);';
+    'position:relative;width:min(980px,94vw);height:min(690px,90vh);background:transparent;border-radius:0;box-shadow:14px 14px 0 rgba(0,0,0,0.72),0 0 0 1px rgba(242,239,229,0.18);overflow:hidden;transform:scale(0.97) translateY(8px);transition:transform .28s cubic-bezier(0.2,0.8,0.2,1);';
 
   const closeBtn = document.createElement('div');
   closeBtn.innerHTML = '&#x2715;';
   closeBtn.style.cssText =
-    'position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:0;border:1px solid rgba(23,26,23,0.24);background:#f2efe5;color:#171a17;font-family:Georgia,serif;font-size:13px;font-weight:400;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;z-index:100000000;user-select:none;box-shadow:3px 3px 0 rgba(0,0,0,0.28);';
-  closeBtn.addEventListener('mouseenter', function () { closeBtn.style.background = '#c86f55'; closeBtn.style.color = '#fff'; });
-  closeBtn.addEventListener('mouseleave', function () { closeBtn.style.background = '#f2efe5'; closeBtn.style.color = '#171a17'; });
+    'position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:0;border:1px solid #0b0d0f;background:#ff5b35;color:#fff;font-family:Georgia,serif;font-size:13px;font-weight:400;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;z-index:100000000;user-select:none;box-shadow:3px 3px 0 rgba(0,0,0,0.28);';
+  closeBtn.addEventListener('mouseenter', function () { closeBtn.style.background = '#ff704d'; closeBtn.style.color = '#fff'; });
+  closeBtn.addEventListener('mouseleave', function () { closeBtn.style.background = '#ff5b35'; closeBtn.style.color = '#fff'; });
 
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'width:100%;height:100%;border:none;background:transparent;';

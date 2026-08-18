@@ -1,8 +1,8 @@
 {
-  "name": "nebula",
-  "version": "1.0.0",
+  "name": "voidext",
+  "version": "2.0.0",
   "private": true,
-  "description": "Nebula — bookmarklet-driven link rotator with account auth, backed by a Vercel site.",
+  "description": "VoidEXT - private bookmarklet-driven link rotation with account authentication.",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",

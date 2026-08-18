@@ -12,6 +12,31 @@
   if (code) code.textContent = bookmarklet || 'Bookmarklet unavailable. Refresh the page and try again.';
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  function checkSystemHealth() {
+    var indicator = document.getElementById('systemStatus');
+    if (!indicator) return;
+    fetch('/api/health', { cache: 'no-store' }).then(function (response) {
+      return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+    }).then(function (result) {
+      var storage = result.data && result.data.storage;
+      indicator.classList.remove('degraded', 'offline');
+      if (!result.ok || !storage || !storage.reachable) {
+        indicator.classList.add('offline');
+        indicator.lastChild.textContent = ' Storage offline';
+      } else if (!storage.persistent) {
+        indicator.classList.add('degraded');
+        indicator.lastChild.textContent = ' Local mode';
+      } else {
+        indicator.lastChild.textContent = ' Database online';
+      }
+    }).catch(function () {
+      indicator.classList.add('offline');
+      indicator.lastChild.textContent = ' Status unavailable';
+    });
+  }
+
+  checkSystemHealth();
+
   function copyBookmarklet(button) {
     if (!bookmarklet) {
       if (status) status.textContent = 'The bookmarklet is still loading. Refresh and try once more.';

@@ -15,6 +15,8 @@ const path = require('path');
 const VERSION = require('./lib/version.js');
 
 let src = fs.readFileSync(path.join(__dirname, 'bookmarklet.src.js'), 'utf8');
+const UI_CSS = fs.readFileSync(path.join(__dirname, 'public', 'bookmarklet-v2.css'), 'utf8').trim();
+src = src.replace('/* __VOIDEXT_V2__ */', UI_CSS);
 
 // Stamp the current version in (the bookmarklet's "installed" version).
 src = src.replace(/__VERSION__/g, VERSION);

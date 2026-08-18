@@ -1,9 +1,25 @@
-# Nebula
+# VoidEXT
 
 An editorial, celestial-themed **bookmarklet** backed by a **Vercel website**.
 Users sign up or log in through the popup, then generate rotating links pulled
 from a private server-side vault. The full link list never ships to the client —
 the popup only sees a user's current set, and only after authentication.
+
+## Recovering from a deleted database
+
+The application is ready to connect to a fresh Upstash Redis / Vercel KV
+database. Create the database, then add its REST URL and token to the deployed
+project using either pair of supported variables:
+
+- UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+- KV_REST_API_URL and KV_REST_API_TOKEN
+
+Also set ADMIN_KEY to a long random secret. Redeploy, then open /api/health.
+A healthy production response reports persistent: true, reachable: true, and
+provider: upstash-redis.
+
+A newly created database starts clean. Accounts and messages from the deleted
+database can only be restored if an export or provider backup still exists.
 
 ## What's here
 

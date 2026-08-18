@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nebula · Admin</title>
+<title>VoidEXT · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 :root{--star:rgba(255,255,255,0.9);--a1:#a855f7;--a2:#ec4899;--a3:#38bdf8;--grad:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);--grad3:linear-gradient(115deg,#818cf8 0%,#c084fc 32%,#f472b6 62%,#38bdf8 100%);--glow:rgba(168,85,247,0.5);--danger:#fb3b6b;}
@@ -83,7 +83,7 @@ td.url{word-break:break-all;max-width:420px;}
 ::-webkit-scrollbar{width:7px;height:7px;}::-webkit-scrollbar-thumb{background:var(--grad);border-radius:10px;}
 @media(max-width:640px){.dash{flex-direction:column;}.side{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,0.12);padding:12px;}.side .brand{margin-bottom:0;margin-right:6px;}.navitem{margin-bottom:0;white-space:nowrap;}.side .spacer{flex:0;}.main{height:auto;padding:20px 18px;}}
 </style>
-<link rel="stylesheet" href="/admin-polish.css">
+<link rel="stylesheet" href="/admin-v2.css">
 </head>
 <body>
 <div class="neb n1"></div>
@@ -94,7 +94,7 @@ td.url{word-break:break-all;max-width:420px;}
 <!-- GATE -->
 <div id="gate" class="gatewrap">
   <div class="card gate">
-    <h2>Nebula Admin — enter code</h2>
+    <h2>VoidEXT Admin — enter code</h2>
     <input id="keyInput" type="password" placeholder="Admin code" inputmode="numeric" autocomplete="off">
     <div class="msg" id="gateMsg"></div>
     <div style="margin-top:14px;"><button class="btn" id="enterBtn" style="width:100%;">Unlock</button></div>
@@ -105,16 +105,16 @@ td.url{word-break:break-all;max-width:420px;}
 <div id="dash" class="dash hidden">
   <aside class="side">
     <div class="brand"><span class="d"></span><span class="nm">ADMIN</span></div>
-    <button class="navitem active" data-nav="overview"><span class="ic">▦</span> Overview</button>
-    <button class="navitem" data-nav="reports"><span class="ic">⚑</span> Reports <span class="badge hidden" id="navPending">0</span></button>
-    <button class="navitem" data-nav="blocked"><span class="ic">⊘</span> Blocked</button>
-    <button class="navitem" data-nav="bugs"><span class="ic">🐞</span> Bugs <span class="badge hidden" id="navBugs">0</span></button>
-    <button class="navitem" data-nav="accounts"><span class="ic">◐</span> Accounts</button>
-    <button class="navitem" data-nav="messages"><span class="ic">✉</span> Messages</button>
-    <button class="navitem" data-nav="announce"><span class="ic">❖</span> Announce</button>
+    <button class="navitem active" data-nav="overview"><span class="ic">01</span> Overview</button>
+    <button class="navitem" data-nav="reports"><span class="ic">02</span> Reports <span class="badge hidden" id="navPending">0</span></button>
+    <button class="navitem" data-nav="blocked"><span class="ic">03</span> Blocked</button>
+    <button class="navitem" data-nav="bugs"><span class="ic">04</span> Bugs <span class="badge hidden" id="navBugs">0</span></button>
+    <button class="navitem" data-nav="accounts"><span class="ic">05</span> Accounts</button>
+    <button class="navitem" data-nav="messages"><span class="ic">06</span> Messages</button>
+    <button class="navitem" data-nav="announce"><span class="ic">07</span> Announce</button>
     <div class="spacer"></div>
-    <button class="navitem" id="refreshBtn"><span class="ic">↻</span> Refresh</button>
-    <button class="navitem" id="logoutBtn"><span class="ic">⏻</span> Lock</button>
+    <button class="navitem" id="refreshBtn"><span class="ic">R</span> Refresh</button>
+    <button class="navitem" id="logoutBtn"><span class="ic">X</span> Lock</button>
   </aside>
   <main class="main">
     <!-- OVERVIEW -->
