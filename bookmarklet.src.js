@@ -33,7 +33,7 @@
 <title>VoidEXT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 body{--a1:#a855f7;--a2:#ec4899;--a3:#38bdf8;--grad:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);--grad3:linear-gradient(115deg,#818cf8 0%,#c084fc 32%,#f472b6 62%,#38bdf8 100%);--glow:rgba(168,85,247,0.5);--btn-bg:var(--grad);--btn-fg:#fff;--danger:#fb3b6b;}
@@ -409,7 +409,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 <div id="loader" class="loader">
   <div class="warp"></div>
   <div class="orbit"><span class="ringline"></span><span class="planet"></span></div>
-  <div class="lbrand">NEBULA</div>
+  <div class="lbrand">VoidEXT</div>
 </div>
 <div class="shell">
 
@@ -418,7 +418,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <div class="brandhead">
       <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="11" ry="4"/></svg></div>
       <h2>VoidEXT</h2>
-      <p>Your private link ritual</p>
+      <p>Your private link workspace</p>
     </div>
     <div class="tabs">
       <div class="tab active" id="tabLogin">Log in</div>
@@ -449,15 +449,23 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     </aside>
     <main class="main">
       <!-- LINKS -->
-      <section id="page-links">
-        <div class="ptitle">Your Links</div>
-        <div class="psub">Five active destinations a day, plus any returned tokens.</div>
-        <div class="actions">
-          <button class="btn" id="genBtn">Generate a link</button>
+      <section id="page-links" class="home-page">
+        <div class="home-kicker"><span class="live-dot"></span>Private routing is online</div><div class="ptitle">Where do you want to go?</div>
+        <div class="psub">Generate a private route from the live vault. Your destinations stay attached to your account.</div>
+        <div class="actions route-composer">
+          <button class="btn composer-btn" id="genBtn">Generate a route <span aria-hidden="true">up</span></button>
           <button class="btn ghost" id="copyBtn">Copy all</button>
           <button class="btn ghost" id="openBtn">Open all</button>
         </div>
-        <div class="meter" id="meter"></div>
+        <div class="usage-card">
+          <div class="usage-top">
+            <div><span class="usage-label">Daily usage</span><strong id="usageValue">0 of 5 used</strong></div>
+            <span class="usage-reset">Resets daily</span>
+          </div>
+          <div class="usage-track"><i id="usageFill"></i></div>
+          <div class="meter" id="meter">5 generations available</div>
+        </div>
+        <div class="section-head"><span>Your routes</span><span class="section-count" id="routeCount">0 saved</span></div>
         <ul class="links" id="linkList"></ul>
         <div class="empty" id="linksEmpty">No links yet — generate one.</div>
       </section>
@@ -688,20 +696,32 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     msg('Opening '+state.links.length+' tabs...','ok');
   };
 
+  function renderUsage(account){
+    account=account||{};
+    var limit=Number(account.limit)||5;
+    var used=Math.max(0,Number(account.used)||0);
+    var bonus=Math.max(0,Number(account.bonus)||0);
+    var rem=account.remaining==null?Math.max(0,limit-used)+bonus:Number(account.remaining);
+    var pct=Math.max(0,Math.min(100,(used/limit)*100));
+    $('usageValue').textContent=used+' of '+limit+' used';
+    $('usageFill').style.width=pct+'%';
+    $('meter').textContent=rem+' generation'+(rem===1?'':'s')+' available'+(bonus?'  -  '+bonus+' bonus':'');
+  }
   function updateMeter(d){
     if(!d||d.remaining==null){return;}
-    var rem=d.remaining;
-    $('meter').textContent=rem+' link token'+(rem===1?'':'s');
-    if(state.account){state.account.remaining=rem;state.account.limit=d.limit;}
+    if(!state.account)state.account={};
+    state.account.remaining=d.remaining;state.account.limit=d.limit||state.account.limit||5;
+    if(d.used!=null)state.account.used=d.used;
+    else state.account.used=Math.max(0,state.account.limit-Math.min(d.remaining,state.account.limit));
+    if(d.bonus!=null)state.account.bonus=d.bonus;
+    renderUsage(state.account);
   }
   function renderLinks(links){
     var L=$('linkList');L.innerHTML='';
     $('linksEmpty').classList.toggle('hidden',links.length>0);
-    $('genBtn').textContent='Generate a link';
-    if(state.account){
-      var rem=(state.account.remaining==null?(state.account.limit||5):state.account.remaining);
-      $('meter').textContent=rem+' link token'+(rem===1?'':'s');
-    }
+    $('routeCount').textContent=links.length+' saved';
+    if(state.account)renderUsage(state.account);
+    else renderUsage({limit:5,used:0,remaining:5,bonus:0});
     var pinSet={};(state.pinned||[]).forEach(function(u){pinSet[u]=true;});
     var ordered=links.slice().sort(function(a,b){
       var pa=pinSet[a]?1:0,pb=pinSet[b]?1:0;
@@ -712,7 +732,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     var TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>';
     ordered.forEach(function(url,idx){
       var li=document.createElement('li');if(pinSet[url])li.className='pinned';
-      var a=document.createElement('a');a.href=url;a.target=state.settings.openInNewTab?'_blank':'_top';a.rel='noopener noreferrer';a.textContent='Link '+(idx+1);
+      var a=document.createElement('a');a.href=url;a.target=state.settings.openInNewTab?'_blank':'_top';a.rel='noopener noreferrer';a.textContent='Private route '+String(idx+1).padStart(2,'0');
       var pin=document.createElement('button');pin.type='button';pin.className='lact'+(pinSet[url]?' on':'');pin.title=pinSet[url]?'Unpin':'Pin';pin.innerHTML=PIN;
       pin.onclick=function(){togglePin(url,!pinSet[url]);};
       var del=document.createElement('button');del.type='button';del.className='lact';del.title='Delete';del.innerHTML=TRASH;
@@ -1172,19 +1192,19 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   const overlay = document.createElement('div');
   overlay.id = OVERLAY_ID;
   overlay.style.cssText =
-    'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(4,5,6,0.82);backdrop-filter:blur(8px) saturate(.8);-webkit-backdrop-filter:blur(8px) saturate(.8);z-index:99999999;opacity:0;transition:opacity .25s ease;display:flex;justify-content:center;align-items:center;';
+    'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.68);backdrop-filter:blur(7px) saturate(.9);-webkit-backdrop-filter:blur(7px) saturate(.9);z-index:99999999;opacity:0;transition:opacity .25s ease;display:flex;justify-content:center;align-items:center;';
 
   const wrapper = document.createElement('div');
   wrapper.id = WRAPPER_ID;
   wrapper.style.cssText =
-    'position:relative;width:min(980px,94vw);height:min(690px,90vh);background:transparent;border-radius:0;box-shadow:14px 14px 0 rgba(0,0,0,0.72),0 0 0 1px rgba(242,239,229,0.18);overflow:hidden;transform:scale(0.97) translateY(8px);transition:transform .28s cubic-bezier(0.2,0.8,0.2,1);';
+    'position:relative;width:min(980px,94vw);height:min(690px,90vh);background:#212121;border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,0.48),0 0 0 1px rgba(255,255,255,0.08);overflow:hidden;transform:scale(0.97) translateY(8px);transition:transform .28s cubic-bezier(0.2,0.8,0.2,1);';
 
   const closeBtn = document.createElement('div');
   closeBtn.innerHTML = '&#x2715;';
   closeBtn.style.cssText =
-    'position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:0;border:1px solid #0b0d0f;background:#ff5b35;color:#fff;font-family:Georgia,serif;font-size:13px;font-weight:400;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;z-index:100000000;user-select:none;box-shadow:3px 3px 0 rgba(0,0,0,0.28);';
-  closeBtn.addEventListener('mouseenter', function () { closeBtn.style.background = '#ff704d'; closeBtn.style.color = '#fff'; });
-  closeBtn.addEventListener('mouseleave', function () { closeBtn.style.background = '#ff5b35'; closeBtn.style.color = '#fff'; });
+    'position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;border:1px solid rgba(255,255,255,0.12);background:#2f2f2f;color:#c7c7c7;font-family:Manrope,system-ui,sans-serif;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.16s;z-index:100000000;user-select:none;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+  closeBtn.addEventListener('mouseenter', function () { closeBtn.style.background = '#424242'; closeBtn.style.color = '#fff'; });
+  closeBtn.addEventListener('mouseleave', function () { closeBtn.style.background = '#2f2f2f'; closeBtn.style.color = '#c7c7c7'; });
 
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'width:100%;height:100%;border:none;background:transparent;';
