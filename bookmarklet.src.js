@@ -488,6 +488,11 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <section id="page-links" class="home-page">
         <div class="home-kicker">Your links</div><div class="ptitle">Links</div>
         <div class="psub">Generate a link and keep the ones you use.</div>
+        <aside class="home-announcement hidden" id="homeAnnouncement" aria-live="polite">
+          <span class="home-announcement-label">Broadcast</span>
+          <div class="home-announcement-copy"><div><strong id="homeAnnouncementTitle">General announcement</strong><time id="homeAnnouncementDate"></time></div><p id="homeAnnouncementText"></p></div>
+          <button id="homeAnnouncementDismiss" type="button" aria-label="Dismiss announcement">&#x2715;</button>
+        </aside>
         <div class="actions route-composer">
           <button class="btn composer-btn" id="genBtn">Generate link</button>
           <button class="btn ghost" id="copyBtn">Copy all</button>
@@ -678,7 +683,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   try{versionParam=new URLSearchParams(window.location.search).get('v')||'';}catch(e){}
   var INSTALLED_VERSION=/^\d+\.\d+\.\d+(?:[-+][a-z0-9.-]+)?$/i.test(versionParam)?versionParam:APP_VERSION;
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
-  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],releases:[],unread:0,reportSel:{}};
+  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],announcements:[],releases:[],unread:0,reportSel:{}};
 
   var $=function(id){return document.getElementById(id);};
   function token(){try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}}
@@ -698,8 +703,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   function applyTheme(t){document.body.setAttribute('data-theme',t||'void');}
   function applySettings(s){state.settings=Object.assign({},DEFAULTS,s||{});applyTheme(state.settings.theme);}
 
-  function showAuth(){$('authWrap').classList.remove('hidden');$('app').classList.add('hidden');closeCommand();closeMore();}
-  function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');checkReleases();paintVersionState();}
+  function showAuth(){$('authWrap').classList.remove('hidden');$('app').classList.add('hidden');closeCommand();closeMore();stopHomeAnnouncementWatch();}
+  function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');checkReleases();paintVersionState();startHomeAnnouncementWatch();}
 
   var PAGE_NAMES={links:'Links',report:'Report links',bug:'Support',messages:'Messages',notifs:'Notifications',updates:'Updates',vault:'Vault',account:'Account',settings:'Settings',help:'Help'};
   function nav(page){
@@ -801,6 +806,38 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         clearMsg();showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();
       })
       .catch(function(){b.disabled=false;msg('Network error — is the server reachable?','err');});
+  };
+
+  // The newest admin announcement appears directly on the bookmark home page.
+  // Dismissal is stored per announcement, so a future broadcast appears again.
+  var homeAnnouncementPoll=null,homeAnnouncementId='';
+  function dismissedAnnouncement(){try{return localStorage.getItem('scale_xt_dismissed_announcement')||'';}catch(e){return'';}}
+  function paintHomeAnnouncement(item){
+    var panel=$('homeAnnouncement');
+    if(!item){homeAnnouncementId='';panel.classList.add('hidden');return;}
+    var id=String(item.id||item.at||'');
+    if(id&&dismissedAnnouncement()===id){homeAnnouncementId=id;panel.classList.add('hidden');return;}
+    homeAnnouncementId=id;
+    $('homeAnnouncementTitle').textContent=item.title||'General announcement';
+    $('homeAnnouncementText').textContent=item.text||'';
+    $('homeAnnouncementDate').textContent=item.at?new Date(item.at).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
+    panel.classList.remove('hidden');
+  }
+  function loadHomeAnnouncement(){
+    return api('/api/announcements').then(function(res){
+      if(!res.ok)return;
+      state.announcements=res.data.announcements||[];
+      paintHomeAnnouncement(state.announcements[0]||null);
+    }).catch(function(){});
+  }
+  function startHomeAnnouncementWatch(){
+    loadHomeAnnouncement();
+    if(!homeAnnouncementPoll)homeAnnouncementPoll=setInterval(loadHomeAnnouncement,60000);
+  }
+  function stopHomeAnnouncementWatch(){if(homeAnnouncementPoll){clearInterval(homeAnnouncementPoll);homeAnnouncementPoll=null;}}
+  $('homeAnnouncementDismiss').onclick=function(){
+    if(homeAnnouncementId){try{localStorage.setItem('scale_xt_dismissed_announcement',homeAnnouncementId);}catch(e){}}
+    $('homeAnnouncement').classList.add('hidden');
   };
 
   // links page

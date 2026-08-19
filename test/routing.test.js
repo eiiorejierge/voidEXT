@@ -40,6 +40,9 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
   assert.match(builtApp, /id="commandPalette"/);
   assert.match(builtApp, /id="versionBtn"/);
   assert.match(builtApp, /id="moreMenu"/);
+  assert.match(builtApp, /id="homeAnnouncement"/);
+  assert.match(source, /api\('\/api\/announcements'\)/);
+  assert.match(source, /scale_xt_dismissed_announcement/);
   assert.doesNotMatch(builtApp, /__VERSION__/);
   assert.equal(launcher.includes('/app.html?v=' + version), true);
   assert.equal(launcher.length <= 5000, true, 'Launcher grew to ' + launcher.length + ' characters');
