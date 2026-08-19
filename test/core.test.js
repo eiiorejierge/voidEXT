@@ -201,6 +201,9 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(globalFeed.json.messages[1].role, 'owner');
   assert.equal(globalFeed.json.messages[1].canDelete, false);
   assert.equal(globalFeed.json.online >= 1, true);
+  const unreadSummary = await call('/api/messages/unread', { token });
+  assert.equal(unreadSummary.status, 200);
+  assert.equal(unreadSummary.json.globalLatestId, globalFeed.json.messages[1].id);
   assert.equal((await call('/api/global/delete', {
     token,
     method: 'POST',
@@ -213,6 +216,16 @@ test('admin controls, announcements, and support conversations work end to end',
   })).status, 200);
   const globalAfterDelete = await call('/api/global/messages', { token });
   assert.equal(globalAfterDelete.json.messages.some((message) => message.id === globalPost.json.message.id), false);
+
+  const linkReport = await call('/api/report', {
+    token,
+    method: 'POST',
+    body: { urls: ['https://example.com/report-target'], reason: 'wrong-destination' },
+  });
+  assert.equal(linkReport.status, 200);
+  const reportQueue = await call('/api/admin/reports', { admin: true });
+  assert.equal(reportQueue.status, 200);
+  assert.equal(reportQueue.json.reports[0].reason, 'wrong-destination');
 
   const created = await call('/api/bug', {
     token,
@@ -358,7 +371,26 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(operations.status, 200);
   assert.equal(operations.json.accounts, 3);
   assert.equal(operations.json.maintenance.enabled, false);
+  assert.equal(operations.json.signupsEnabled, true);
   assert.equal((await call('/api/admin/operations', { token: secondSignup.json.token })).status, 403);
+
+  const registrationOff = await call('/api/admin/signups', {
+    admin: true,
+    method: 'POST',
+    body: { enabled: false },
+  });
+  assert.equal(registrationOff.status, 200);
+  assert.equal(registrationOff.json.signupsEnabled, false);
+  assert.equal((await call('/api/maintenance')).json.signupsEnabled, false);
+  assert.equal((await call('/api/signup', {
+    method: 'POST',
+    body: { username: 'closed_signup', password: 'password123' },
+  })).status, 403);
+  assert.equal((await call('/api/admin/signups', {
+    admin: true,
+    method: 'POST',
+    body: { enabled: true },
+  })).json.signupsEnabled, true);
 
   const maintenanceOn = await call('/api/admin/maintenance', {
     admin: true,
@@ -412,4 +444,31 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(afterMaintenance.status, 200);
   assert.equal(afterMaintenance.json.usagePercent, 11);
   assert.equal(afterMaintenance.json.usageAvailable, 8);
+
+  const sessionSignup = await call('/api/signup', {
+    method: 'POST',
+    body: { username: 'session_user', password: 'password123' },
+  });
+  const sessionLogin = await call('/api/login', {
+    method: 'POST',
+    body: { username: 'session_user', password: 'password123' },
+  });
+  const passwordChange = await call('/api/password', {
+    token: sessionSignup.json.token,
+    method: 'POST',
+    body: { current: 'password123', newPassword: 'new-password-456' },
+  });
+  assert.equal(passwordChange.status, 200);
+  assert.equal(typeof passwordChange.json.token, 'string');
+  assert.equal((await call('/api/me', { token: sessionSignup.json.token })).status, 401);
+  assert.equal((await call('/api/me', { token: sessionLogin.json.token })).status, 401);
+  assert.equal((await call('/api/me', { token: passwordChange.json.token })).status, 200);
+  const newLogin = await call('/api/login', {
+    method: 'POST',
+    body: { username: 'session_user', password: 'new-password-456' },
+  });
+  assert.equal(newLogin.status, 200);
+  assert.equal((await call('/api/logout-all', { token: passwordChange.json.token, method: 'POST' })).status, 200);
+  assert.equal((await call('/api/me', { token: passwordChange.json.token })).status, 401);
+  assert.equal((await call('/api/me', { token: newLogin.json.token })).status, 401);
 });

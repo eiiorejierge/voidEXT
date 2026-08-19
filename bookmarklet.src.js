@@ -459,7 +459,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <aside class="side" aria-label="Primary navigation">
       <div class="brand" title="Scale XT"><span class="d"></span><span class="nm">Scale XT</span></div>
       <button class="navitem active" data-nav="links" data-label="Links" title="Links" aria-label="Links"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span><span class="navtext">Links</span></button>
-      <button class="navitem" data-nav="global" data-label="Global chat" title="Global chat" aria-label="Global chat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.3 3.4 5.1 3.4 8.5S14.3 18.2 12 20.5M12 3.5C9.7 5.8 8.6 8.6 8.6 12s1.1 6.2 3.4 8.5"/></svg></span><span class="navtext">Global chat</span></button>
+      <button class="navitem" data-nav="global" data-label="Global chat" title="Global chat" aria-label="Global chat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.3 3.4 5.1 3.4 8.5S14.3 18.2 12 20.5M12 3.5C9.7 5.8 8.6 8.6 8.6 12s1.1 6.2 3.4 8.5"/></svg></span><span class="navtext">Global chat</span><span class="badge hidden" id="globalBadge">New</span></button>
       <button class="navitem" data-nav="bug" data-label="Support" title="Support" aria-label="Support"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5h14v10H9l-4 3v-13z"/><path d="M8 9h8M8 12h5"/></svg></span><span class="navtext">Support</span><span class="badge hidden" id="bugBadge">0</span></button>
       <button class="navitem" data-nav="messages" data-label="Messages" title="Messages" aria-label="Messages"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7 7 0 0 1-9.5 6.5L5 19.5l1.4-4A7 7 0 1 1 20 11.5z"/></svg></span><span class="navtext">Messages</span><span class="badge hidden" id="msgBadge">0</span></button>
       <div class="spacer"></div>
@@ -500,6 +500,11 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <button class="btn ghost" id="copyBtn">Copy all</button>
           <button class="btn ghost" id="openBtn">Open all</button>
         </div>
+        <div class="link-tools">
+          <input id="linkSearch" type="search" placeholder="Search saved links" autocomplete="off">
+          <select id="linkDomain" aria-label="Filter saved links by domain"><option value="">All domains</option></select>
+          <button class="btn ghost" id="randomBtn" type="button">Open random</button>
+        </div>
         <div class="usage-card">
           <div class="usage-top">
             <div><span class="usage-label">Weekly usage</span><strong id="usageValue">0% used</strong></div>
@@ -514,6 +519,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         <div class="section-head"><span>Your routes</span><span class="section-count" id="routeCount">0 saved</span></div>
         <ul class="links" id="linkList"></ul>
         <div class="empty" id="linksEmpty">No links yet — generate one.</div>
+        <aside class="undo-delete hidden" id="undoDelete" aria-live="polite"><span>Link removed.</span><button type="button" id="undoDeleteBtn">Undo</button></aside>
       </section>
       <!-- SETTINGS -->
       <section id="page-settings" class="hidden">
@@ -535,6 +541,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         <div class="psub">Select the links that don't work, then send them for review. An admin confirms before anything is blocked.</div>
         <ul class="links" id="reportList" style="margin-top:6px;"></ul>
         <div class="empty" id="reportEmpty">No links to report — generate some first.</div>
+        <label class="flabel" for="reportReason" style="margin-top:14px;">Reason</label>
+        <select id="reportReason"><option value="dead">Dead link</option><option value="blocked">Blocked or unavailable</option><option value="wrong-destination">Wrong destination</option><option value="other">Other</option></select>
         <button class="btn" id="reportBtn" style="margin-top:14px;">Report selected</button>
       </section>
       <!-- SUPPORT -->
@@ -562,7 +570,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <section id="page-global" class="hidden">
         <div class="global-head">
           <div><div class="ptitle">Global chat</div><div class="psub">One shared room for everyone using Scale XT.</div></div>
-          <div class="global-presence"><i></i><span id="globalOnline">— online</span></div>
+          <div class="global-head-actions"><button class="btn ghost" id="globalMute" type="button">Mute</button><div class="global-presence"><i></i><span id="globalOnline">— online</span></div></div>
         </div>
         <div class="global-room">
           <div class="global-messages" id="globalMessages"></div>
@@ -660,6 +668,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <input id="pwCurrent" type="password" placeholder="Current password" autocomplete="off">
           <input id="pwNew" type="password" placeholder="New password" autocomplete="off">
           <button class="btn" id="pwBtn" style="width:100%;">Update password</button>
+          <button class="btn ghost" id="logoutAllBtn" style="width:100%;">Log out all devices</button>
         </div>
       </section>
       <!-- RELEASE NOTES -->
@@ -702,7 +711,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   try{versionParam=new URLSearchParams(window.location.search).get('v')||'';}catch(e){}
   var INSTALLED_VERSION=/^\d+\.\d+\.\d+(?:[-+][a-z0-9.-]+)?$/i.test(versionParam)?versionParam:APP_VERSION;
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
-  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],announcements:[],releases:[],unread:0,reportSel:{}};
+  var state={mode:'login',signupsEnabled:true,settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],announcements:[],releases:[],unread:0,reportSel:{}};
 
   var $=function(id){return document.getElementById(id);};
   function token(){try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}}
@@ -803,6 +812,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 
   // tabs
   function setMode(m){
+    if(m==='signup'&&!state.signupsEnabled)m='login';
     state.mode=m;
     $('tabLogin').classList.toggle('active',m==='login');
     $('tabSignup').classList.toggle('active',m==='signup');
@@ -888,6 +898,34 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     state.links.forEach(function(u){window.open(u,'_blank','noopener');});
     msg('Opening '+state.links.length+' tabs...','ok');
   };
+  function linkDomain(url){try{return new URL(url).hostname.replace(/^www\./,'').toLowerCase();}catch(e){return'';}}
+  function syncLinkDomains(links){
+    var select=$('linkDomain'),sig=links.map(linkDomain).sort().join('|');
+    if(select.getAttribute('data-sig')===sig)return;
+    var selected=select.value,domains=[];
+    links.forEach(function(url){var domain=linkDomain(url);if(domain&&domains.indexOf(domain)<0)domains.push(domain);});
+    domains.sort();select.innerHTML='<option value="">All domains</option>';
+    domains.forEach(function(domain){var option=document.createElement('option');option.value=domain;option.textContent=domain;select.appendChild(option);});
+    select.value=domains.indexOf(selected)>=0?selected:'';select.setAttribute('data-sig',sig);
+  }
+  function setSignupsEnabled(enabled){
+    state.signupsEnabled=enabled!==false;
+    $('tabSignup').classList.toggle('hidden',!state.signupsEnabled);
+    $('tabSignup').parentNode.style.gridTemplateColumns=state.signupsEnabled?'1fr 1fr':'1fr';
+    $('tabSignup').setAttribute('aria-disabled',state.signupsEnabled?'false':'true');
+    $('tabSignup').title=state.signupsEnabled?'':'New account registration is currently closed.';
+    if(!state.signupsEnabled&&state.mode==='signup')setMode('login');
+  }
+  function visibleLinks(){
+    var q=$('linkSearch').value.trim().toLowerCase(),domain=$('linkDomain').value;
+    return (state.links||[]).filter(function(url){return(!q||url.toLowerCase().indexOf(q)>=0)&&(!domain||linkDomain(url)===domain);});
+  }
+  $('linkSearch').addEventListener('input',function(){renderLinks(state.links);});
+  $('linkDomain').addEventListener('change',function(){renderLinks(state.links);});
+  $('randomBtn').onclick=function(){
+    var links=visibleLinks();if(!links.length){msg('No saved links match the current filter.','err');return;}
+    var url=links[Math.floor(Math.random()*links.length)];window.open(url,state.settings.openInNewTab?'_blank':'_top','noopener');
+  };
 
   function renderUsage(account){
     account=account||{};
@@ -910,12 +948,15 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   }
   function renderLinks(links){
     var L=$('linkList');L.innerHTML='';
-    $('linksEmpty').classList.toggle('hidden',links.length>0);
-    $('routeCount').textContent=links.length+' saved';
+    syncLinkDomains(links);
+    var shown=visibleLinks();
+    $('linksEmpty').textContent=links.length?'No saved links match this filter.':'No links yet — generate one.';
+    $('linksEmpty').classList.toggle('hidden',shown.length>0);
+    $('routeCount').textContent=(shown.length===links.length?links.length:shown.length+' of '+links.length)+' saved';
     if(state.account)renderUsage(state.account);
     else renderUsage({usagePercent:0});
     var pinSet={};(state.pinned||[]).forEach(function(u){pinSet[u]=true;});
-    var ordered=links.slice().sort(function(a,b){
+    var ordered=shown.slice().sort(function(a,b){
       var pa=pinSet[a]?1:0,pb=pinSet[b]?1:0;
       if(pa!==pb)return pb-pa;                 // pinned to the top
       return links.indexOf(a)-links.indexOf(b);// otherwise keep original order
@@ -928,27 +969,38 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       var pin=document.createElement('button');pin.type='button';pin.className='lact'+(pinSet[url]?' on':'');pin.title=pinSet[url]?'Unpin':'Pin';pin.innerHTML=PIN;
       pin.onclick=function(){togglePin(url,!pinSet[url]);};
       var del=document.createElement('button');del.type='button';del.className='lact';del.title='Delete';del.innerHTML=TRASH;
-      del.onclick=function(){
-        if(del.getAttribute('data-c')==='1'){deleteLink(url);return;}
-        del.setAttribute('data-c','1');del.classList.add('confirm');del.title='Click again to delete';
-        setTimeout(function(){del.removeAttribute('data-c');del.classList.remove('confirm');del.title='Delete';},2500);
-      };
+      del.onclick=function(){stageDeleteLink(url);};
       li.appendChild(a);li.appendChild(pin);li.appendChild(del);L.appendChild(li);
     });
   }
+  var pendingDelete=null;
+  function commitPendingDelete(){
+    if(!pendingDelete)return;
+    var item=pendingDelete;pendingDelete=null;$('undoDelete').classList.add('hidden');
+    api('/api/links/delete',{method:'POST',body:{url:item.url}}).then(function(res){
+      if(!res.ok){state.links.splice(Math.min(item.index,state.links.length),0,item.url);if(item.pinned)state.pinned.push(item.url);renderLinks(state.links);msg(res.data.error||'Could not delete.','err');return;}
+      state.links=res.data.links||state.links;state.pinned=res.data.pinned||state.pinned;renderLinks(state.links);
+    }).catch(function(){state.links.splice(Math.min(item.index,state.links.length),0,item.url);if(item.pinned)state.pinned.push(item.url);renderLinks(state.links);msg('Network error.','err');});
+  }
+  function stageDeleteLink(url){
+    if(pendingDelete)commitPendingDelete();
+    var index=state.links.indexOf(url),pinned=state.pinned.indexOf(url)>=0;
+    if(index<0)return;
+    state.links.splice(index,1);state.pinned=state.pinned.filter(function(item){return item!==url;});renderLinks(state.links);
+    pendingDelete={url:url,index:index,pinned:pinned,timer:setTimeout(commitPendingDelete,8000)};
+    $('undoDelete').classList.remove('hidden');
+  }
+  $('undoDeleteBtn').onclick=function(){
+    if(!pendingDelete)return;
+    var item=pendingDelete;pendingDelete=null;clearTimeout(item.timer);$('undoDelete').classList.add('hidden');
+    state.links.splice(Math.min(item.index,state.links.length),0,item.url);if(item.pinned&&state.pinned.indexOf(item.url)<0)state.pinned.push(item.url);renderLinks(state.links);msg('Link restored.','ok');
+  };
   function togglePin(url,pin){
     api('/api/links/pin',{method:'POST',body:{url:url,pinned:pin}}).then(function(res){
       if(!res.ok){msg(res.data.error||'Could not update.','err');return;}
       state.links=res.data.links||state.links;state.pinned=res.data.pinned||[];renderLinks(state.links);
     }).catch(function(){msg('Network error.','err');});
   }
-  function deleteLink(url){
-    api('/api/links/delete',{method:'POST',body:{url:url}}).then(function(res){
-      if(!res.ok){msg(res.data.error||'Could not delete.','err');return;}
-      state.links=res.data.links||[];state.pinned=res.data.pinned||[];renderLinks(state.links);msg('Link deleted.','ok');
-    }).catch(function(){msg('Network error.','err');});
-  }
-
   // settings page
   function openSettings(){
     state.draft=Object.assign({},state.settings);
@@ -1049,7 +1101,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     var urls=Object.keys(state.reportSel||{}).filter(function(u){return state.reportSel[u];});
     if(!urls.length){msg('Select at least one link.','err');return;}
     var b=$('reportBtn');b.disabled=true;msg('Sending report...','');
-    api('/api/report',{method:'POST',body:{urls:urls}}).then(function(res){
+    api('/api/report',{method:'POST',body:{urls:urls,reason:$('reportReason').value}}).then(function(res){
       b.disabled=false;
       if(!res.ok){msg(res.data.error||'Could not report.','err');return;}
       msg('Reported '+res.data.reported+' link(s) for review.','ok');renderReport();
@@ -1129,11 +1181,22 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   $('supportReply').addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();sendSupportReply();}});
 
   // global chat — one persistent room shared by every signed-in member.
-  var globalPoll=null,globalSig='';
+  var globalPoll=null,globalSig='',globalLatestId='';
+  function globalMuted(){try{return localStorage.getItem('scale_xt_global_muted')==='1';}catch(e){return false;}}
+  function globalSeen(){try{return localStorage.getItem('scale_xt_global_seen')||'';}catch(e){return'';}}
+  function setGlobalSeen(id){try{if(id)localStorage.setItem('scale_xt_global_seen',id);}catch(e){}}
+  function paintGlobalMute(){$('globalMute').textContent=globalMuted()?'Unmute':'Mute';}
+  function paintGlobalBadge(latestId){
+    if(latestId)globalLatestId=latestId;
+    var badge=$('globalBadge'),viewing=state.activePage==='global';
+    if(viewing&&globalLatestId)setGlobalSeen(globalLatestId);
+    badge.classList.toggle('hidden',!globalLatestId||viewing||globalMuted()||globalSeen()===globalLatestId);
+  }
   function openGlobal(){
     globalSig='';
     loadGlobal(true);
     startGlobalPoll();
+    paintGlobalMute();paintGlobalBadge(globalLatestId);
     setTimeout(function(){$('globalInput').focus();},80);
   }
   function loadGlobal(forceScroll){
@@ -1150,6 +1213,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     var box=$('globalMessages');
     var atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<70;
     globalSig=sig;
+    globalLatestId=messages.length?messages[messages.length-1].id:'';paintGlobalBadge(globalLatestId);
     box.innerHTML='';
     $('globalEmpty').classList.toggle('hidden',messages.length>0);
     messages.forEach(function(message){
@@ -1207,6 +1271,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   $('globalSend').onclick=sendGlobal;
   $('globalInput').addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();sendGlobal();}});
   $('globalInput').addEventListener('input',function(){$('globalCount').textContent=$('globalInput').value.length+' / 500';});
+  $('globalMute').onclick=function(){try{localStorage.setItem('scale_xt_global_muted',globalMuted()?'0':'1');}catch(e){}paintGlobalMute();paintGlobalBadge(globalLatestId);};
 
   // messages — texting-style: an inbox of conversations, each opening a thread
   // of chat bubbles you reply into. Messages live in the thread (server side),
@@ -1244,7 +1309,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     if(n>0){b.textContent=n>99?'99+':n;b.classList.remove('hidden');}else{b.classList.add('hidden');}
   }
   function refreshMsgBadge(){
-    api('/api/messages/unread').then(function(res){if(res.ok)setMsgBadge(res.data.unread||0);});
+    api('/api/messages/unread').then(function(res){if(res.ok){setMsgBadge(res.data.unread||0);paintGlobalBadge(res.data.globalLatestId||'');}});
   }
 
   function openMessages(){
@@ -1485,12 +1550,18 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     api('/api/password',{method:'POST',body:{current:cur,newPassword:nw}}).then(function(res){
       b.disabled=false;
       if(!res.ok){msg(res.data.error||'Could not update.','err');return;}
-      $('pwCurrent').value='';$('pwNew').value='';msg('Password updated.','ok');
+      if(res.data.token)setToken(res.data.token);
+      $('pwCurrent').value='';$('pwNew').value='';msg('Password updated. Other sessions were signed out.','ok');
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   };
+  $('logoutAllBtn').onclick=function(){
+    var button=$('logoutAllBtn');button.disabled=true;msg('Signing out every device...','');
+    api('/api/logout-all',{method:'POST'}).then(function(res){button.disabled=false;if(!res.ok){msg(res.data.error||'Could not revoke sessions.','err');return;}doLogout(false);msg('All devices signed out.','ok');}).catch(function(){button.disabled=false;msg('Network error.','err');});
+  };
 
-  function doLogout(){
-    api('/api/logout',{method:'POST'});
+  function doLogout(callApi){
+    if(callApi!==false)api('/api/logout',{method:'POST'});
+    if(pendingDelete){clearTimeout(pendingDelete.timer);pendingDelete=null;$('undoDelete').classList.add('hidden');}
     stopMsgPoll();stopGlobalPoll();stopSupportPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);setSupportBadge(0);threadPartner=null;supportId=null;
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
   }
@@ -1511,7 +1582,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   }
   function checkMaintenance(){
     api('/api/maintenance').then(function(res){
-      if(res.ok)paintMaintenance(res.data.maintenance);
+      if(res.ok){paintMaintenance(res.data.maintenance);setSignupsEnabled(res.data.signupsEnabled!==false);}
     }).catch(function(){});
   }
   function startMaintenanceWatch(){

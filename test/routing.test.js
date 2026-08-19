@@ -45,6 +45,11 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
   assert.match(builtApp, /id="page-global"/);
   assert.match(source, /api\('\/api\/global\/messages'\)/);
   assert.match(source, /api\('\/api\/global\/send'/);
+  assert.match(source, /id="linkSearch"/);
+  assert.match(source, /id="undoDelete"/);
+  assert.match(source, /id="reportReason"/);
+  assert.match(source, /id="globalMute"/);
+  assert.match(source, /api\('\/api\/logout-all'/);
   assert.match(source, /api\('\/api\/announcements'\)/);
   assert.match(source, /scale_xt_dismissed_announcement/);
   assert.match(stylesheet, /\.app\.hidden\{display:none!important\}/);
@@ -54,4 +59,15 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
 
   const ids = [...builtApp.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
   assert.equal(new Set(ids).size, ids.length, 'The generated app contains duplicate element IDs');
+});
+
+test('standalone and Vercel responses include baseline security headers', () => {
+  const server = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+  const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
+  assert.match(server, /X-Content-Type-Options/);
+  assert.match(server, /Content-Security-Policy/);
+  const names = vercel.headers.flatMap((rule) => rule.headers.map((header) => header.key));
+  assert.equal(names.includes('X-Content-Type-Options'), true);
+  assert.equal(names.includes('Content-Security-Policy'), true);
+  assert.equal(names.includes('Cache-Control'), true);
 });

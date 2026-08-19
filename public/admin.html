@@ -152,7 +152,7 @@ td.url{word-break:break-all;max-width:420px;}
       <div class="psub">Reports are never auto-blocked. Confirm one to pause the link and return usage to affected users.</div>
       <div class="row"><button class="btn ghost sm" id="clearReportsBtn" data-cap="links">Clear log</button></div>
       <div class="scroll"><table>
-        <thead><tr><th>Link</th><th>By</th><th>When</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Link</th><th>Reason</th><th>By</th><th>When</th><th>Status</th><th></th></tr></thead>
         <tbody id="reportsBody"></tbody>
       </table></div>
       <div class="empty hidden" id="reportsEmpty">No reports yet.</div>
@@ -170,6 +170,7 @@ td.url{word-break:break-all;max-width:420px;}
       <div class="pool-toolbar">
         <input id="poolSearch" type="search" placeholder="Search links..." autocomplete="off">
         <select id="poolFilter" aria-label="Filter links"><option value="all">All links</option><option value="active">Active</option><option value="paused">Paused</option><option value="removed">Removed</option><option value="custom">Custom only</option></select>
+        <button class="btn ghost" id="poolExportBtn" type="button">Copy filtered</button>
       </div>
       <div id="poolList" class="pool-list"></div>
       <div class="empty hidden" id="poolEmpty">No links match this filter.</div>
@@ -203,6 +204,13 @@ td.url{word-break:break-all;max-width:420px;}
         </article>
         <article class="operation-card">
           <div class="operation-number">02</div>
+          <h2>Account registration</h2>
+          <p>Close public registration without affecting existing accounts or staff access.</p>
+          <strong id="signupState">Checking...</strong>
+          <button class="btn" id="signupToggle">Close registration</button>
+        </article>
+        <article class="operation-card">
+          <div class="operation-number">03</div>
           <h2>Reward everyone</h2>
           <p>Add the same number of usage credits to every account and send a notification explaining the reward.</p>
           <div class="operation-fields">
@@ -214,7 +222,7 @@ td.url{word-break:break-all;max-width:420px;}
           <button class="btn" id="rewardAllBtn">Reward all users</button>
         </article>
         <article class="operation-card operation-danger">
-          <div class="operation-number">03</div>
+          <div class="operation-number">04</div>
           <h2>Reset weekly usage</h2>
           <p>Set this week's usage back to 0% for every account. Existing unused usage credits stay on each account.</p>
           <div class="operation-summary"><b id="resetAccountCount">—</b><span>accounts in scope</span></div>
@@ -292,7 +300,7 @@ td.url{word-break:break-all;max-width:420px;}
       <div class="release-composer">
         <div class="release-fields">
           <label for="releaseVersion">Version</label>
-          <input id="releaseVersion" type="text" value="2.7.0" placeholder="2.7.0">
+          <input id="releaseVersion" type="text" value="2.8.0" placeholder="2.8.0">
           <label for="releaseTitle">Title</label>
           <input id="releaseTitle" type="text" maxlength="100" placeholder="What changed?">
         </div>
@@ -447,6 +455,7 @@ td.url{word-break:break-all;max-width:420px;}
           :'<span class="pill" style="opacity:.6">denied</span>';
         var action=r.status==='pending'?'<button class="btn sm" data-act="confirm">Confirm</button> <button class="btn ghost sm" data-act="deny">Deny</button>':'';
         tr.innerHTML='<td class="url"><a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.url)+'</a></td>'+
+          '<td><span class="pill">'+esc((r.reason||'other').replace(/-/g,' '))+'</span></td>'+
           '<td><span class="pill">'+esc(r.by||'?')+'</span></td>'+
           '<td class="muted" style="white-space:nowrap;">'+esc(when(r.at))+'</td>'+
           '<td>'+statusPill+'</td>'+
@@ -471,13 +480,16 @@ td.url{word-break:break-all;max-width:420px;}
       renderPool();
     });
   }
-  function renderPool(){
+  function filteredPool(){
     var q=$('poolSearch').value.trim().toLowerCase(),filter=$('poolFilter').value;
-    var list=poolItems.filter(function(item){
+    return poolItems.filter(function(item){
       var matches=!q||item.url.toLowerCase().indexOf(q)>=0;
       var visible=filter==='all'||item.status===filter||(filter==='custom'&&item.source==='custom');
       return matches&&visible;
     });
+  }
+  function renderPool(){
+    var list=filteredPool();
     var box=$('poolList');box.innerHTML='';
     $('poolEmpty').classList.toggle('hidden',list.length>0);
     list.forEach(function(item){
@@ -506,6 +518,13 @@ td.url{word-break:break-all;max-width:420px;}
   }
   $('poolSearch').addEventListener('input',renderPool);
   $('poolFilter').addEventListener('change',renderPool);
+  $('poolExportBtn').onclick=function(){
+    var links=filteredPool().map(function(item){return item.url;});
+    if(!links.length){err('No links match the current filter.');return;}
+    var text=links.join('\n');
+    function fallback(){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok('Copied '+links.length+' link(s).');}catch(e){err('Copy failed.');}document.body.removeChild(ta);}
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){ok('Copied '+links.length+' link(s).');},fallback);else fallback();
+  };
   $('poolAddBtn').onclick=function(){
     var text=$('poolAddInput').value.trim();
     if(!text){err('Enter at least one URL.');return;}
@@ -569,11 +588,13 @@ td.url{word-break:break-all;max-width:420px;}
     });
   }
 
-  var maintenanceEnabled=false,operationsAccounts=0;
+  var maintenanceEnabled=false,registrationEnabled=true,operationsAccounts=0,operationsMaintenance={};
   function paintOperations(data){
     data=data||{};
-    var maintenance=data.maintenance||{},enabled=maintenance.enabled===true;
+    if(data.maintenance)operationsMaintenance=data.maintenance;
+    var maintenance=operationsMaintenance,enabled=maintenance.enabled===true;
     maintenanceEnabled=enabled;
+    if(Object.prototype.hasOwnProperty.call(data,'signupsEnabled'))registrationEnabled=data.signupsEnabled!==false;
     operationsAccounts=data.accounts==null?operationsAccounts:Math.max(0,Number(data.accounts)||0);
     $('maintenanceState').textContent=enabled?'Maintenance active':'Service live';
     $('maintenanceMeta').textContent=enabled
@@ -586,6 +607,9 @@ td.url{word-break:break-all;max-width:420px;}
     if(maintenance.message)$('maintenanceMessage').value=maintenance.message;
     $('resetAccountCount').textContent=operationsAccounts;
     $('maintenanceBadge').classList.toggle('hidden',!enabled);
+    $('signupState').textContent=registrationEnabled?'Registration open':'Registration closed';
+    $('signupToggle').textContent=registrationEnabled?'Close registration':'Open registration';
+    $('signupToggle').className=registrationEnabled?'btn danger':'btn';
   }
   function loadOperations(){
     api('/api/admin/operations').then(function(res){
@@ -600,8 +624,16 @@ td.url{word-break:break-all;max-width:420px;}
     api('/api/admin/maintenance',{method:'POST',body:{enabled:!maintenanceEnabled,message:message}}).then(function(res){
       button.disabled=false;
       if(!res.ok){err(res.data.error||'Could not change maintenance mode.');return;}
-      paintOperations({maintenance:res.data.maintenance,accounts:operationsAccounts});
+      paintOperations({maintenance:res.data.maintenance,signupsEnabled:registrationEnabled,accounts:operationsAccounts});
       ok(res.data.maintenance.enabled?'Maintenance mode is active.':'Maintenance mode ended.');
+    }).catch(function(){button.disabled=false;err('Network error.');});
+  };
+  $('signupToggle').onclick=function(){
+    var button=$('signupToggle');button.disabled=true;
+    api('/api/admin/signups',{method:'POST',body:{enabled:!registrationEnabled}}).then(function(res){
+      button.disabled=false;if(!res.ok){err(res.data.error||'Could not change registration.');return;}
+      paintOperations({maintenance:operationsMaintenance,signupsEnabled:res.data.signupsEnabled,accounts:operationsAccounts});
+      ok(res.data.signupsEnabled?'Registration is open.':'Registration is closed.');
     }).catch(function(){button.disabled=false;err('Network error.');});
   };
   $('rewardAllBtn').onclick=function(){

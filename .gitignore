@@ -1,4 +1,6 @@
 node_modules/
+.npm-cache/
+.agent-browser/
 .vercel/
 .env
 .env*.local

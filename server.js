@@ -33,6 +33,16 @@ function cors(res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
+function securityHeaders(res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+  );
+}
+
 function readBody(req) {
   return new Promise((resolve) => {
     let d = '';
@@ -52,9 +62,11 @@ function readBody(req) {
 
 const server = http.createServer(async (req, res) => {
   cors(res);
+  securityHeaders(res);
   const pathname = req.url.split('?')[0];
 
   if (pathname.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store');
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
       return res.end();

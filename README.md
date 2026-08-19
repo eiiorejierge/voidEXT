@@ -31,7 +31,13 @@ empty; data from a deleted database requires an export or provider backup.
 ## Accounts and staff access
 
 Users create an account through the bookmarklet. Passwords are hashed with
-scrypt and sessions use random bearer tokens.
+scrypt and sessions use random bearer tokens that expire after 30 days.
+Changing a password revokes older sessions, and users can sign out every device
+from the Account page.
+
+Staff can open or close new account registration from Admin > Operations.
+Existing accounts and staff access continue working while registration is
+closed.
 
 The username w7ll is the permanent owner account. It receives full owner
 permissions automatically and cannot be demoted or deleted.
@@ -80,11 +86,13 @@ in-memory storage. That data disappears when the process stops.
 - POST /api/login: sign in and receive a session token.
 - GET /api/me: validate the current session.
 - POST /api/logout: invalidate the current session.
+- POST /api/logout-all: invalidate every session for the current account.
 - GET /api/links: generate a rotating link batch.
 - POST /api/report: report a destination.
 - GET /api/health: check application and storage health.
 - GET /api/admin/session: validate a signed-in staff session.
 - GET /api/admin/stats: load the admin dashboard overview.
+- POST /api/admin/signups: open or close new account registration.
 
 All /api/admin endpoints require a bearer token belonging to a signed-in
 owner, admin, or support account, plus the role capability needed by the
