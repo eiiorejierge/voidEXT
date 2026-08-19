@@ -112,9 +112,10 @@ td.url{word-break:break-all;max-width:420px;}
     <button class="navitem" data-nav="reports" data-cap="reports"><span class="ic">03</span> Reports <span class="badge hidden" id="navPending">0</span></button>
     <button class="navitem" data-nav="bugs" data-cap="support"><span class="ic">04</span> Support <span class="badge hidden" id="navBugs">0</span></button>
     <button class="navitem" data-nav="accounts" data-cap="accounts"><span class="ic">05</span> Accounts</button>
-    <button class="navitem" data-nav="messages" data-cap="messages"><span class="ic">06</span> Messages</button>
-    <button class="navitem" data-nav="announce" data-cap="announcements"><span class="ic">07</span> Announce</button>
-    <button class="navitem" data-nav="releases" data-cap="releases"><span class="ic">08</span> Releases</button>
+    <button class="navitem" data-nav="operations" data-cap="operations"><span class="ic">06</span> Operations <span class="badge hidden" id="maintenanceBadge">On</span></button>
+    <button class="navitem" data-nav="messages" data-cap="messages"><span class="ic">07</span> Messages</button>
+    <button class="navitem" data-nav="announce" data-cap="announcements"><span class="ic">08</span> Announce</button>
+    <button class="navitem" data-nav="releases" data-cap="releases"><span class="ic">09</span> Releases</button>
     <div class="spacer"></div>
     <div class="staff-identity" id="staffIdentity"></div>
     <button class="navitem" id="refreshBtn"><span class="ic">R</span> Refresh</button>
@@ -182,6 +183,44 @@ td.url{word-break:break-all;max-width:420px;}
         <tbody id="usersBody"></tbody>
       </table></div>
       <div class="empty hidden" id="usersEmpty">No accounts yet.</div>
+    </section>
+    <!-- OPERATIONS -->
+    <section id="page-operations" class="hidden">
+      <div class="ptitle">Operations</div>
+      <div class="psub">Control service availability and weekly usage for every account.</div>
+      <div class="operations-status" id="operationsStatus">
+        <div><span>Service state</span><strong id="maintenanceState">Checking...</strong><small id="maintenanceMeta">Loading the current status.</small></div>
+        <i id="maintenanceLamp" aria-hidden="true"></i>
+      </div>
+      <div class="operations-grid">
+        <article class="operation-card">
+          <div class="operation-number">01</div>
+          <h2>Maintenance mode</h2>
+          <p>Pause user actions while keeping staff controls and existing sign-ins available. The notice appears in the bookmark and on the main site.</p>
+          <label for="maintenanceMessage">Public notice</label>
+          <textarea id="maintenanceMessage" maxlength="500">Scale XT is temporarily unavailable while maintenance is in progress. Please check back shortly.</textarea>
+          <button class="btn" id="maintenanceToggle">Start maintenance</button>
+        </article>
+        <article class="operation-card">
+          <div class="operation-number">02</div>
+          <h2>Reward everyone</h2>
+          <p>Add the same number of usage credits to every account and send a notification explaining the reward.</p>
+          <div class="operation-fields">
+            <label for="rewardAmount">Credits per user</label>
+            <input id="rewardAmount" type="number" min="1" max="100" value="2">
+            <label for="rewardMessage">Notification</label>
+            <textarea id="rewardMessage" maxlength="500" placeholder="Optional note about the delay..."></textarea>
+          </div>
+          <button class="btn" id="rewardAllBtn">Reward all users</button>
+        </article>
+        <article class="operation-card operation-danger">
+          <div class="operation-number">03</div>
+          <h2>Reset weekly usage</h2>
+          <p>Set this week's usage back to 0% for every account. Existing unused usage credits stay on each account.</p>
+          <div class="operation-summary"><b id="resetAccountCount">—</b><span>accounts in scope</span></div>
+          <button class="btn danger" id="resetUsageBtn">Reset all usage</button>
+        </article>
+      </div>
     </section>
     <!-- SUPPORT INBOX -->
     <section id="page-bugs" class="hidden">
@@ -253,7 +292,7 @@ td.url{word-break:break-all;max-width:420px;}
       <div class="release-composer">
         <div class="release-fields">
           <label for="releaseVersion">Version</label>
-          <input id="releaseVersion" type="text" value="2.4.0" placeholder="2.4.0">
+          <input id="releaseVersion" type="text" value="2.4.2" placeholder="2.4.2">
           <label for="releaseTitle">Title</label>
           <input id="releaseTitle" type="text" maxlength="100" placeholder="What changed?">
         </div>
@@ -321,13 +360,14 @@ td.url{word-break:break-all;max-width:420px;}
   // ---- nav ----
   var allUsernames=[];
   function nav(page){
-    ['overview','pool','reports','bugs','accounts','messages','announce','releases'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
+    ['overview','pool','reports','bugs','accounts','operations','messages','announce','releases'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
     if(page==='overview')loadStats();
     if(page==='pool'&&can('links'))loadPool();
     if(page==='reports'&&can('reports'))loadReports();
     if(page==='bugs'&&can('support'))loadBugs();else stopBugPoll();
     if((page==='accounts'||page==='messages')&&can('accounts'))loadUsers();
+    if(page==='operations'&&can('operations'))loadOperations();
     if(page==='announce'&&can('announcements'))loadAnnouncements();
     if(page==='releases'&&can('releases'))loadReleasesAdmin();
     clr($('msg'));
@@ -340,6 +380,7 @@ td.url{word-break:break-all;max-width:420px;}
     if(can('reports'))loadReports();
     if(can('support'))loadBugs();
     if(can('accounts'))loadUsers();
+    if(can('operations'))loadOperations();
     if(can('announcements'))loadAnnouncements();
     if(can('releases'))loadReleasesAdmin();
   }
@@ -517,6 +558,65 @@ td.url{word-break:break-all;max-width:420px;}
       });
     });
   }
+
+  var maintenanceEnabled=false,operationsAccounts=0;
+  function paintOperations(data){
+    data=data||{};
+    var maintenance=data.maintenance||{},enabled=maintenance.enabled===true;
+    maintenanceEnabled=enabled;
+    operationsAccounts=data.accounts==null?operationsAccounts:Math.max(0,Number(data.accounts)||0);
+    $('maintenanceState').textContent=enabled?'Maintenance active':'Service live';
+    $('maintenanceMeta').textContent=enabled
+      ? 'Started '+when(maintenance.startedAt)+(maintenance.by?' by '+maintenance.by:'')
+      : 'User actions are available.';
+    $('maintenanceLamp').classList.toggle('on',enabled);
+    $('operationsStatus').classList.toggle('active',enabled);
+    $('maintenanceToggle').textContent=enabled?'End maintenance':'Start maintenance';
+    $('maintenanceToggle').className=enabled?'btn ghost':'btn';
+    if(maintenance.message)$('maintenanceMessage').value=maintenance.message;
+    $('resetAccountCount').textContent=operationsAccounts;
+    $('maintenanceBadge').classList.toggle('hidden',!enabled);
+  }
+  function loadOperations(){
+    api('/api/admin/operations').then(function(res){
+      if(res.ok)paintOperations(res.data);
+      else err(res.data.error||'Could not load operations.');
+    });
+  }
+  $('maintenanceToggle').onclick=function(){
+    var button=$('maintenanceToggle'),message=$('maintenanceMessage').value.trim();
+    if(!maintenanceEnabled&&!message){err('Enter a maintenance notice.');return;}
+    button.disabled=true;
+    api('/api/admin/maintenance',{method:'POST',body:{enabled:!maintenanceEnabled,message:message}}).then(function(res){
+      button.disabled=false;
+      if(!res.ok){err(res.data.error||'Could not change maintenance mode.');return;}
+      paintOperations({maintenance:res.data.maintenance,accounts:operationsAccounts});
+      ok(res.data.maintenance.enabled?'Maintenance mode is active.':'Maintenance mode ended.');
+    }).catch(function(){button.disabled=false;err('Network error.');});
+  };
+  $('rewardAllBtn').onclick=function(){
+    var amount=Math.max(0,Math.min(100,parseInt($('rewardAmount').value,10)||0));
+    var message=$('rewardMessage').value.trim();
+    if(amount<1){err('Enter at least one usage credit.');return;}
+    if(!window.confirm('Add '+amount+' usage credit'+(amount===1?'':'s')+' to all '+operationsAccounts+' account(s)?'))return;
+    var button=$('rewardAllBtn');button.disabled=true;
+    api('/api/admin/reward-all',{method:'POST',body:{amount:amount,message:message}}).then(function(res){
+      button.disabled=false;
+      if(!res.ok){err(res.data.error||'Could not reward users.');return;}
+      ok('Added '+res.data.totalCredits+' total credits across '+res.data.rewarded+' account(s).');
+      loadUsers();loadStats();
+    }).catch(function(){button.disabled=false;err('Network error.');});
+  };
+  $('resetUsageBtn').onclick=function(){
+    if(!window.confirm('Reset this week\'s usage to 0% for every account? Unused credits will stay in place.'))return;
+    var button=$('resetUsageBtn');button.disabled=true;
+    api('/api/admin/usage-reset-all',{method:'POST'}).then(function(res){
+      button.disabled=false;
+      if(!res.ok){err(res.data.error||'Could not reset usage.');return;}
+      ok('Reset weekly usage for '+res.data.reset+' active account(s).');
+      loadOperations();loadUsers();loadStats();
+    }).catch(function(){button.disabled=false;err('Network error.');});
+  };
 
   var bugItems=[],activeBugId=null,bugPoll=null;
   function supportOpen(status){return status!=='fixed'&&status!=='dismissed';}

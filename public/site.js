@@ -35,14 +35,42 @@
     });
   }
 
-  checkSystemHealth();
 
   function loadLatestAnnouncement() {
     var rail = document.getElementById('announcementRail');
+    var dismiss = document.getElementById('announcementDismiss');
+    var indicator = document.getElementById('systemStatus');
     if (!rail) return;
-    fetch('/api/announcements', { cache: 'no-store' }).then(function (response) {
+    fetch('/api/maintenance', { cache: 'no-store' }).then(function (response) {
       return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+    }).then(function (statusResult) {
+      var maintenance = statusResult.ok && statusResult.data && statusResult.data.maintenance;
+      if (maintenance && maintenance.enabled) {
+        rail.dataset.maintenance = 'true';
+        rail.dataset.id = 'maintenance';
+        document.getElementById('announcementTitle').textContent = 'Maintenance in progress';
+        document.getElementById('announcementText').textContent = maintenance.message || 'Scale XT is temporarily unavailable.';
+        document.getElementById('announcementDate').textContent = maintenance.startedAt
+          ? new Date(maintenance.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+          : 'Now';
+        dismiss.hidden = true;
+        rail.classList.remove('hidden');
+        if (indicator) {
+          indicator.classList.remove('degraded');
+          indicator.classList.add('offline');
+          indicator.lastChild.textContent = ' Maintenance';
+        }
+        return null;
+      }
+      delete rail.dataset.maintenance;
+      dismiss.hidden = false;
+      rail.classList.add('hidden');
+      checkSystemHealth();
+      return fetch('/api/announcements', { cache: 'no-store' }).then(function (response) {
+        return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+      });
     }).then(function (result) {
+      if (!result) return;
       var item = result.ok && result.data && result.data.announcements && result.data.announcements[0];
       if (!item) return;
       var dismissed = '';
@@ -53,16 +81,18 @@
       document.getElementById('announcementDate').textContent = new Date(item.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
       rail.dataset.id = item.id || '';
       rail.classList.remove('hidden');
-    }).catch(function () {});
+    }).catch(function () { checkSystemHealth(); });
   }
 
   document.getElementById('announcementDismiss').addEventListener('click', function () {
     var rail = document.getElementById('announcementRail');
+    if (rail.dataset.maintenance === 'true') return;
     try { sessionStorage.setItem('scale_xt_announcement_dismissed', rail.dataset.id || 'dismissed'); } catch (error) {}
     rail.classList.add('hidden');
   });
 
   loadLatestAnnouncement();
+  window.setInterval(loadLatestAnnouncement, 30000);
 
   function copyBookmarklet(button) {
     if (!bookmarklet) {

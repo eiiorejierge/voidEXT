@@ -403,6 +403,15 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <button class="btn" id="updCopy" style="width:100%;margin-top:12px;">Copy new bookmarklet</button>
   </div>
 </div>
+<div id="maintenanceMode" class="maintenance-mode hidden" role="status" aria-live="polite">
+  <div class="maintenance-card">
+    <span class="maintenance-mark" aria-hidden="true"></span>
+    <div class="maintenance-kicker">Scale XT status</div>
+    <h1>Maintenance</h1>
+    <p id="maintenanceNotice">Scale XT is temporarily unavailable while maintenance is in progress.</p>
+    <div class="maintenance-foot"><span id="maintenanceSince">Check back shortly.</span><i>Updates automatically</i></div>
+  </div>
+</div>
 <div id="loader" class="loader" aria-label="Loading">
   <span class="loader-circle" aria-hidden="true"></span>
 </div>
@@ -1244,6 +1253,28 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
   };
 
+  var maintenancePoll=null;
+  function paintMaintenance(maintenance){
+    maintenance=maintenance||{};
+    var panel=$('maintenanceMode');
+    if(maintenance.enabled){
+      $('maintenanceNotice').textContent=maintenance.message||'Scale XT is temporarily unavailable while maintenance is in progress.';
+      $('maintenanceSince').textContent=maintenance.startedAt?'Started '+new Date(maintenance.startedAt).toLocaleString():'Check back shortly.';
+      panel.classList.remove('hidden');
+    }else{
+      panel.classList.add('hidden');
+    }
+  }
+  function checkMaintenance(){
+    api('/api/maintenance').then(function(res){
+      if(res.ok)paintMaintenance(res.data.maintenance);
+    }).catch(function(){});
+  }
+  function startMaintenanceWatch(){
+    checkMaintenance();
+    if(!maintenancePoll)maintenancePoll=setInterval(checkMaintenance,10000);
+  }
+
   // version / update check
   function isNewer(a,b){
     var pa=String(a).split('.').map(Number),pb=String(b).split('.').map(Number);
@@ -1294,7 +1325,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   }
 
   (function init(){
-    setMode('login');applyTheme('void');checkVersion();
+    setMode('login');applyTheme('void');checkVersion();startMaintenanceWatch();
     if(token()){
       api('/api/me').then(function(res){
         if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.pinned=res.data.pinned||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();}

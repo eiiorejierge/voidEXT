@@ -111,6 +111,7 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(builtInReleases.status, 200);
   assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.4.0'), true);
   assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.4.1'), true);
+  assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.4.2'), true);
   const publishedRelease = await call('/api/admin/release', {
     admin: true,
     method: 'POST',
@@ -276,4 +277,63 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(stats.json.roles.support, 1);
   assert.equal(stats.json.activity.length, 7);
   assert.equal(stats.json.viewer.role, 'owner');
+
+  const operations = await call('/api/admin/operations', { admin: true });
+  assert.equal(operations.status, 200);
+  assert.equal(operations.json.accounts, 2);
+  assert.equal(operations.json.maintenance.enabled, false);
+  assert.equal((await call('/api/admin/operations', { token: secondSignup.json.token })).status, 403);
+
+  const maintenanceOn = await call('/api/admin/maintenance', {
+    admin: true,
+    method: 'POST',
+    body: { enabled: true, message: 'Brief maintenance test.' },
+  });
+  assert.equal(maintenanceOn.status, 200);
+  assert.equal(maintenanceOn.json.maintenance.enabled, true);
+  const publicMaintenance = await call('/api/maintenance');
+  assert.equal(publicMaintenance.json.maintenance.message, 'Brief maintenance test.');
+  assert.equal((await call('/api/signup', {
+    method: 'POST',
+    body: { username: 'blocked_signup', password: 'password123' },
+  })).status, 503);
+  assert.equal((await call('/api/links', { token })).status, 503);
+  assert.equal((await call('/api/me', { token })).status, 200);
+
+  const rewardAll = await call('/api/admin/reward-all', {
+    admin: true,
+    method: 'POST',
+    body: { amount: 2, message: 'Thanks for waiting.' },
+  });
+  assert.equal(rewardAll.status, 200);
+  assert.equal(rewardAll.json.rewarded, 2);
+  assert.equal(rewardAll.json.totalCredits, 4);
+
+  const resetAll = await call('/api/admin/usage-reset-all', { admin: true, method: 'POST' });
+  assert.equal(resetAll.status, 200);
+  assert.equal(resetAll.json.accounts, 2);
+  assert.equal(resetAll.json.reset, 1);
+
+  const rewardedReporter = await call('/api/me', { token });
+  assert.equal(rewardedReporter.json.account.usagePercent, 0);
+  assert.equal(rewardedReporter.json.account.usageAvailable, 10);
+  assert.equal(rewardedReporter.json.account.usageCredits, 5);
+  assert.equal(rewardedReporter.json.notifications.some((item) => item.text === 'Thanks for waiting. (2 usage credits added.)'), true);
+
+  const resetSecond = await call('/api/me', { token: secondSignup.json.token });
+  assert.equal(resetSecond.json.account.usagePercent, 0);
+  assert.equal(resetSecond.json.account.usageAvailable, 9);
+  assert.equal(resetSecond.json.account.usageCredits, 4);
+
+  const maintenanceOff = await call('/api/admin/maintenance', {
+    admin: true,
+    method: 'POST',
+    body: { enabled: false },
+  });
+  assert.equal(maintenanceOff.status, 200);
+  assert.equal((await call('/api/maintenance')).json.maintenance.enabled, false);
+  const afterMaintenance = await call('/api/links', { token: secondSignup.json.token });
+  assert.equal(afterMaintenance.status, 200);
+  assert.equal(afterMaintenance.json.usagePercent, 11);
+  assert.equal(afterMaintenance.json.usageAvailable, 8);
 });
