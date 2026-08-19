@@ -31,6 +31,7 @@ test('every nested client API namespace has a Vercel adapter', () => {
 test('the compact bookmarklet shell tracks the installed launcher version', () => {
   const source = fs.readFileSync(path.join(root, 'bookmarklet.src.js'), 'utf8');
   const builtApp = fs.readFileSync(path.join(root, 'public', 'app.html'), 'utf8');
+  const stylesheet = fs.readFileSync(path.join(root, 'public', 'bookmarklet-scale.css'), 'utf8');
   const launcher = fs.readFileSync(path.join(root, 'bookmarklet.min.js'), 'utf8').trim();
   const version = require(path.join(root, 'lib', 'version.js'));
 
@@ -43,6 +44,7 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
   assert.match(builtApp, /id="homeAnnouncement"/);
   assert.match(source, /api\('\/api\/announcements'\)/);
   assert.match(source, /scale_xt_dismissed_announcement/);
+  assert.match(stylesheet, /\.app\.hidden\{display:none!important\}/);
   assert.doesNotMatch(builtApp, /__VERSION__/);
   assert.equal(launcher.includes('/app.html?v=' + version), true);
   assert.equal(launcher.length <= 5000, true, 'Launcher grew to ' + launcher.length + ' characters');

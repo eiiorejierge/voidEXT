@@ -186,3 +186,5 @@ body[data-theme=eclipse] #homeAnnouncementDismiss:hover{background:#e5e4df;color
   #homeAnnouncementDismiss{grid-column:2;grid-row:1}
   .home-announcement-copy>div{align-items:flex-start;flex-direction:column;gap:3px}
 }
+/* 2.6.2 auth visibility fix */
+.app.hidden{display:none!important}
