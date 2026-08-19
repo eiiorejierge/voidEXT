@@ -460,7 +460,10 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
             <span class="usage-reset">Resets Saturday</span>
           </div>
           <div class="usage-track"><i id="usageFill"></i></div>
-          <div class="meter" id="meter">Usage resets every Saturday.</div>
+          <div class="meter" id="meter">
+            <span id="usageAvailable">— available</span>
+            <span id="usageCredits">— credits</span>
+          </div>
         </div>
         <div class="section-head"><span>Your routes</span><span class="section-count" id="routeCount">0 saved</span></div>
         <ul class="links" id="linkList"></ul>
@@ -572,6 +575,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <div class="inforow"><span class="k">Username</span><span class="v" id="acUser">—</span></div>
           <div class="inforow"><span class="k">Member since</span><span class="v" id="acSince">—</span></div>
           <div class="inforow"><span class="k">Weekly usage</span><span class="v" id="acRemain">—</span></div>
+          <div class="inforow"><span class="k">Available usage</span><span class="v" id="acAvailable">—</span></div>
+          <div class="inforow"><span class="k">Usage credits</span><span class="v" id="acCredits">—</span></div>
           <div class="inforow"><span class="k">Role</span><span class="v" id="acRole">Member</span></div>
           <div class="inforow"><span class="k">Theme</span><span class="v" id="acTheme">—</span></div>
         </div>
@@ -721,14 +726,19 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   function renderUsage(account){
     account=account||{};
     var pct=Math.max(0,Math.min(100,Math.round(Number(account.usagePercent)||0)));
+    var available=Math.max(0,Math.floor(Number(account.usageAvailable)||0));
+    var credits=Math.max(0,Math.floor(Number(account.usageCredits)||0));
     $('usageValue').textContent=pct+'% used';
     $('usageFill').style.width=pct+'%';
-    $('meter').textContent='Usage resets every Saturday.';
+    $('usageAvailable').textContent=available+' link use'+(available===1?'':'s')+' available';
+    $('usageCredits').textContent=credits+' usage credit'+(credits===1?'':'s');
   }
   function updateMeter(d){
     if(!d||d.usagePercent==null)return;
     if(!state.account)state.account={};
     state.account.usagePercent=d.usagePercent;
+    if(d.usageAvailable!=null)state.account.usageAvailable=d.usageAvailable;
+    if(d.usageCredits!=null)state.account.usageCredits=d.usageCredits;
     state.account.resetAt=d.resetAt||state.account.resetAt;
     renderUsage(state.account);
   }
@@ -798,9 +808,13 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   function renderAccount(){
     var a=state.account||{};
     var role=a.role||'member';
+    var available=Math.max(0,Math.floor(Number(a.usageAvailable)||0));
+    var credits=Math.max(0,Math.floor(Number(a.usageCredits)||0));
     $('acUser').textContent=state.username||'—';
     $('acSince').textContent=fmtDate(a.created);
     $('acRemain').textContent=Math.max(0,Math.min(100,Math.round(Number(a.usagePercent)||0)))+'% used';
+    $('acAvailable').textContent=available+' link use'+(available===1?'':'s');
+    $('acCredits').textContent=credits+' credit'+(credits===1?'':'s');
     $('acRole').textContent=role.charAt(0).toUpperCase()+role.slice(1);
     $('acTheme').textContent=state.settings.theme;
     $('staffAdminLink').classList.toggle('hidden',role!=='admin'&&role!=='support');
@@ -1199,8 +1213,15 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       var d=res.data;
       $('vPool').textContent=d.poolSize;$('vTotal').textContent=d.totalLinks;$('vBlocked').textContent=d.blockedCount;
       var pct=Math.max(0,Math.min(100,Math.round(Number(d.usagePercent)||0)));
-      $('vRemain').textContent=pct+'% used';
-      if(state.account){state.account.usagePercent=pct;state.account.resetAt=d.resetAt||state.account.resetAt;}
+      var available=Math.max(0,Math.floor(Number(d.usageAvailable)||0));
+      $('vRemain').textContent=available+' available · '+pct+'% used';
+      if(state.account){
+        state.account.usagePercent=pct;
+        state.account.usageAvailable=available;
+        state.account.usageCredits=Math.max(0,Math.floor(Number(d.usageCredits)||0));
+        state.account.resetAt=d.resetAt||state.account.resetAt;
+        renderUsage(state.account);
+      }
     }).catch(function(){msg('Network error.','err');});
   }
   $('vaultRefresh').onclick=loadVault;

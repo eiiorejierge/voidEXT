@@ -36,6 +36,8 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(signup.status, 200);
   const token = signup.json.token;
   assert.equal(signup.json.account.usagePercent, 0);
+  assert.equal(signup.json.account.usageAvailable, 5);
+  assert.equal(signup.json.account.usageCredits, 0);
   assert.equal(signup.json.account.role, 'member');
   assert.equal('limit' in signup.json.account, false);
   assert.equal('remaining' in signup.json.account, false);
@@ -55,13 +57,34 @@ test('admin controls, announcements, and support conversations work end to end',
     const generated = await call('/api/links', { token: secondSignup.json.token });
     assert.equal(generated.status, 200);
     assert.equal(generated.json.usagePercent, index * 20);
+    assert.equal(generated.json.usageAvailable, 5 - index);
+    assert.equal(generated.json.usageCredits, 0);
     assert.equal('remaining' in generated.json, false);
     assert.equal('limit' in generated.json, false);
   }
   const atCapacity = await call('/api/links', { token: secondSignup.json.token });
   assert.equal(atCapacity.status, 429);
   assert.equal(atCapacity.json.usagePercent, 100);
+  assert.equal(atCapacity.json.usageAvailable, 0);
+  assert.equal(atCapacity.json.usageCredits, 0);
   assert.equal(/\b5\b/.test(atCapacity.json.error), false);
+
+  const grant = await call('/api/admin/grant-tokens', {
+    admin: true,
+    method: 'POST',
+    body: { username: 'another_user', amount: 3 },
+  });
+  assert.equal(grant.status, 200);
+  const credited = await call('/api/me', { token: secondSignup.json.token });
+  assert.equal(credited.json.account.usagePercent, 63);
+  assert.equal(credited.json.account.usageAvailable, 3);
+  assert.equal(credited.json.account.usageCredits, 3);
+
+  const creditUse = await call('/api/links', { token: secondSignup.json.token });
+  assert.equal(creditUse.status, 200);
+  assert.equal(creditUse.json.usagePercent, 75);
+  assert.equal(creditUse.json.usageAvailable, 2);
+  assert.equal(creditUse.json.usageCredits, 2);
 
   const roleSet = await call('/api/admin/role-set', {
     admin: true,
@@ -87,6 +110,7 @@ test('admin controls, announcements, and support conversations work end to end',
   const builtInReleases = await call('/api/releases');
   assert.equal(builtInReleases.status, 200);
   assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.4.0'), true);
+  assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.4.1'), true);
   const publishedRelease = await call('/api/admin/release', {
     admin: true,
     method: 'POST',
@@ -241,12 +265,14 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(login.status, 200);
   assert.equal(login.json.account.role, 'member');
   assert.equal(login.json.account.usagePercent, 0);
+  assert.equal(login.json.account.usageAvailable, 8);
+  assert.equal(login.json.account.usageCredits, 3);
   assert.equal('bonus' in login.json.account, false);
   assert.equal('remaining' in login.json.account, false);
 
   const stats = await call('/api/admin/stats', { admin: true });
   assert.equal(stats.status, 200);
-  assert.equal(stats.json.weekly.averageUsage, 50);
+  assert.equal(stats.json.weekly.averageUsage, 38);
   assert.equal(stats.json.roles.support, 1);
   assert.equal(stats.json.activity.length, 7);
   assert.equal(stats.json.viewer.role, 'owner');

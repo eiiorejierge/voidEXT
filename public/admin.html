@@ -480,13 +480,14 @@ td.url{word-break:break-all;max-width:420px;}
         var roleControl=can('roles')
           ? '<div class="role-control"><select class="role-select">'+['member','support','admin'].map(function(role){return '<option value="'+role+'"'+(u.role===role?' selected':'')+'>'+role+'</option>';}).join('')+'</select><button class="btn ghost sm" data-act="role">Save</button></div>'
           : '<span class="pill">'+esc(u.role||'member')+'</span>';
+        var credits=Math.max(0,Number(u.usageCredits)||0),available=Math.max(0,Number(u.usageAvailable)||0);
         var creditControl=can('accountsWrite')
-          ? '<div class="credit-control"><input class="tok" type="number" value="1" min="1" max="100"><button class="btn sm" data-act="grant">Add</button></div>'
-          : '<span class="muted">—</span>';
+          ? '<div class="credit-control"><span class="muted">'+credits+' credit'+(credits===1?'':'s')+'</span><input class="tok" type="number" value="1" min="1" max="100"><button class="btn sm" data-act="grant">Add</button></div>'
+          : '<span class="muted">'+credits+' credit'+(credits===1?'':'s')+'</span>';
         var deleteControl=can('accountsWrite')?'<button class="btn danger sm" data-act="del">Delete</button>':'';
         tr.innerHTML='<td><b>'+esc(u.username)+'</b></td>'+
           '<td>'+roleControl+'</td>'+
-          '<td><div class="usage-cell"><b>'+pct+'%</b><span><i style="width:'+pct+'%"></i></span></div></td>'+
+          '<td><div class="usage-cell"><b>'+pct+'%</b><small class="muted">'+available+' available</small><span><i style="width:'+pct+'%"></i></span></div></td>'+
           '<td class="muted" style="white-space:nowrap;">'+esc(when(u.created))+'</td>'+
           '<td>'+esc(u.linkCount||0)+'</td>'+
           '<td>'+creditControl+'</td>'+
