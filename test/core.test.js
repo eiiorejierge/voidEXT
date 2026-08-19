@@ -7,10 +7,14 @@ delete process.env.KV_REST_API_URL;
 delete process.env.KV_REST_API_TOKEN;
 delete process.env.UPSTASH_REDIS_REST_URL;
 delete process.env.UPSTASH_REDIS_REST_TOKEN;
-process.env.ADMIN_KEY = 'test-admin';
+delete process.env.DATABASE_URL;
+delete process.env.ADMIN_KEY;
+process.env.OWNER_SETUP_PASSWORD = 'owner-password-123';
 delete globalThis.__voidMem;
 
 const { handle, usagePeriod } = require('../lib/core.js');
+
+let ownerToken = '';
 
 async function call(path, options) {
   options = options || {};
@@ -19,7 +23,7 @@ async function call(path, options) {
     path,
     body: options.body || {},
     authHeader: options.admin
-      ? 'Bearer test-admin'
+      ? 'Bearer ' + ownerToken
       : options.token
         ? 'Bearer ' + options.token
         : '',
@@ -29,6 +33,24 @@ async function call(path, options) {
 }
 
 test('admin controls, announcements, and support conversations work end to end', async () => {
+  const rejectedOwnerSignup = await call('/api/signup', {
+    method: 'POST',
+    body: { username: 'w7ll', password: 'someone-elses-password' },
+  });
+  assert.equal(rejectedOwnerSignup.status, 403);
+
+  const ownerSignup = await call('/api/signup', {
+    method: 'POST',
+    body: { username: 'w7ll', password: 'owner-password-123' },
+  });
+  assert.equal(ownerSignup.status, 200);
+  assert.equal(ownerSignup.json.account.role, 'owner');
+  ownerToken = ownerSignup.json.token;
+  const ownerSession = await call('/api/admin/session', { token: ownerToken });
+  assert.equal(ownerSession.status, 200);
+  assert.equal(ownerSession.json.role, 'owner');
+  assert.equal((await call('/api/admin/session', { token: 'test-admin' })).status, 401);
+
   const signup = await call('/api/signup', {
     method: 'POST',
     body: { username: 'reporter', password: 'password123' },
@@ -94,6 +116,19 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(roleSet.status, 200);
   assert.equal(roleSet.json.role, 'support');
 
+  const ownerDemotion = await call('/api/admin/role-set', {
+    admin: true,
+    method: 'POST',
+    body: { username: 'w7ll', role: 'member' },
+  });
+  assert.equal(ownerDemotion.status, 403);
+  const ownerDeletion = await call('/api/admin/delete-user', {
+    admin: true,
+    method: 'POST',
+    body: { username: 'w7ll' },
+  });
+  assert.equal(ownerDeletion.status, 403);
+
   const supportSession = await call('/api/admin/session', { token: secondSignup.json.token });
   assert.equal(supportSession.status, 200);
   assert.equal(supportSession.json.role, 'support');
@@ -132,7 +167,7 @@ test('admin controls, announcements, and support conversations work end to end',
     body: { title: 'General announcement', text: 'Support conversations are live.' },
   });
   assert.equal(announce.status, 200);
-  assert.equal(announce.json.recipients, 2);
+  assert.equal(announce.json.recipients, 3);
 
   const publicFeed = await call('/api/announcements');
   assert.equal(publicFeed.status, 200);
@@ -273,14 +308,15 @@ test('admin controls, announcements, and support conversations work end to end',
 
   const stats = await call('/api/admin/stats', { admin: true });
   assert.equal(stats.status, 200);
-  assert.equal(stats.json.weekly.averageUsage, 38);
+  assert.equal(stats.json.weekly.averageUsage, 25);
   assert.equal(stats.json.roles.support, 1);
+  assert.equal(stats.json.roles.owner, 1);
   assert.equal(stats.json.activity.length, 7);
   assert.equal(stats.json.viewer.role, 'owner');
 
   const operations = await call('/api/admin/operations', { admin: true });
   assert.equal(operations.status, 200);
-  assert.equal(operations.json.accounts, 2);
+  assert.equal(operations.json.accounts, 3);
   assert.equal(operations.json.maintenance.enabled, false);
   assert.equal((await call('/api/admin/operations', { token: secondSignup.json.token })).status, 403);
 
@@ -306,12 +342,12 @@ test('admin controls, announcements, and support conversations work end to end',
     body: { amount: 2, message: 'Thanks for waiting.' },
   });
   assert.equal(rewardAll.status, 200);
-  assert.equal(rewardAll.json.rewarded, 2);
-  assert.equal(rewardAll.json.totalCredits, 4);
+  assert.equal(rewardAll.json.rewarded, 3);
+  assert.equal(rewardAll.json.totalCredits, 6);
 
   const resetAll = await call('/api/admin/usage-reset-all', { admin: true, method: 'POST' });
   assert.equal(resetAll.status, 200);
-  assert.equal(resetAll.json.accounts, 2);
+  assert.equal(resetAll.json.accounts, 3);
   assert.equal(resetAll.json.reset, 1);
 
   const rewardedReporter = await call('/api/me', { token });

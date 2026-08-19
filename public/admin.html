@@ -93,12 +93,12 @@ td.url{word-break:break-all;max-width:420px;}
 <div id="gate" class="gatewrap">
   <div class="card gate">
     <h2>Scale XT staff</h2>
-    <p class="gate-copy">Use the admin code, or continue with a staff account already signed in to Scale XT.</p>
-    <input id="keyInput" type="password" placeholder="Admin code" inputmode="numeric" autocomplete="off">
+    <p class="gate-copy">Sign in with an owner, admin, or support account.</p>
+    <input id="loginUsername" type="text" placeholder="Username" autocomplete="username" autocapitalize="none">
+    <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
     <div class="msg" id="gateMsg"></div>
     <div class="gate-actions">
-      <button class="btn" id="enterBtn">Use admin code</button>
-      <button class="btn ghost hidden" id="staffBtn">Continue as signed-in staff</button>
+      <button class="btn" id="loginBtn">Sign in</button>
     </div>
   </div>
 </div>
@@ -119,7 +119,7 @@ td.url{word-break:break-all;max-width:420px;}
     <div class="spacer"></div>
     <div class="staff-identity" id="staffIdentity"></div>
     <button class="navitem" id="refreshBtn"><span class="ic">R</span> Refresh</button>
-    <button class="navitem" id="logoutBtn"><span class="ic">X</span> Lock</button>
+    <button class="navitem" id="logoutBtn"><span class="ic">X</span> Log out</button>
   </aside>
   <main class="main">
     <!-- OVERVIEW -->
@@ -292,7 +292,7 @@ td.url{word-break:break-all;max-width:420px;}
       <div class="release-composer">
         <div class="release-fields">
           <label for="releaseVersion">Version</label>
-          <input id="releaseVersion" type="text" value="2.4.2" placeholder="2.4.2">
+          <input id="releaseVersion" type="text" value="2.5.0" placeholder="2.5.0">
           <label for="releaseTitle">Title</label>
           <input id="releaseTitle" type="text" maxlength="100" placeholder="What changed?">
         </div>
@@ -310,12 +310,11 @@ td.url{word-break:break-all;max-width:420px;}
 
 <script>
 (function(){
-  var KEY_STORE='voidext_admin_key',APP_TOKEN='voidext_token';
+  var APP_TOKEN='voidext_token';
   var adminSession={role:null,username:null,capabilities:[]};
   var $=function(id){return document.getElementById(id);};
-  function key(){try{return sessionStorage.getItem(KEY_STORE)||'';}catch(e){return'';}}
-  function setKey(k){try{k?sessionStorage.setItem(KEY_STORE,k):sessionStorage.removeItem(KEY_STORE);}catch(e){}}
-  function appToken(){try{return localStorage.getItem(APP_TOKEN)||'';}catch(e){return'';}}
+  function token(){try{return localStorage.getItem(APP_TOKEN)||'';}catch(e){return'';}}
+  function setToken(value){try{value?localStorage.setItem(APP_TOKEN,value):localStorage.removeItem(APP_TOKEN);}catch(e){}}
   function can(cap){return adminSession.capabilities.indexOf(cap)>=0;}
   function msg(el,t,k){el.className='msg show '+(k||'');el.textContent=t;}
   function clr(el){el.className='msg';el.textContent='';}
@@ -324,7 +323,9 @@ td.url{word-break:break-all;max-width:420px;}
 
   function api(path,opts){
     opts=opts||{};
-    return fetch(path,{method:opts.method||'GET',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key()},body:opts.body?JSON.stringify(opts.body):undefined})
+    var headers={'Content-Type':'application/json'},authToken=token();
+    if(authToken)headers.Authorization='Bearer '+authToken;
+    return fetch(path,{method:opts.method||'GET',headers:headers,body:opts.body?JSON.stringify(opts.body):undefined})
       .then(function(r){return r.json().catch(function(){return{};}).then(function(j){return{ok:r.ok,status:r.status,data:j};});});
   }
 
@@ -333,29 +334,38 @@ td.url{word-break:break-all;max-width:420px;}
     $('staffIdentity').innerHTML='<b>'+esc(adminSession.username||'Staff')+'</b><span>'+esc(adminSession.role||'staff')+'</span>';
     document.querySelectorAll('[data-cap]').forEach(function(el){el.classList.toggle('hidden',!can(el.getAttribute('data-cap')));});
   }
-  function authenticate(secret){
-    setKey(secret);
+  function authenticate(){
     clr($('gateMsg'));
     api('/api/admin/session').then(function(res){
-      if(!res.ok){setKey('');msg($('gateMsg'),res.data.error||'Access denied.','err');return;}
+      if(!res.ok){
+        setToken('');
+        msg($('gateMsg'),res.status===403?'This account does not have staff access.':(res.data.error||'Please sign in.'),'err');
+        return;
+      }
       applySession(res.data);
       $('gate').classList.add('hidden');
       $('dash').classList.remove('hidden');
       nav('overview');
       loadAll();
-    }).catch(function(){setKey('');msg($('gateMsg'),'Network error.','err');});
+    }).catch(function(){setToken('');msg($('gateMsg'),'Network error.','err');});
   }
 
-  // ---- gate ----
-  $('enterBtn').onclick=unlock;
-  $('staffBtn').onclick=function(){var token=appToken();if(token)authenticate(token);};
-  $('keyInput').addEventListener('keydown',function(e){if(e.key==='Enter')unlock();});
-  function unlock(){
-    var secret=$('keyInput').value.trim();
-    if(!secret){msg($('gateMsg'),'Enter the admin code.','err');return;}
-    authenticate(secret);
+  // ---- account login gate ----
+  $('loginBtn').onclick=login;
+  $('loginUsername').addEventListener('keydown',function(e){if(e.key==='Enter'){$('loginPassword').focus();}});
+  $('loginPassword').addEventListener('keydown',function(e){if(e.key==='Enter')login();});
+  function login(){
+    var username=$('loginUsername').value.trim(),password=$('loginPassword').value;
+    if(!username||!password){msg($('gateMsg'),'Enter your username and password.','err');return;}
+    var button=$('loginBtn');button.disabled=true;button.textContent='Signing in...';clr($('gateMsg'));
+    api('/api/login',{method:'POST',body:{username:username,password:password}}).then(function(res){
+      button.disabled=false;button.textContent='Sign in';
+      if(!res.ok){msg($('gateMsg'),res.data.error||'Could not sign in.','err');return;}
+      setToken(res.data.token);
+      $('loginPassword').value='';
+      authenticate();
+    }).catch(function(){button.disabled=false;button.textContent='Sign in';msg($('gateMsg'),'Network error.','err');});
   }
-  if(appToken())$('staffBtn').classList.remove('hidden');
 
   // ---- nav ----
   var allUsernames=[];
@@ -409,7 +419,7 @@ td.url{word-break:break-all;max-width:420px;}
       var pct=Math.max(0,Math.min(100,weekly.averageUsage||0));
       $('weeklyUsage').innerHTML='<div class="usage-number">'+pct+'% <span>average used</span></div><div class="usage-track"><i style="width:'+pct+'%"></i></div>'+
         '<div class="metric-list"><span><b>'+esc(weekly.atCapacity||0)+'</b> at 100%</span><span><b>'+esc(d.active7d||0)+'</b> active this week</span><span>Resets '+esc(when(weekly.resetAt))+'</span></div>';
-      $('roleBreakdown').innerHTML=['member','support','admin'].map(function(role){
+      $('roleBreakdown').innerHTML=['owner','admin','support','member'].map(function(role){
         return '<div class="role-row"><span>'+role+'</span><b>'+esc(roles[role]||0)+'</b></div>';
       }).join('');
       var queue=[];
@@ -518,14 +528,14 @@ td.url{word-break:break-all;max-width:420px;}
       $('usersEmpty').classList.toggle('hidden',users.length>0);
       users.forEach(function(u){
         var tr=document.createElement('tr'),pct=Math.max(0,Math.min(100,u.usagePercent||0));
-        var roleControl=can('roles')
+        var roleControl=can('roles')&&u.role!=='owner'
           ? '<div class="role-control"><select class="role-select">'+['member','support','admin'].map(function(role){return '<option value="'+role+'"'+(u.role===role?' selected':'')+'>'+role+'</option>';}).join('')+'</select><button class="btn ghost sm" data-act="role">Save</button></div>'
           : '<span class="pill">'+esc(u.role||'member')+'</span>';
         var credits=Math.max(0,Number(u.usageCredits)||0),available=Math.max(0,Number(u.usageAvailable)||0);
         var creditControl=can('accountsWrite')
           ? '<div class="credit-control"><span class="muted">'+credits+' credit'+(credits===1?'':'s')+'</span><input class="tok" type="number" value="1" min="1" max="100"><button class="btn sm" data-act="grant">Add</button></div>'
           : '<span class="muted">'+credits+' credit'+(credits===1?'':'s')+'</span>';
-        var deleteControl=can('accountsWrite')?'<button class="btn danger sm" data-act="del">Delete</button>':'';
+        var deleteControl=can('accountsWrite')&&u.role!=='owner'?'<button class="btn danger sm" data-act="del">Delete</button>':'';
         tr.innerHTML='<td><b>'+esc(u.username)+'</b></td>'+
           '<td>'+roleControl+'</td>'+
           '<td><div class="usage-cell"><b>'+pct+'%</b><small class="muted">'+available+' available</small><span><i style="width:'+pct+'%"></i></span></div></td>'+
@@ -839,13 +849,21 @@ td.url{word-break:break-all;max-width:420px;}
   }
   $('clearReportsBtn').onclick=function(){if(!can('links'))return;api('/api/admin/clear-reports',{method:'POST'}).then(function(r){if(r.ok){loadReports();loadStats();ok('Reports cleared.');}});};
   $('refreshBtn').onclick=loadAll;
-  $('logoutBtn').onclick=lock;
+  $('logoutBtn').onclick=function(){api('/api/logout',{method:'POST'}).then(lock,lock);};
 
   function ok(t){msg($('msg'),t,'ok');setTimeout(function(){clr($('msg'));},2500);}
   function err(t){msg($('msg'),t,'err');}
-  function lock(){stopBugPoll();activeBugId=null;adminSession={role:null,username:null,capabilities:[]};setKey('');$('dash').classList.add('hidden');$('gate').classList.remove('hidden');$('keyInput').value='';}
+  function lock(){
+    stopBugPoll();
+    activeBugId=null;
+    adminSession={role:null,username:null,capabilities:[]};
+    setToken('');
+    $('dash').classList.add('hidden');
+    $('gate').classList.remove('hidden');
+    $('loginPassword').value='';
+  }
 
-  if(key())authenticate(key());
+  if(token())authenticate();
 })();
 </script>
 </body>

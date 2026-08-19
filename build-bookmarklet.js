@@ -50,7 +50,7 @@ const compactHtml = await minifyHtml(embeddedHtml, {
 
 // Publish the full UI as a normal static page. The bookmarklet launcher only
 // opens this page in an overlay, keeping the saved javascript: URL very small.
-const appHtml = compactHtml.replace(new RegExp(apiSentinel, 'g'), 'https://void-ext.vercel.app');
+const appHtml = compactHtml.replace(new RegExp(apiSentinel, 'g'), 'https://voidext-production.up.railway.app');
 fs.writeFileSync(path.join(__dirname, 'public', 'app.html'), appHtml);
 
 const escapedHtml = compactHtml

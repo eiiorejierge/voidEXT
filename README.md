@@ -1,154 +1,91 @@
 # Scale XT
 
-An editorial, celestial-themed **bookmarklet** backed by a **Vercel website**.
-Users sign up or log in through the popup, then generate rotating links pulled
-from a private server-side vault. The full link list never ships to the client —
-the popup only sees a user's current set, and only after authentication.
+Scale XT is a bookmarklet-driven link dashboard with account authentication,
+weekly usage limits, support tickets, announcements, release notes, and a
+staff administration panel.
 
-## Recovering from a deleted database
+## Production deployment
 
-The application is ready to connect to a fresh Upstash Redis / Vercel KV
-database. Create the database, then add its REST URL and token to the deployed
-project using either pair of supported variables:
+The production application runs on Railway:
 
-- UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
-- KV_REST_API_URL and KV_REST_API_TOKEN
+https://voidext-production.up.railway.app
 
-Also set ADMIN_KEY to a long random secret. Redeploy, then open /api/health.
-A healthy production response reports persistent: true, reachable: true, and
-provider: upstash-redis.
+The bookmarklet is generated with that address and loads the application from
+the Railway service.
 
-A newly created database starts clean. Accounts and messages from the deleted
-database can only be restored if an export or provider backup still exists.
+## Railway PostgreSQL setup
 
-## What's here
+1. Add a PostgreSQL database to the same Railway project as the web service.
+2. Open the VoidEXT web service, then open Variables.
+3. Click Add Reference Variable.
+4. Select DATABASE_URL from the PostgreSQL service.
+5. Add OWNER_SETUP_PASSWORD with the password you want to use for w7ll.
+6. Deploy the staged changes.
+7. Create the w7ll account once, then remove OWNER_SETUP_PASSWORD and redeploy.
+8. Open /api/health on the production domain. A successful connection reports
+   configured: true, persistent: true, reachable: true, provider: postgres.
 
-```
-api/[...path].js     Vercel serverless function (catch-all) — the API
-lib/core.js          Framework-agnostic request handler (auth, rotation, reports)
-lib/store.js         Storage layer (Vercel KV / Upstash Redis REST, in-memory fallback)
-lib/links.js         The master link pool (server-side only)
-server.js            Standalone Node server (local dev + Railway/Render hosting)
-public/index.html    Landing page + bookmarklet installer
-bookmarklet.src.js   Readable bookmarklet source
-bookmarklet.min.js   Compiled one-line "javascript:..." bookmarklet
-build-bookmarklet.js Compiles src -> min
-vercel.json          Vercel config (CORS headers, clean URLs)
-```
+Scale XT creates its scale_xt_store table automatically. A new database begins
+empty; data from a deleted database requires an export or provider backup.
 
-## Features
+## Accounts and staff access
 
-- **Signup + login** in the popup (passwords hashed with scrypt, token auth).
-- **Weekly link rotation** — usage resets every Saturday, while pinned links
-  and returned usage stay attached to the account.
-- **Blocked-link reporting** — every link has a `blocked` button; tapping it pulls
-  the link from *everyone's* rotation and logs it for review (you asked to be alerted
-  about dead links). Restore it later via the admin endpoint if it comes back.
-- **No native dialogs** — there are zero `alert()`/`confirm()`/`prompt()` calls, so you
-  never see the `"<site> says..."` browser chrome. Everything renders inside the popup.
-- **Percentage-only usage** — members see weekly usage as a percentage instead
-  of an exposed generation count; support credits and admin grants still work.
-- **Three coordinated interfaces** — a responsive public installer, the full
-  in-page bookmarklet app, and a mobile-ready admin control room.
+Users create an account through the bookmarklet. Passwords are hashed with
+scrypt and sessions use random bearer tokens.
 
-## Deploy to Vercel
+The username w7ll is the permanent owner account. It receives full owner
+permissions automatically and cannot be demoted or deleted.
 
-1. Push this repo to GitHub and import it at [vercel.com/new](https://vercel.com/new).
-2. **Add a KV store** (required for accounts to persist): in the Vercel project →
-   **Storage** → create a KV / Upstash Redis store and connect it. Vercel injects
-   `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically. *(Without a store, accounts
-   live in memory and reset on every cold start — fine for a quick look, not for real use.)*
-3. *(Optional)* Set `ADMIN_KEY` in the project env vars to protect the admin endpoints.
-4. Deploy. Your site is at `https://<your-project>.vercel.app`.
+The admin panel is available at /admin. It only accepts a normal signed-in
+owner, admin, or support account. There is no separate admin code.
 
-## Deploy to Railway
+- Owner: every administrative capability, including assigning staff roles.
+- Admin: account, link, announcement, release, maintenance, and support tools.
+- Support: reports, support conversations, account visibility, and messages.
 
-The whole app also runs as a single long-lived Node process (`server.js`), so it
-deploys to Railway with no code changes — `npm start` runs `node server.js`,
-which serves both the static site and `/api/*` on `process.env.PORT`.
+## Main files
 
-1. Push this repo to GitHub and create a new project at
-   [railway.app/new](https://railway.app/new) → **Deploy from GitHub repo**.
-   Railway auto-detects Node via Nixpacks; `railway.json` pins the start command.
-   There are **no npm dependencies** (pure Node builtins), so the build just
-   needs Node ≥18 — no native build step.
-2. **Add a Redis store for persistence.** Railway's built-in Redis is TCP-only,
-   but this app talks to the **Upstash REST API**. Easiest path: add the
-   **Upstash Redis** plugin (or a free database at [upstash.com](https://upstash.com)),
-   then set these service **Variables**:
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
+- server.js: Railway HTTP server and static-file host.
+- lib/core.js: authentication, roles, usage, messages, reports, and admin APIs.
+- lib/store.js: Railway PostgreSQL, Upstash Redis REST, and local-memory storage.
+- lib/links.js: built-in private destination pool.
+- public/admin.html: staff dashboard and account login.
+- bookmarklet.src.js: readable bookmarklet source.
+- build-bookmarklet.js: generates the production bookmarklet and application.
 
-   *(Without them the app still boots, but accounts live in memory and reset on
-   every restart/redeploy.)*
-3. *(Optional)* Set `ADMIN_KEY` to protect the admin endpoints.
-4. Deploy, then under **Settings → Networking** generate a public domain. Your
-   site is at `https://<your-service>.up.railway.app`.
+## Commands
 
-> Render works the same way: a **Web Service**, build command `npm install`
-> (a no-op here), start command `node server.js`, plus the same Upstash vars.
+Install dependencies:
 
-### Point the bookmarklet at your deployment
+    npm install
 
-Edit the `API_BASE` constant at the top of `bookmarklet.src.js`:
+Run locally:
 
-```js
-const API_BASE = 'https://your-project.vercel.app';
-```
+    npm start
 
-Then rebuild:
+Run tests:
 
-```bash
-node build-bookmarklet.js
-```
+    npm test
 
-The landing page (`/`) always serves the freshly built bookmarklet — drag the
-button to your bookmarks bar, or copy the code from the page.
+Rebuild the bookmarklet:
 
-## Local testing
+    npm run build:bookmarklet
 
-```bash
-npm start                     # http://localhost:3000  (no KV needed; in-memory)
-```
+Without DATABASE_URL or Upstash variables, local development uses temporary
+in-memory storage. That data disappears when the process stops.
 
-Point `API_BASE` at `http://localhost:3000`, rebuild, and test. End-to-end flow
-(signup → login → generate → report) all works against the local server.
+## Important endpoints
 
-## API
+- POST /api/signup: create an account.
+- POST /api/login: sign in and receive a session token.
+- GET /api/me: validate the current session.
+- POST /api/logout: invalidate the current session.
+- GET /api/links: generate a rotating link batch.
+- POST /api/report: report a destination.
+- GET /api/health: check application and storage health.
+- GET /api/admin/session: validate a signed-in staff session.
+- GET /api/admin/stats: load the admin dashboard overview.
 
-| Method | Path | Auth | Purpose |
-|--------|------|------|---------|
-| POST | `/api/signup` | — | Create account, returns `{token}` |
-| POST | `/api/login` | — | Authenticate, returns `{token}` |
-| GET | `/api/me` | Bearer | Validate token |
-| POST | `/api/logout` | Bearer | Invalidate token |
-| GET | `/api/links` | Bearer | Generate a rotating batch of links |
-| POST | `/api/report` | Bearer | Report a blocked link (`{url}`) |
-| GET | `/api/admin/blocked` | Admin key | List blocked links + reports |
-| POST | `/api/admin/unblock` | Admin key | Restore a link to rotation (`{url}`) |
-
-Admin endpoints use `Authorization: Bearer <ADMIN_KEY>` (default `void-admin`).
-
-## Managing the link pool
-
-The list lives in `lib/links.js` — one URL per line. Paste a raw dump (duplicates and
-SVG-namespace junk are filtered automatically) and redeploy. Currently **383 links**
-in rotation. Heads up per the source: a chunk of these may be blocked at any given time,
-and some get re-used every few weeks — the `blocked` reporting flow is how you keep the
-pool clean and get alerted.
-
-### Reviewing reported links
-
-```bash
-curl https://your-project.vercel.app/api/admin/blocked \
-  -H "Authorization: Bearer YOUR_ADMIN_KEY"
-```
-
-Returns every reported/blocked URL plus who reported it and when. To put one back:
-
-```bash
-curl -X POST https://your-project.vercel.app/api/admin/unblock \
-  -H "Authorization: Bearer YOUR_ADMIN_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://example.com/"}'
-```
+All /api/admin endpoints require a bearer token belonging to a signed-in
+owner, admin, or support account, plus the role capability needed by the
+specific endpoint.

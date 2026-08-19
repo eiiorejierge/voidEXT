@@ -6,10 +6,8 @@
 // long-lived hosts like Railway / Render: `npm start` -> `node server.js`,
 // binding to process.env.PORT.
 //
-// Without a KV/Upstash store configured (env vars), accounts live in memory and
-// reset when the process restarts — fine for local testing, NOT for production.
-// On Railway, provision an Upstash Redis and set UPSTASH_REDIS_REST_URL /
-// UPSTASH_REDIS_REST_TOKEN so accounts persist across restarts/deploys.
+// Without persistent storage, accounts live in memory and reset when the process
+// restarts. On Railway, attach Postgres and reference its DATABASE_URL variable.
 // =============================================================================
 
 const http = require('http');
