@@ -403,7 +403,24 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <button class="btn" id="updCopy" style="width:100%;margin-top:12px;">Copy new bookmarklet</button>
   </div>
 </div>
-<div id="maintenanceMode" class="maintenance-mode hidden" role="status" aria-live="polite">
+<div id="commandPalette" class="command-overlay hidden" role="dialog" aria-modal="true" aria-label="Quick actions">
+  <div class="command-card">
+    <div class="command-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="commandInput" type="text" placeholder="Go to or run an action…" autocomplete="off"><kbd>Esc</kbd></div>
+    <div class="command-list" id="commandList">
+      <button type="button" data-command="generate" data-search="generate new link route"><span class="command-icon">+</span><span><b>Generate a link</b><small>Create a new destination</small></span></button>
+      <button type="button" data-command="links" data-search="links home routes"><span class="command-icon">↗</span><span><b>Links</b><small>Return to your workspace</small></span></button>
+      <button type="button" data-command="report" data-search="report broken dead link"><span class="command-icon">!</span><span><b>Report links</b><small>Flag destinations that do not work</small></span></button>
+      <button type="button" data-command="support" data-search="support bug report help"><span class="command-icon">?</span><span><b>New support report</b><small>Start a conversation about a problem</small></span></button>
+      <button type="button" data-command="messages" data-search="messages conversation chat"><span class="command-icon">••</span><span><b>Messages</b><small>Open your conversations</small></span></button>
+      <button type="button" data-command="notifications" data-search="notifications announcements alerts"><span class="command-icon">○</span><span><b>Notifications</b><small>See account and service updates</small></span></button>
+      <button type="button" data-command="vault" data-search="vault status usage links"><span class="command-icon">□</span><span><b>Vault status</b><small>Check live link availability</small></span></button>
+      <button type="button" data-command="updates" data-search="updates version release notes"><span class="command-icon">↑</span><span><b>Updates</b><small>Version status and release notes</small></span></button>
+      <button type="button" data-command="settings" data-search="settings theme preferences"><span class="command-icon">◇</span><span><b>Settings</b><small>Theme and link behavior</small></span></button>
+      <button type="button" data-command="account" data-search="account profile credits role"><span class="command-icon">@</span><span><b>Account</b><small>Usage, role, and security</small></span></button>
+    </div>
+    <div class="command-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span><kbd>Esc</kbd> close</span></div>
+  </div>
+</div><div id="maintenanceMode" class="maintenance-mode hidden" role="status" aria-live="polite">
   <div class="maintenance-card">
     <span class="maintenance-mark" aria-hidden="true"></span>
     <div class="maintenance-kicker">Scale XT status</div>
@@ -438,22 +455,35 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 
   <!-- APP -->
   <div id="app" class="app hidden">
-    <aside class="side">
-      <div class="brand"><span class="d"></span><span class="nm">Scale XT</span></div>
-      <button class="navitem active" data-nav="links"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span> Links</button>
-      <button class="navitem" data-nav="report"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2 3.5L17 11H5"/></svg></span> Report</button>
-      <button class="navitem" data-nav="bug"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5h14v10H9l-4 3v-13z"/><path d="M8 9h8M8 12h5"/></svg></span> Support <span class="badge hidden" id="bugBadge">0</span></button>
-      <button class="navitem" data-nav="messages"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7 7 0 0 1-9.5 6.5L5 19.5l1.4-4A7 7 0 1 1 20 11.5z"/></svg></span> Messages <span class="badge hidden" id="msgBadge">0</span></button>
-      <button class="navitem" data-nav="notifs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 19.5a2 2 0 0 0 3 0"/></svg></span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
-      <button class="navitem" data-nav="vault"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></span> Vault</button>
-      <button class="navitem" data-nav="account"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span> Account</button>
-      <button class="navitem" data-nav="updates"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h9l3 3V20H6z"/><path d="M15 3.5V7h3M9 11h6M9 14.5h6"/></svg></span> Updates <span class="badge hidden" id="releaseBadge">New</span></button>
-      <button class="navitem" data-nav="settings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span> Settings</button>
-      <button class="navitem" data-nav="help"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.7 1.2c0 1.6-2.2 2-2.2 3.3"/><path d="M12 17.2v.01"/></svg></span> Help</button>
+    <aside class="side" aria-label="Primary navigation">
+      <div class="brand" title="Scale XT"><span class="d"></span><span class="nm">Scale XT</span></div>
+      <button class="navitem active" data-nav="links" data-label="Links" title="Links" aria-label="Links"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span><span class="navtext">Links</span></button>
+      <button class="navitem" data-nav="bug" data-label="Support" title="Support" aria-label="Support"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5h14v10H9l-4 3v-13z"/><path d="M8 9h8M8 12h5"/></svg></span><span class="navtext">Support</span><span class="badge hidden" id="bugBadge">0</span></button>
+      <button class="navitem" data-nav="messages" data-label="Messages" title="Messages" aria-label="Messages"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7 7 0 0 1-9.5 6.5L5 19.5l1.4-4A7 7 0 1 1 20 11.5z"/></svg></span><span class="navtext">Messages</span><span class="badge hidden" id="msgBadge">0</span></button>
       <div class="spacer"></div>
-      <button class="navitem logout" id="logoutBtn"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V5.5A1.5 1.5 0 0 0 12.5 4H6A1.5 1.5 0 0 0 4.5 5.5v13A1.5 1.5 0 0 0 6 20h6.5a1.5 1.5 0 0 0 1.5-1.5V16"/><path d="M9.5 12h10M16.5 9l3 3-3 3"/></svg></span> Log out</button>
+      <button class="navitem logout" id="logoutBtn" data-label="Log out" title="Log out" aria-label="Log out"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V5.5A1.5 1.5 0 0 0 12.5 4H6A1.5 1.5 0 0 0 4.5 5.5v13A1.5 1.5 0 0 0 6 20h6.5a1.5 1.5 0 0 0 1.5-1.5V16"/><path d="M9.5 12h10M16.5 9l3 3-3 3"/></svg></span><span class="navtext">Log out</span></button>
     </aside>
-    <main class="main">
+    <div class="workspace">
+      <header class="utilitybar">
+        <div class="utility-context"><span>Workspace</span><strong id="utilityPage">Links</strong></div>
+        <button class="command-trigger" id="commandBtn" type="button" aria-label="Open quick actions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><span>Search or jump</span><kbd>Ctrl K</kbd></button>
+        <nav class="utility-actions" aria-label="Tools">
+          <button class="utility-btn" data-nav="report" title="Report links" aria-label="Report links"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2 3.5L17 11H5"/></svg></button>
+          <button class="utility-btn" data-nav="notifs" title="Notifications" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 19.5a2 2 0 0 0 3 0"/></svg><span class="badge hidden" id="navBadge">0</span></button>
+          <button class="utility-btn" data-nav="vault" title="Vault status" aria-label="Vault status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></button>
+          <button class="version-chip" id="versionBtn" type="button" title="Version and updates"><i id="versionDot"></i><span id="versionLabel">v__VERSION__</span><small id="versionState">Checking</small></button>
+          <button class="utility-btn" data-nav="account" title="Account" aria-label="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></button>
+          <button class="utility-btn" id="moreBtn" type="button" title="More" aria-label="More options" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+        </nav>
+        <div class="more-menu hidden" id="moreMenu">
+          <button type="button" data-nav="updates"><span>Updates</span><span class="badge hidden" id="releaseBadge">New</span></button>
+          <button type="button" data-nav="settings">Settings</button>
+          <button type="button" data-nav="help">Help</button>
+          <a class="hidden" id="staffAdminMenuLink" href="/admin" target="_blank" rel="noopener">Admin dashboard</a>
+          <button type="button" class="danger" id="logoutMenuBtn">Log out</button>
+        </div>
+      </header>
+      <main class="main">
       <!-- LINKS -->
       <section id="page-links" class="home-page">
         <div class="home-kicker">Your links</div><div class="ptitle">Links</div>
@@ -588,6 +618,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <div class="inforow"><span class="k">Usage credits</span><span class="v" id="acCredits">—</span></div>
           <div class="inforow"><span class="k">Role</span><span class="v" id="acRole">Member</span></div>
           <div class="inforow"><span class="k">Theme</span><span class="v" id="acTheme">—</span></div>
+          <div class="inforow"><span class="k">Installed version</span><span class="v" id="acVersion">—</span></div>
+          <div class="inforow"><span class="k">Latest version</span><span class="v" id="acLatest">Checking…</span></div>
         </div>
         <a class="btn ghost hidden" id="staffAdminLink" href="/admin" target="_blank" rel="noopener" style="margin-top:14px;">Open staff panel</a>
         <span class="flabel" style="margin-top:26px;">Share usage</span>
@@ -605,13 +637,19 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <input id="pwNew" type="password" placeholder="New password" autocomplete="off">
           <button class="btn" id="pwBtn" style="width:100%;">Update password</button>
         </div>
+      </section>
       <!-- RELEASE NOTES -->
       <section id="page-updates" class="hidden">
         <div class="ptitle">Updates</div>
-        <div class="psub">What changed in Scale XT.</div>
+        <div class="psub">Your installed version and everything that changed.</div>
+        <div class="version-panel">
+          <div><span>Installed</span><strong id="updatesInstalled">—</strong></div>
+          <div><span>Latest</span><strong id="updatesLatest">Checking…</strong></div>
+          <button class="btn ghost" id="updatesAction" type="button">Check for updates</button>
+        </div>
+        <div class="section-head release-heading"><span>Release notes</span><span class="section-count" id="releaseCount">—</span></div>
         <div id="releaseList" class="release-list"></div>
         <div class="empty hidden" id="releaseEmpty">No release notes yet.</div>
-      </section>
       </section>
       <!-- HELP -->
       <section id="page-help" class="hidden">
@@ -623,18 +661,22 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <p style="line-height:1.7;margin-bottom:12px;">• If a link is dead or blocked, tap <b>blocked</b> on it — it's pulled from everyone's rotation and reported.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
           <p style="line-height:1.7;color:var(--muted);">Links are stored on the server and shown as labels so the URLs don't leak over your shoulder.</p>
-          <p style="margin-top:16px;color:var(--muted);font-size:12px;">Scale XT <b>v__VERSION__</b></p>
+          <p style="margin-top:16px;color:var(--muted);font-size:12px;">Installed: <b id="helpVersion">v__VERSION__</b> <span id="helpVersionState">· checking for updates</span></p>
           <button class="btn ghost" id="helpUpdate" style="margin-top:14px;">Update Scale XT</button>
         </div>
       </section>
       <div class="msg" id="msg"></div>
-    </main>
+      </main>
+    </div>
   </div>
 </div>
 
 <script>
 (function(){
-  var API=window.location.origin, TOKEN_KEY='voidext_token', BUILT_VERSION='__VERSION__';
+  var API=window.location.origin, TOKEN_KEY='voidext_token', APP_VERSION='__VERSION__';
+  var versionParam='';
+  try{versionParam=new URLSearchParams(window.location.search).get('v')||'';}catch(e){}
+  var INSTALLED_VERSION=/^\d+\.\d+\.\d+(?:[-+][a-z0-9.-]+)?$/i.test(versionParam)?versionParam:APP_VERSION;
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
   var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],releases:[],unread:0,reportSel:{}};
 
@@ -656,14 +698,18 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   function applyTheme(t){document.body.setAttribute('data-theme',t||'void');}
   function applySettings(s){state.settings=Object.assign({},DEFAULTS,s||{});applyTheme(state.settings.theme);}
 
-  function showAuth(){$('authWrap').classList.remove('hidden');$('app').classList.add('hidden');}
-  function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');checkReleases();}
+  function showAuth(){$('authWrap').classList.remove('hidden');$('app').classList.add('hidden');closeCommand();closeMore();}
+  function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');checkReleases();paintVersionState();}
 
+  var PAGE_NAMES={links:'Links',report:'Report links',bug:'Support',messages:'Messages',notifs:'Notifications',updates:'Updates',vault:'Vault',account:'Account',settings:'Settings',help:'Help'};
   function nav(page){
     ['links','report','bug','messages','notifs','updates','vault','account','settings','help'].forEach(function(p){
       $('page-'+p).classList.toggle('hidden',p!==page);
     });
+    state.activePage=page;
+    $('utilityPage').textContent=PAGE_NAMES[page]||'Scale XT';
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
+    closeMore();closeCommand();
     if(page==='settings')openSettings();
     if(page==='account')renderAccount();
     if(page==='vault')loadVault();
@@ -675,6 +721,60 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     clearMsg();
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
+
+  function closeMore(){$('moreMenu').classList.add('hidden');$('moreBtn').setAttribute('aria-expanded','false');}
+  $('moreBtn').onclick=function(e){e.stopPropagation();var open=$('moreMenu').classList.contains('hidden');closeMore();if(open){$('moreMenu').classList.remove('hidden');$('moreBtn').setAttribute('aria-expanded','true');}};
+  $('moreMenu').onclick=function(e){e.stopPropagation();};
+  document.addEventListener('click',closeMore);
+  $('versionBtn').onclick=function(){if(latestVersion&&isNewer(latestVersion,INSTALLED_VERSION))openUpdate();else nav('updates');};
+
+  var commandIndex=0;
+  function commandButtons(){return Array.prototype.filter.call(document.querySelectorAll('[data-command]'),function(el){return !el.classList.contains('hidden');});}
+  function paintCommandSelection(){
+    var items=commandButtons();
+    if(!items.length)return;
+    commandIndex=Math.max(0,Math.min(commandIndex,items.length-1));
+    items.forEach(function(el,i){el.classList.toggle('selected',i===commandIndex);});
+    items[commandIndex].scrollIntoView({block:'nearest'});
+  }
+  function filterCommands(){
+    var q=$('commandInput').value.trim().toLowerCase();
+    document.querySelectorAll('[data-command]').forEach(function(el){el.classList.toggle('hidden',!!q&&(el.getAttribute('data-search')||'').indexOf(q)<0);});
+    commandIndex=0;paintCommandSelection();
+  }
+  function openCommand(){
+    if($('app').classList.contains('hidden'))return;
+    closeMore();$('commandPalette').classList.remove('hidden');$('commandInput').value='';filterCommands();
+    setTimeout(function(){$('commandInput').focus();},0);
+  }
+  function closeCommand(){
+    var palette=$('commandPalette');if(!palette)return;
+    palette.classList.add('hidden');$('commandInput').value='';
+    document.querySelectorAll('[data-command]').forEach(function(el){el.classList.remove('hidden','selected');});
+  }
+  function runCommand(command){
+    closeCommand();
+    var pages={links:'links',report:'report',messages:'messages',notifications:'notifs',vault:'vault',updates:'updates',settings:'settings',account:'account'};
+    if(pages[command]){nav(pages[command]);return;}
+    if(command==='generate'){nav('links');setTimeout(function(){$('genBtn').click();},0);return;}
+    if(command==='support'){nav('bug');setTimeout(function(){$('supportNewBtn').click();},0);}
+  }
+  $('commandBtn').onclick=openCommand;
+  $('commandInput').addEventListener('input',filterCommands);
+  $('commandInput').addEventListener('keydown',function(e){
+    var items=commandButtons();
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeCommand();return;}
+    if(!items.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();commandIndex=(commandIndex+1)%items.length;paintCommandSelection();}
+    else if(e.key==='ArrowUp'){e.preventDefault();commandIndex=(commandIndex-1+items.length)%items.length;paintCommandSelection();}
+    else if(e.key==='Enter'){e.preventDefault();runCommand(items[commandIndex].getAttribute('data-command'));}
+  });
+  document.querySelectorAll('[data-command]').forEach(function(el){el.onclick=function(){runCommand(el.getAttribute('data-command'));};});
+  $('commandPalette').onclick=function(e){if(e.target===$('commandPalette'))closeCommand();};
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==='k'){e.preventDefault();openCommand();}
+    else if(e.key==='Escape'){closeCommand();closeMore();}
+  });
 
   // tabs
   function setMode(m){
@@ -826,7 +926,11 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     $('acCredits').textContent=credits+' credit'+(credits===1?'':'s');
     $('acRole').textContent=role.charAt(0).toUpperCase()+role.slice(1);
     $('acTheme').textContent=state.settings.theme;
-    $('staffAdminLink').classList.toggle('hidden',role!=='admin'&&role!=='support');
+    $('acVersion').textContent='v'+INSTALLED_VERSION;
+    $('acLatest').textContent=latestVersion?'v'+latestVersion:'Checking…';
+    var isStaff=role==='owner'||role==='admin'||role==='support';
+    $('staffAdminLink').classList.toggle('hidden',!isStaff);
+    $('staffAdminMenuLink').classList.toggle('hidden',!isStaff);
     api('/api/users').then(function(res){ if(res.ok) giftUsers=res.data.usernames||[]; });
   }
 
@@ -1208,6 +1312,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         var copy=document.createElement('p');copy.textContent=release.text||'';
         card.appendChild(meta);card.appendChild(title);card.appendChild(copy);list.appendChild(card);
       });
+      $('releaseCount').textContent=state.releases.length+' release'+(state.releases.length===1?'':'s');
       if(markSeen&&state.releases[0])setReleaseSeen(state.releases[0].id);
       paintReleaseBadge();
     });
@@ -1247,11 +1352,13 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   };
 
-  $('logoutBtn').onclick=function(){
+  function doLogout(){
     api('/api/logout',{method:'POST'});
     stopMsgPoll();stopSupportPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);setSupportBadge(0);threadPartner=null;supportId=null;
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
-  };
+  }
+  $('logoutBtn').onclick=doLogout;
+  $('logoutMenuBtn').onclick=doLogout;
 
   var maintenancePoll=null;
   function paintMaintenance(maintenance){
@@ -1281,29 +1388,58 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     for(var i=0;i<3;i++){var x=pa[i]||0,y=pb[i]||0;if(x>y)return true;if(x<y)return false;}
     return false;
   }
-  var latestVersion=null;
-  function checkVersion(){
-    api('/api/version').then(function(res){
-      if(res.ok&&res.data.version&&isNewer(res.data.version,BUILT_VERSION)){
-        latestVersion=res.data.version;
-        var bar=$('updateBar');
-        bar.innerHTML='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:5px;"><path d="M12 19V6M6 12l6-6 6 6"/></svg>Update available: <b>v'+BUILT_VERSION+'</b> → <b>v'+latestVersion+'</b> · tap to update';
-        bar.classList.remove('hidden');
-        bar.onclick=openUpdate;
-      }
-    }).catch(function(){});
+  var latestVersion=APP_VERSION,versionPoll=null;
+  function updateReady(){return !!latestVersion&&isNewer(latestVersion,INSTALLED_VERSION);}
+  function paintVersionState(){
+    var ready=updateReady(),latest=latestVersion||APP_VERSION;
+    $('versionLabel').textContent='v'+INSTALLED_VERSION;
+    $('versionState').textContent=ready?'Update ready':'Current';
+    $('versionDot').classList.toggle('update',ready);
+    $('versionBtn').classList.toggle('update',ready);
+    $('updatesInstalled').textContent='v'+INSTALLED_VERSION;
+    $('updatesLatest').textContent='v'+latest;
+    $('updatesAction').textContent=ready?'Install update':'Check again';
+    $('updatesAction').classList.toggle('attention',ready);
+    $('helpVersion').textContent='v'+INSTALLED_VERSION;
+    $('helpVersionState').textContent=ready?' · v'+latest+' is ready':' · up to date';
+    if($('acVersion'))$('acVersion').textContent='v'+INSTALLED_VERSION;
+    if($('acLatest'))$('acLatest').textContent='v'+latest;
   }
+  function checkVersion(announce){
+    return api('/api/version').then(function(res){
+      if(!res.ok||!res.data.version)throw new Error('version unavailable');
+      latestVersion=res.data.version;paintVersionState();
+      var bar=$('updateBar');
+      if(updateReady()){
+        bar.innerHTML='<span class="update-toast-icon">↑</span><span><b>Scale XT v'+latestVersion+' is ready</b><small>You are using v'+INSTALLED_VERSION+'. Tap to update.</small></span>';
+        bar.classList.remove('hidden');bar.onclick=openUpdate;
+      }else{
+        bar.classList.add('hidden');bar.onclick=null;
+        if(announce)msg('Scale XT v'+INSTALLED_VERSION+' is up to date.','ok');
+      }
+    }).catch(function(){
+      $('versionState').textContent='Check failed';
+      $('updatesLatest').textContent='Unavailable';
+      if(announce)msg('Could not check for updates.','err');
+    });
+  }
+  function startVersionWatch(){if(versionPoll)return;versionPoll=setInterval(function(){checkVersion(false);},900000);}
   function openUpdate(){
-    $('updVer').textContent='v'+BUILT_VERSION+'  →  v'+(latestVersion||'?');
+    var target=latestVersion||APP_VERSION;
+    $('updVer').textContent=updateReady()?'v'+INSTALLED_VERSION+'  →  v'+target:'Installed v'+INSTALLED_VERSION;
     $('updCode').textContent='Loading latest version…';
     $('updModal').classList.remove('hidden');
     api('/api/bookmarklet').then(function(res){
       if(res.ok&&res.data.code){
         $('updCode').textContent=res.data.code;
-        if(res.data.version)$('updVer').textContent='v'+BUILT_VERSION+'  →  v'+res.data.version;
+        if(res.data.version){
+          latestVersion=res.data.version;paintVersionState();
+          $('updVer').textContent=isNewer(res.data.version,INSTALLED_VERSION)?'v'+INSTALLED_VERSION+'  →  v'+res.data.version:'Latest version: v'+res.data.version;
+        }
       }else{$('updCode').textContent='Could not load the latest code. Try again, or reinstall from the site.';}
     }).catch(function(){$('updCode').textContent='Network error — could not load the latest code.';});
   }
+  $('updatesAction').onclick=function(){if(updateReady())openUpdate();else checkVersion(true);};
   $('helpUpdate').onclick=openUpdate;
   $('updClose').onclick=function(){$('updModal').classList.add('hidden');};
   $('updModal').onclick=function(e){if(e.target===$('updModal'))$('updModal').classList.add('hidden');};
@@ -1314,7 +1450,6 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     function fallback(){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){msg('Copy failed — select the code and copy manually.','err');}document.body.removeChild(ta);}
     try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fallback);}else fallback();}catch(e){fallback();}
   };
-
   // Remove the loader as soon as the real session check is complete.
   function hideLoader(){
     var l=$('loader');if(!l||l._hiding)return;l._hiding=true;
@@ -1325,7 +1460,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   }
 
   (function init(){
-    setMode('login');applyTheme('void');checkVersion();startMaintenanceWatch();
+    setMode('login');applyTheme('void');paintVersionState();checkVersion(false);startVersionWatch();startMaintenanceWatch();
     if(token()){
       api('/api/me').then(function(res){
         if(res.ok){state.username=res.data.username;applySettings(res.data.settings);state.account=res.data.account||null;state.links=res.data.links||[];state.pinned=res.data.pinned||[];state.notifications=res.data.notifications||[];showApp();renderLinks(state.links);setBadge((res.data.notifications||[]).length);setMsgBadge(res.data.messagesUnread||0);startBadgePoll();}

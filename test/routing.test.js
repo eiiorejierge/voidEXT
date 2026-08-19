@@ -27,3 +27,23 @@ test('every nested client API namespace has a Vercel adapter', () => {
     );
   }
 });
+
+test('the compact bookmarklet shell tracks the installed launcher version', () => {
+  const source = fs.readFileSync(path.join(root, 'bookmarklet.src.js'), 'utf8');
+  const builtApp = fs.readFileSync(path.join(root, 'public', 'app.html'), 'utf8');
+  const launcher = fs.readFileSync(path.join(root, 'bookmarklet.min.js'), 'utf8').trim();
+  const version = require(path.join(root, 'lib', 'version.js'));
+
+  assert.match(source, /URLSearchParams\(window\.location\.search\)\.get\('v'\)/);
+  assert.match(source, /isNewer\(latestVersion,INSTALLED_VERSION\)/);
+  assert.doesNotMatch(source, /BUILT_VERSION/);
+  assert.match(builtApp, /id="commandPalette"/);
+  assert.match(builtApp, /id="versionBtn"/);
+  assert.match(builtApp, /id="moreMenu"/);
+  assert.doesNotMatch(builtApp, /__VERSION__/);
+  assert.equal(launcher.includes('/app.html?v=' + version), true);
+  assert.equal(launcher.length <= 5000, true, 'Launcher grew to ' + launcher.length + ' characters');
+
+  const ids = [...builtApp.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(new Set(ids).size, ids.length, 'The generated app contains duplicate element IDs');
+});
