@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scale XT · Admin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 :root{--star:rgba(255,255,255,0.9);--a1:#a855f7;--a2:#ec4899;--a3:#38bdf8;--grad:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);--grad3:linear-gradient(115deg,#818cf8 0%,#c084fc 32%,#f472b6 62%,#38bdf8 100%);--glow:rgba(168,85,247,0.5);--danger:#fb3b6b;}
@@ -94,10 +92,14 @@ td.url{word-break:break-all;max-width:420px;}
 <!-- GATE -->
 <div id="gate" class="gatewrap">
   <div class="card gate">
-    <h2>Scale XT Admin — enter code</h2>
+    <h2>Scale XT staff</h2>
+    <p class="gate-copy">Use the admin code, or continue with a staff account already signed in to Scale XT.</p>
     <input id="keyInput" type="password" placeholder="Admin code" inputmode="numeric" autocomplete="off">
     <div class="msg" id="gateMsg"></div>
-    <div style="margin-top:14px;"><button class="btn" id="enterBtn" style="width:100%;">Unlock</button></div>
+    <div class="gate-actions">
+      <button class="btn" id="enterBtn">Use admin code</button>
+      <button class="btn ghost hidden" id="staffBtn">Continue as signed-in staff</button>
+    </div>
   </div>
 </div>
 
@@ -106,13 +108,15 @@ td.url{word-break:break-all;max-width:420px;}
   <aside class="side">
     <div class="brand"><span class="d"></span><span class="nm">ADMIN</span></div>
     <button class="navitem active" data-nav="overview"><span class="ic">01</span> Overview</button>
-    <button class="navitem" data-nav="pool"><span class="ic">02</span> Link pool</button>
-    <button class="navitem" data-nav="reports"><span class="ic">03</span> Reports <span class="badge hidden" id="navPending">0</span></button>
-    <button class="navitem" data-nav="bugs"><span class="ic">04</span> Support <span class="badge hidden" id="navBugs">0</span></button>
-    <button class="navitem" data-nav="accounts"><span class="ic">05</span> Accounts</button>
-    <button class="navitem" data-nav="messages"><span class="ic">06</span> Messages</button>
-    <button class="navitem" data-nav="announce"><span class="ic">07</span> Announce</button>
+    <button class="navitem" data-nav="pool" data-cap="links"><span class="ic">02</span> Link pool</button>
+    <button class="navitem" data-nav="reports" data-cap="reports"><span class="ic">03</span> Reports <span class="badge hidden" id="navPending">0</span></button>
+    <button class="navitem" data-nav="bugs" data-cap="support"><span class="ic">04</span> Support <span class="badge hidden" id="navBugs">0</span></button>
+    <button class="navitem" data-nav="accounts" data-cap="accounts"><span class="ic">05</span> Accounts</button>
+    <button class="navitem" data-nav="messages" data-cap="messages"><span class="ic">06</span> Messages</button>
+    <button class="navitem" data-nav="announce" data-cap="announcements"><span class="ic">07</span> Announce</button>
+    <button class="navitem" data-nav="releases" data-cap="releases"><span class="ic">08</span> Releases</button>
     <div class="spacer"></div>
+    <div class="staff-identity" id="staffIdentity"></div>
     <button class="navitem" id="refreshBtn"><span class="ic">R</span> Refresh</button>
     <button class="navitem" id="logoutBtn"><span class="ic">X</span> Lock</button>
   </aside>
@@ -120,14 +124,32 @@ td.url{word-break:break-all;max-width:420px;}
     <!-- OVERVIEW -->
     <section id="page-overview">
       <div class="ptitle">Overview</div>
-      <div class="psub">Snapshot of the vault and accounts.</div>
+      <div class="psub">Accounts, weekly usage, activity, and support at a glance.</div>
       <div class="stats" id="stats"></div>
+      <div class="dashboard-grid">
+        <article class="dashboard-panel dashboard-wide">
+          <header><div><span>Activity</span><h2>Last 7 days</h2></div><small>links · signups · support</small></header>
+          <div class="activity-chart" id="activityChart"></div>
+        </article>
+        <article class="dashboard-panel">
+          <header><div><span>Usage</span><h2>This week</h2></div></header>
+          <div id="weeklyUsage"></div>
+        </article>
+        <article class="dashboard-panel">
+          <header><div><span>Access</span><h2>User roles</h2></div></header>
+          <div id="roleBreakdown"></div>
+        </article>
+        <article class="dashboard-panel">
+          <header><div><span>Queue</span><h2>Needs attention</h2></div></header>
+          <div id="opsQueue"></div>
+        </article>
+      </div>
     </section>
     <!-- REPORTS -->
     <section id="page-reports" class="hidden">
       <div class="ptitle">Reports queue</div>
-      <div class="psub">Reports are NOT auto-blocked. Confirm to block the link + refund affected users a token (with a notification). Deny to leave it in rotation.</div>
-      <div class="row"><button class="btn ghost sm" id="clearReportsBtn">Clear log</button></div>
+      <div class="psub">Reports are never auto-blocked. Confirm one to pause the link and return usage to affected users.</div>
+      <div class="row"><button class="btn ghost sm" id="clearReportsBtn" data-cap="links">Clear log</button></div>
       <div class="scroll"><table>
         <thead><tr><th>Link</th><th>By</th><th>When</th><th>Status</th><th></th></tr></thead>
         <tbody id="reportsBody"></tbody>
@@ -154,9 +176,9 @@ td.url{word-break:break-all;max-width:420px;}
     <!-- ACCOUNTS -->
     <section id="page-accounts" class="hidden">
       <div class="ptitle">Accounts</div>
-      <div class="psub">Every registered account.</div>
+      <div class="psub">View weekly usage, assign roles, and manage accounts.</div>
       <div class="scroll"><table>
-        <thead><tr><th>Username</th><th>Created</th><th>Links</th><th>Tokens</th><th>Grant tokens</th><th></th></tr></thead>
+        <thead><tr><th>Username</th><th>Role</th><th>Weekly usage</th><th>Created</th><th>Links</th><th>Usage credit</th><th></th></tr></thead>
         <tbody id="usersBody"></tbody>
       </table></div>
       <div class="empty hidden" id="usersEmpty">No accounts yet.</div>
@@ -186,7 +208,7 @@ td.url{word-break:break-all;max-width:420px;}
               <textarea id="bugReply" placeholder="Reply to the reporter..."></textarea>
               <div class="ticket-actions">
                 <button class="btn" id="bugReplyBtn">Send reply</button>
-                <label class="reward-label">Reward <input id="bugTokens" type="number" value="5" min="0" max="10"></label>
+                <label class="reward-label">Usage credit <input id="bugTokens" type="number" value="1" min="0" max="10"></label>
                 <button class="btn ghost" id="bugFixBtn">Mark fixed</button>
                 <button class="btn danger" id="bugCloseBtn">Close</button>
               </div>
@@ -224,16 +246,38 @@ td.url{word-break:break-all;max-width:420px;}
       <div id="annList" style="margin-top:10px;"></div>
       <div class="empty" id="annEmpty">No announcements yet.</div>
     </section>
+    <!-- RELEASES -->
+    <section id="page-releases" class="hidden">
+      <div class="ptitle">Release notes</div>
+      <div class="psub">Publish a short update that appears inside Scale XT.</div>
+      <div class="release-composer">
+        <div class="release-fields">
+          <label for="releaseVersion">Version</label>
+          <input id="releaseVersion" type="text" value="2.4.0" placeholder="2.4.0">
+          <label for="releaseTitle">Title</label>
+          <input id="releaseTitle" type="text" maxlength="100" placeholder="What changed?">
+        </div>
+        <label for="releaseText">Notes</label>
+        <textarea id="releaseText" maxlength="2000" placeholder="A short, clear summary for users."></textarea>
+        <button class="btn" id="releaseSend">Publish release</button>
+      </div>
+      <div class="section-label">Published releases</div>
+      <div id="releaseAdminList"></div>
+      <div class="empty" id="releaseAdminEmpty">No release notes yet.</div>
+    </section>
     <div class="msg" id="msg"></div>
   </main>
 </div>
 
 <script>
 (function(){
-  var KEY_STORE='voidext_admin_key';
+  var KEY_STORE='voidext_admin_key',APP_TOKEN='voidext_token';
+  var adminSession={role:null,username:null,capabilities:[]};
   var $=function(id){return document.getElementById(id);};
   function key(){try{return sessionStorage.getItem(KEY_STORE)||'';}catch(e){return'';}}
   function setKey(k){try{k?sessionStorage.setItem(KEY_STORE,k):sessionStorage.removeItem(KEY_STORE);}catch(e){}}
+  function appToken(){try{return localStorage.getItem(APP_TOKEN)||'';}catch(e){return'';}}
+  function can(cap){return adminSession.capabilities.indexOf(cap)>=0;}
   function msg(el,t,k){el.className='msg show '+(k||'');el.textContent=t;}
   function clr(el){el.className='msg';el.textContent='';}
   function when(ts){if(!ts)return '—';return new Date(ts).toLocaleString();}
@@ -245,50 +289,96 @@ td.url{word-break:break-all;max-width:420px;}
       .then(function(r){return r.json().catch(function(){return{};}).then(function(j){return{ok:r.ok,status:r.status,data:j};});});
   }
 
-  // ---- gate ----
-  $('enterBtn').onclick=unlock;
-  $('keyInput').addEventListener('keydown',function(e){if(e.key==='Enter')unlock();});
-  function unlock(){
-    var k=$('keyInput').value.trim();
-    if(!k){msg($('gateMsg'),'Enter the admin code.','err');return;}
-    setKey(k);
-    api('/api/admin/stats').then(function(res){
-      if(!res.ok){setKey('');msg($('gateMsg'),res.data.error||'Wrong code.','err');return;}
-      $('gate').classList.add('hidden');$('dash').classList.remove('hidden');nav('overview');loadAll();
+  function applySession(session){
+    adminSession=session||{role:null,username:null,capabilities:[]};
+    $('staffIdentity').innerHTML='<b>'+esc(adminSession.username||'Staff')+'</b><span>'+esc(adminSession.role||'staff')+'</span>';
+    document.querySelectorAll('[data-cap]').forEach(function(el){el.classList.toggle('hidden',!can(el.getAttribute('data-cap')));});
+  }
+  function authenticate(secret){
+    setKey(secret);
+    clr($('gateMsg'));
+    api('/api/admin/session').then(function(res){
+      if(!res.ok){setKey('');msg($('gateMsg'),res.data.error||'Access denied.','err');return;}
+      applySession(res.data);
+      $('gate').classList.add('hidden');
+      $('dash').classList.remove('hidden');
+      nav('overview');
+      loadAll();
     }).catch(function(){setKey('');msg($('gateMsg'),'Network error.','err');});
   }
+
+  // ---- gate ----
+  $('enterBtn').onclick=unlock;
+  $('staffBtn').onclick=function(){var token=appToken();if(token)authenticate(token);};
+  $('keyInput').addEventListener('keydown',function(e){if(e.key==='Enter')unlock();});
+  function unlock(){
+    var secret=$('keyInput').value.trim();
+    if(!secret){msg($('gateMsg'),'Enter the admin code.','err');return;}
+    authenticate(secret);
+  }
+  if(appToken())$('staffBtn').classList.remove('hidden');
 
   // ---- nav ----
   var allUsernames=[];
   function nav(page){
-    ['overview','pool','reports','bugs','accounts','messages','announce'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
+    ['overview','pool','reports','bugs','accounts','messages','announce','releases'].forEach(function(p){$('page-'+p).classList.toggle('hidden',p!==page);});
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
     if(page==='overview')loadStats();
-    if(page==='pool')loadPool();
-    if(page==='reports')loadReports();
-    if(page==='bugs')loadBugs();else stopBugPoll();
-    if(page==='accounts')loadUsers();
-    if(page==='messages')loadUsers();
-    if(page==='announce')loadAnnouncements();
+    if(page==='pool'&&can('links'))loadPool();
+    if(page==='reports'&&can('reports'))loadReports();
+    if(page==='bugs'&&can('support'))loadBugs();else stopBugPoll();
+    if((page==='accounts'||page==='messages')&&can('accounts'))loadUsers();
+    if(page==='announce'&&can('announcements'))loadAnnouncements();
+    if(page==='releases'&&can('releases'))loadReleasesAdmin();
     clr($('msg'));
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
 
-  function loadAll(){loadStats();loadPool();loadReports();loadBugs();loadUsers();}
+  function loadAll(){
+    loadStats();
+    if(can('links'))loadPool();
+    if(can('reports'))loadReports();
+    if(can('support'))loadBugs();
+    if(can('accounts'))loadUsers();
+    if(can('announcements'))loadAnnouncements();
+    if(can('releases'))loadReleasesAdmin();
+  }
 
   function loadStats(){
     api('/api/admin/stats').then(function(res){
       if(res.status===401||res.status===429){return lock();}
       if(!res.ok)return;
-      var d=res.data;
-      if(d.pendingReports>0){$('navPending').textContent=d.pendingReports;$('navPending').classList.remove('hidden');}else{$('navPending').classList.add('hidden');}
+      var d=res.data,weekly=d.weekly||{},roles=d.roles||{},activity=d.activity||[];
+      if(d.viewer)applySession(d.viewer);
+      if(d.pendingReports>0&&can('reports')){$('navPending').textContent=d.pendingReports;$('navPending').classList.remove('hidden');}else{$('navPending').classList.add('hidden');}
       var supportCount=d.bugUnread||d.openBugs||0;
-      if(supportCount>0){$('navBugs').textContent=supportCount;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
+      if(supportCount>0&&can('support')){$('navBugs').textContent=supportCount;$('navBugs').classList.remove('hidden');}else{$('navBugs').classList.add('hidden');}
       $('stats').innerHTML=[
-        ['Accounts',d.accounts],['Active links',d.activeLinks],['Total links',d.totalLinks],
-        ['Paused',d.blockedCount],['Removed',d.removedCount||0],['Custom',d.customLinks||0],
-        ['Pending reports',d.pendingReports!=null?d.pendingReports:0],['Open support',d.openBugs!=null?d.openBugs:0],['Unread support',d.bugUnread||0]
+        ['Accounts',d.accounts||0],['Active 24h',d.active24h||0],['Weekly links',weekly.generations||0],['Average usage',(weekly.averageUsage||0)+'%']
       ].map(function(x){return '<div class="stat"><div class="n">'+x[1]+'</div><div class="l">'+x[0]+'</div></div>';}).join('');
+
+      var max=1;
+      activity.forEach(function(day){max=Math.max(max,day.generations||0,day.signups||0,day.support||0,day.reports||0);});
+      $('activityChart').innerHTML=activity.map(function(day){
+        var label=new Date(day.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'});
+        function bar(value,kind){var h=value?Math.max(8,Math.round((value/max)*100)):3;return '<i class="'+kind+'" style="height:'+h+'%" title="'+value+'"></i>';}
+        return '<div class="activity-day"><div class="activity-bars">'+bar(day.generations||0,'gen')+bar(day.signups||0,'signup')+bar((day.support||0)+(day.reports||0),'support')+'</div><b>'+esc(label)+'</b></div>';
+      }).join('')||'<div class="empty">No activity yet.</div>';
+
+      var pct=Math.max(0,Math.min(100,weekly.averageUsage||0));
+      $('weeklyUsage').innerHTML='<div class="usage-number">'+pct+'% <span>average used</span></div><div class="usage-track"><i style="width:'+pct+'%"></i></div>'+
+        '<div class="metric-list"><span><b>'+esc(weekly.atCapacity||0)+'</b> at 100%</span><span><b>'+esc(d.active7d||0)+'</b> active this week</span><span>Resets '+esc(when(weekly.resetAt))+'</span></div>';
+      $('roleBreakdown').innerHTML=['member','support','admin'].map(function(role){
+        return '<div class="role-row"><span>'+role+'</span><b>'+esc(roles[role]||0)+'</b></div>';
+      }).join('');
+      var queue=[];
+      if(can('reports'))queue.push({label:'Pending reports',value:d.pendingReports||0,page:'reports'});
+      if(can('support'))queue.push({label:'Open support',value:d.openBugs||0,page:'bugs'});
+      if(can('links'))queue.push({label:'Paused links',value:d.blockedCount||0,page:'pool'});
+      $('opsQueue').innerHTML=queue.map(function(item){
+        return '<button class="queue-row" data-route="'+item.page+'"><span>'+esc(item.label)+'</span><b>'+esc(item.value)+'</b></button>';
+      }).join('')||'<div class="empty">Nothing needs attention.</div>';
+      Array.prototype.forEach.call($('opsQueue').querySelectorAll('[data-route]'),function(button){button.onclick=function(){nav(button.getAttribute('data-route'));};});
     });
   }
 
@@ -311,7 +401,7 @@ td.url{word-break:break-all;max-width:420px;}
           '<td>'+statusPill+'</td>'+
           '<td style="text-align:right;white-space:nowrap;">'+action+'</td>';
         var cBtn=tr.querySelector('[data-act="confirm"]'),dBtn=tr.querySelector('[data-act="deny"]');
-        if(cBtn)cBtn.onclick=function(){cBtn.disabled=true;api('/api/admin/report-confirm',{method:'POST',body:{id:r.id}}).then(function(rr){if(rr.ok){ok('Blocked. '+rr.data.affected+' user(s) refunded + notified.');loadReports();loadStats();}else{cBtn.disabled=false;err(rr.data.error||'Failed.');}});};
+        if(cBtn)cBtn.onclick=function(){cBtn.disabled=true;api('/api/admin/report-confirm',{method:'POST',body:{id:r.id}}).then(function(rr){if(rr.ok){ok('Paused. Usage returned to '+rr.data.affected+' user(s).');loadReports();loadStats();}else{cBtn.disabled=false;err(rr.data.error||'Failed.');}});};
         if(dBtn)dBtn.onclick=function(){dBtn.disabled=true;api('/api/admin/report-deny',{method:'POST',body:{id:r.id}}).then(function(rr){if(rr.ok){ok('Report denied.');loadReports();loadStats();}else{dBtn.disabled=false;err(rr.data.error||'Failed.');}});};
         tb.appendChild(tr);
       });
@@ -386,25 +476,42 @@ td.url{word-break:break-all;max-width:420px;}
       var tb=$('usersBody');tb.innerHTML='';
       $('usersEmpty').classList.toggle('hidden',users.length>0);
       users.forEach(function(u){
-        var tr=document.createElement('tr');
+        var tr=document.createElement('tr'),pct=Math.max(0,Math.min(100,u.usagePercent||0));
+        var roleControl=can('roles')
+          ? '<div class="role-control"><select class="role-select">'+['member','support','admin'].map(function(role){return '<option value="'+role+'"'+(u.role===role?' selected':'')+'>'+role+'</option>';}).join('')+'</select><button class="btn ghost sm" data-act="role">Save</button></div>'
+          : '<span class="pill">'+esc(u.role||'member')+'</span>';
+        var creditControl=can('accountsWrite')
+          ? '<div class="credit-control"><input class="tok" type="number" value="1" min="1" max="100"><button class="btn sm" data-act="grant">Add</button></div>'
+          : '<span class="muted">—</span>';
+        var deleteControl=can('accountsWrite')?'<button class="btn danger sm" data-act="del">Delete</button>':'';
         tr.innerHTML='<td><b>'+esc(u.username)+'</b></td>'+
+          '<td>'+roleControl+'</td>'+
+          '<td><div class="usage-cell"><b>'+pct+'%</b><span><i style="width:'+pct+'%"></i></span></div></td>'+
           '<td class="muted" style="white-space:nowrap;">'+esc(when(u.created))+'</td>'+
-          '<td>'+u.linkCount+'</td>'+
-          '<td><span class="pill">'+(u.tokens!=null?u.tokens:'—')+' tokens</span></td>'+
-          '<td style="white-space:nowrap;"><input class="tok" type="number" value="1" min="1" style="width:56px;padding:6px 8px;letter-spacing:0;"> <button class="btn sm" data-act="grant">Grant</button></td>'+
-          '<td style="text-align:right;"><button class="btn danger sm" data-act="del">Delete</button></td>';
+          '<td>'+esc(u.linkCount||0)+'</td>'+
+          '<td>'+creditControl+'</td>'+
+          '<td style="text-align:right;">'+deleteControl+'</td>';
         var tok=tr.querySelector('.tok'),gBtn=tr.querySelector('[data-act="grant"]'),dBtn=tr.querySelector('[data-act="del"]');
-        gBtn.onclick=function(){
+        var roleBtn=tr.querySelector('[data-act="role"]'),roleSelect=tr.querySelector('.role-select');
+        if(roleBtn)roleBtn.onclick=function(){
+          roleBtn.disabled=true;
+          api('/api/admin/role-set',{method:'POST',body:{username:u.username,role:roleSelect.value}}).then(function(r){
+            roleBtn.disabled=false;
+            if(r.ok){ok(u.username+' is now '+r.data.role+'.');loadUsers();loadStats();}
+            else err(r.data.error||'Could not change the role.');
+          });
+        };
+        if(gBtn)gBtn.onclick=function(){
           var amt=parseInt(tok.value,10)||0;
-          if(!amt){err('Enter a token amount.');return;}
+          if(!amt){err('Enter a usage-credit amount.');return;}
           gBtn.disabled=true;
           api('/api/admin/grant-tokens',{method:'POST',body:{username:u.username,amount:amt}}).then(function(r){
             gBtn.disabled=false;
-            if(r.ok){ok('Gave '+amt+' token(s) to '+u.username+' — now '+r.data.tokens+'.');loadUsers();}
-            else err(r.data.error||'Could not grant.');
+            if(r.ok){ok('Added usage credit for '+u.username+'.');loadUsers();}
+            else err(r.data.error||'Could not add usage.');
           });
         };
-        dBtn.onclick=function(){api('/api/admin/delete-user',{method:'POST',body:{username:u.username}}).then(function(r){if(r.ok){loadUsers();loadStats();ok('Account deleted.');}});};
+        if(dBtn)dBtn.onclick=function(){api('/api/admin/delete-user',{method:'POST',body:{username:u.username}}).then(function(r){if(r.ok){loadUsers();loadStats();ok('Account deleted.');}else err(r.data.error||'Could not delete the account.');});};
         tb.appendChild(tr);
       });
     });
@@ -509,7 +616,7 @@ td.url{word-break:break-all;max-width:420px;}
     var button=$('bugFixBtn');button.disabled=true;
     api('/api/admin/bug-resolve',{method:'POST',body:{id:activeBugId,tokens:tokens}}).then(function(res){
       if(!res.ok){button.disabled=false;err(res.data.error||'Could not mark fixed.');return;}
-      renderBugThread(res.data.bug);loadBugs();loadStats();loadUsers();ok('Marked fixed and awarded '+tokens+' token(s).');
+      renderBugThread(res.data.bug);loadBugs();loadStats();loadUsers();ok('Marked fixed'+(tokens?' and added usage credit.':'.'));
     });
   };
   $('bugCloseBtn').onclick=function(){
@@ -594,20 +701,50 @@ td.url{word-break:break-all;max-width:420px;}
       });
     });
   }
-  $('clearReportsBtn').onclick=function(){api('/api/admin/clear-reports',{method:'POST'}).then(function(r){if(r.ok){loadReports();loadStats();ok('Reports cleared.');}});};
+  // ---- release notes ----
+  $('releaseSend').onclick=function(){
+    var version=$('releaseVersion').value.trim(),title=$('releaseTitle').value.trim(),text=$('releaseText').value.trim();
+    if(!version||!title||!text){err('Complete the version, title, and notes.');return;}
+    var button=$('releaseSend');button.disabled=true;
+    api('/api/admin/release',{method:'POST',body:{version:version,title:title,text:text}}).then(function(result){
+      button.disabled=false;
+      if(!result.ok){err(result.data.error||'Could not publish the release.');return;}
+      $('releaseTitle').value='';$('releaseText').value='';
+      ok('Release '+version+' published.');
+      loadReleasesAdmin();
+    }).catch(function(){button.disabled=false;err('Network error.');});
+  };
+  function loadReleasesAdmin(){
+    api('/api/admin/releases').then(function(result){
+      if(!result.ok)return;
+      var list=result.data.releases||[],container=$('releaseAdminList');container.innerHTML='';
+      $('releaseAdminEmpty').classList.toggle('hidden',list.length>0);
+      list.forEach(function(release){
+        var item=document.createElement('article');item.className='release-admin-card';
+        var remove=release.source==='published'?'<button class="btn danger sm" data-release-delete>Delete</button>':'<span class="pill">built in</span>';
+        item.innerHTML='<header><div><span>VERSION '+esc(release.version)+'</span><h3>'+esc(release.title)+'</h3></div>'+remove+'</header>'+
+          '<p>'+esc(release.text)+'</p><footer>'+esc(when(release.at))+(release.by?' · '+esc(release.by):'')+'</footer>';
+        var deleteButton=item.querySelector('[data-release-delete]');
+        if(deleteButton)deleteButton.onclick=function(){
+          deleteButton.disabled=true;
+          api('/api/admin/release-delete',{method:'POST',body:{id:release.id}}).then(function(response){
+            if(response.ok){ok('Release note removed.');loadReleasesAdmin();}
+            else{deleteButton.disabled=false;err(response.data.error||'Could not remove the release.');}
+          });
+        };
+        container.appendChild(item);
+      });
+    });
+  }
+  $('clearReportsBtn').onclick=function(){if(!can('links'))return;api('/api/admin/clear-reports',{method:'POST'}).then(function(r){if(r.ok){loadReports();loadStats();ok('Reports cleared.');}});};
   $('refreshBtn').onclick=loadAll;
   $('logoutBtn').onclick=lock;
 
   function ok(t){msg($('msg'),t,'ok');setTimeout(function(){clr($('msg'));},2500);}
   function err(t){msg($('msg'),t,'err');}
-  function lock(){stopBugPoll();activeBugId=null;setKey('');$('dash').classList.add('hidden');$('gate').classList.remove('hidden');$('keyInput').value='';}
+  function lock(){stopBugPoll();activeBugId=null;adminSession={role:null,username:null,capabilities:[]};setKey('');$('dash').classList.add('hidden');$('gate').classList.remove('hidden');$('keyInput').value='';}
 
-  if(key()){
-    api('/api/admin/stats').then(function(res){
-      if(res.ok){$('gate').classList.add('hidden');$('dash').classList.remove('hidden');nav('overview');loadAll();}
-      else setKey('');
-    });
-  }
+  if(key())authenticate(key());
 })();
 </script>
 </body>

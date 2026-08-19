@@ -10,7 +10,7 @@ delete process.env.UPSTASH_REDIS_REST_TOKEN;
 process.env.ADMIN_KEY = 'test-admin';
 delete globalThis.__voidMem;
 
-const { handle } = require('../lib/core.js');
+const { handle, usagePeriod } = require('../lib/core.js');
 
 async function call(path, options) {
   options = options || {};
@@ -35,12 +35,71 @@ test('admin controls, announcements, and support conversations work end to end',
   });
   assert.equal(signup.status, 200);
   const token = signup.json.token;
+  assert.equal(signup.json.account.usagePercent, 0);
+  assert.equal(signup.json.account.role, 'member');
+  assert.equal('limit' in signup.json.account, false);
+  assert.equal('remaining' in signup.json.account, false);
+  assert.equal('bonus' in signup.json.account, false);
+
+  const sampleWeek = usagePeriod(Date.parse('2026-08-18T12:00:00Z'));
+  assert.equal(new Date(sampleWeek.start).toISOString(), '2026-08-15T00:00:00.000Z');
+  assert.equal(new Date(sampleWeek.resetAt).toISOString(), '2026-08-22T00:00:00.000Z');
 
   const secondSignup = await call('/api/signup', {
     method: 'POST',
     body: { username: 'another_user', password: 'password123' },
   });
   assert.equal(secondSignup.status, 200);
+
+  for (let index = 1; index <= 5; index++) {
+    const generated = await call('/api/links', { token: secondSignup.json.token });
+    assert.equal(generated.status, 200);
+    assert.equal(generated.json.usagePercent, index * 20);
+    assert.equal('remaining' in generated.json, false);
+    assert.equal('limit' in generated.json, false);
+  }
+  const atCapacity = await call('/api/links', { token: secondSignup.json.token });
+  assert.equal(atCapacity.status, 429);
+  assert.equal(atCapacity.json.usagePercent, 100);
+  assert.equal(/\b5\b/.test(atCapacity.json.error), false);
+
+  const roleSet = await call('/api/admin/role-set', {
+    admin: true,
+    method: 'POST',
+    body: { username: 'another_user', role: 'support' },
+  });
+  assert.equal(roleSet.status, 200);
+  assert.equal(roleSet.json.role, 'support');
+
+  const supportSession = await call('/api/admin/session', { token: secondSignup.json.token });
+  assert.equal(supportSession.status, 200);
+  assert.equal(supportSession.json.role, 'support');
+  assert.equal(supportSession.json.capabilities.includes('support'), true);
+  assert.equal(supportSession.json.capabilities.includes('links'), false);
+  assert.equal((await call('/api/admin/bugs', { token: secondSignup.json.token })).status, 200);
+  assert.equal((await call('/api/admin/pool', { token: secondSignup.json.token })).status, 403);
+  assert.equal((await call('/api/admin/role-set', {
+    token: secondSignup.json.token,
+    method: 'POST',
+    body: { username: 'reporter', role: 'admin' },
+  })).status, 403);
+
+  const builtInReleases = await call('/api/releases');
+  assert.equal(builtInReleases.status, 200);
+  assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.4.0'), true);
+  const publishedRelease = await call('/api/admin/release', {
+    admin: true,
+    method: 'POST',
+    body: { version: '2.4.1', title: 'Small follow-up', text: 'A test release note.' },
+  });
+  assert.equal(publishedRelease.status, 200);
+  const publicReleases = await call('/api/releases');
+  assert.equal(publicReleases.json.releases.some((item) => item.version === '2.4.1'), true);
+  assert.equal((await call('/api/admin/release-delete', {
+    admin: true,
+    method: 'POST',
+    body: { id: publishedRelease.json.release.id },
+  })).status, 200);
 
   const announce = await call('/api/admin/announce', {
     admin: true,
@@ -180,5 +239,15 @@ test('admin controls, announcements, and support conversations work end to end',
     body: { username: 'reporter', password: 'password123' },
   });
   assert.equal(login.status, 200);
-  assert.equal(login.json.account.bonus, 3);
+  assert.equal(login.json.account.role, 'member');
+  assert.equal(login.json.account.usagePercent, 0);
+  assert.equal('bonus' in login.json.account, false);
+  assert.equal('remaining' in login.json.account, false);
+
+  const stats = await call('/api/admin/stats', { admin: true });
+  assert.equal(stats.status, 200);
+  assert.equal(stats.json.weekly.averageUsage, 50);
+  assert.equal(stats.json.roles.support, 1);
+  assert.equal(stats.json.activity.length, 7);
+  assert.equal(stats.json.viewer.role, 'owner');
 });

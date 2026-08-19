@@ -1,12 +1,11 @@
 /* =============================================================================
  * Scale XT bookmarklet (readable source)
  * -----------------------------------------------------------------------------
- * Editorial celestial app popup (orbit field, sidebar menu) that
- * works end to end:
+ * Minimal black-and-white popup that works end to end:
  *   - Log in / Sign up against the Scale XT site
- *   - Links page: generate your daily set (5/day), copy-all, open-all, report
+ *   - Links page: generate, copy, open, pin, and report
  *   - Settings page: theme + behavior toggles, saved to your account
- *   - Account page: username, member-since, daily usage
+ *   - Account page: username, member-since, role, and weekly usage percentage
  *
  * ALL UI renders inside the popup. NO alert()/confirm()/prompt().
  *
@@ -404,10 +403,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <button class="btn" id="updCopy" style="width:100%;margin-top:12px;">Copy new bookmarklet</button>
   </div>
 </div>
-<div id="loader" class="loader">
-  <div class="warp"></div>
-  <div class="orbit"><span class="ringline"></span><span class="planet"></span></div>
-  <div class="lbrand">Scale XT</div>
+<div id="loader" class="loader" aria-label="Loading">
+  <span class="loader-circle" aria-hidden="true"></span>
 </div>
 <div class="shell">
 
@@ -441,6 +438,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <button class="navitem" data-nav="notifs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 19.5a2 2 0 0 0 3 0"/></svg></span> Notifications <span class="badge hidden" id="navBadge">0</span></button>
       <button class="navitem" data-nav="vault"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></span> Vault</button>
       <button class="navitem" data-nav="account"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span> Account</button>
+      <button class="navitem" data-nav="updates"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h9l3 3V20H6z"/><path d="M15 3.5V7h3M9 11h6M9 14.5h6"/></svg></span> Updates <span class="badge hidden" id="releaseBadge">New</span></button>
       <button class="navitem" data-nav="settings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span> Settings</button>
       <button class="navitem" data-nav="help"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.7 1.2c0 1.6-2.2 2-2.2 3.3"/><path d="M12 17.2v.01"/></svg></span> Help</button>
       <div class="spacer"></div>
@@ -449,20 +447,20 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <main class="main">
       <!-- LINKS -->
       <section id="page-links" class="home-page">
-        <div class="home-kicker"><span class="live-dot"></span>Five private destinations, ready when you are</div><div class="ptitle">Where do you want to go?</div>
-        <div class="psub">Generate a private route from the live vault. Your destinations stay attached to your account.</div>
+        <div class="home-kicker">Your links</div><div class="ptitle">Links</div>
+        <div class="psub">Generate a link and keep the ones you use.</div>
         <div class="actions route-composer">
-          <button class="btn composer-btn" id="genBtn">Generate a route <span aria-hidden="true">up</span></button>
+          <button class="btn composer-btn" id="genBtn">Generate link</button>
           <button class="btn ghost" id="copyBtn">Copy all</button>
           <button class="btn ghost" id="openBtn">Open all</button>
         </div>
         <div class="usage-card">
           <div class="usage-top">
-            <div><span class="usage-label">Daily usage</span><strong id="usageValue">0 of 5 used</strong></div>
-            <span class="usage-reset">Resets daily</span>
+            <div><span class="usage-label">Weekly usage</span><strong id="usageValue">0% used</strong></div>
+            <span class="usage-reset">Resets Saturday</span>
           </div>
           <div class="usage-track"><i id="usageFill"></i></div>
-          <div class="meter" id="meter">5 generations available</div>
+          <div class="meter" id="meter">Usage resets every Saturday.</div>
         </div>
         <div class="section-head"><span>Your routes</span><span class="section-count" id="routeCount">0 saved</span></div>
         <ul class="links" id="linkList"></ul>
@@ -563,7 +561,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <div class="inforow"><span class="k">Live links in rotation</span><span class="v" id="vPool">—</span></div>
           <div class="inforow"><span class="k">Total links</span><span class="v" id="vTotal">—</span></div>
           <div class="inforow"><span class="k">Blocked / dead</span><span class="v" id="vBlocked">—</span></div>
-          <div class="inforow"><span class="k">Your link tokens</span><span class="v" id="vRemain">—</span></div>
+          <div class="inforow"><span class="k">Weekly usage</span><span class="v" id="vRemain">—</span></div>
         </div>
       </section>
       <!-- ACCOUNT -->
@@ -573,17 +571,19 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         <div class="info">
           <div class="inforow"><span class="k">Username</span><span class="v" id="acUser">—</span></div>
           <div class="inforow"><span class="k">Member since</span><span class="v" id="acSince">—</span></div>
-          <div class="inforow"><span class="k">Link tokens</span><span class="v" id="acRemain">—</span></div>
+          <div class="inforow"><span class="k">Weekly usage</span><span class="v" id="acRemain">—</span></div>
+          <div class="inforow"><span class="k">Role</span><span class="v" id="acRole">Member</span></div>
           <div class="inforow"><span class="k">Theme</span><span class="v" id="acTheme">—</span></div>
         </div>
-        <span class="flabel" style="margin-top:26px;">Send a link token</span>
-        <div class="psub" style="margin-bottom:12px;">Gift one of your link tokens to another user — max 1 per person per hour.</div>
+        <a class="btn ghost hidden" id="staffAdminLink" href="/admin" target="_blank" rel="noopener" style="margin-top:14px;">Open staff panel</a>
+        <span class="flabel" style="margin-top:26px;">Share usage</span>
+        <div class="psub" style="margin-bottom:12px;">Give another user one usage credit. You can share with the same person once per hour.</div>
         <div class="info" style="max-width:360px;">
           <div style="position:relative;">
             <input id="giftUser" type="text" placeholder="Username" autocomplete="off" style="letter-spacing:0;">
             <div id="giftSuggest" class="suggest hidden"></div>
           </div>
-          <button class="btn" id="giftBtn" style="width:100%;">Send 1 token</button>
+          <button class="btn" id="giftBtn" style="width:100%;">Share usage</button>
         </div>
         <span class="flabel" style="margin-top:26px;">Change password</span>
         <div class="info" style="max-width:360px;">
@@ -591,13 +591,20 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <input id="pwNew" type="password" placeholder="New password" autocomplete="off">
           <button class="btn" id="pwBtn" style="width:100%;">Update password</button>
         </div>
+      <!-- RELEASE NOTES -->
+      <section id="page-updates" class="hidden">
+        <div class="ptitle">Updates</div>
+        <div class="psub">What changed in Scale XT.</div>
+        <div id="releaseList" class="release-list"></div>
+        <div class="empty hidden" id="releaseEmpty">No release notes yet.</div>
+      </section>
       </section>
       <!-- HELP -->
       <section id="page-help" class="hidden">
         <div class="ptitle">Help</div>
         <div class="psub">How Scale XT works.</div>
         <div class="info">
-          <p style="line-height:1.7;margin-bottom:12px;">• Hit <b>Generate Links</b> on the Links page to pull your daily set (5 per day). Your set is saved — it loads automatically next time.</p>
+          <p style="line-height:1.7;margin-bottom:12px;">• Use <b>Generate link</b> to add a destination. Weekly usage resets every Saturday.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• Click <b>Link 1</b>, <b>Link 2</b>… to open them. Use <b>Open all</b> to launch every link at once.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• If a link is dead or blocked, tap <b>blocked</b> on it — it's pulled from everyone's rotation and reported.</p>
           <p style="line-height:1.7;margin-bottom:12px;">• <b>Vault</b> shows how many links are still live. <b>Settings</b> changes your theme and behavior.</p>
@@ -615,7 +622,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 (function(){
   var API=window.location.origin, TOKEN_KEY='voidext_token', BUILT_VERSION='__VERSION__';
   var DEFAULTS={theme:'void',openInNewTab:true,confirmReport:false};
-  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],unread:0,reportSel:{}};
+  var state={mode:'login',settings:Object.assign({},DEFAULTS),draft:null,account:null,links:[],pinned:[],notifications:[],releases:[],unread:0,reportSel:{}};
 
   var $=function(id){return document.getElementById(id);};
   function token(){try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return'';}}
@@ -636,10 +643,10 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   function applySettings(s){state.settings=Object.assign({},DEFAULTS,s||{});applyTheme(state.settings.theme);}
 
   function showAuth(){$('authWrap').classList.remove('hidden');$('app').classList.add('hidden');}
-  function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');}
+  function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');checkReleases();}
 
   function nav(page){
-    ['links','report','bug','messages','notifs','vault','account','settings','help'].forEach(function(p){
+    ['links','report','bug','messages','notifs','updates','vault','account','settings','help'].forEach(function(p){
       $('page-'+p).classList.toggle('hidden',p!==page);
     });
     document.querySelectorAll('[data-nav]').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-nav')===page);});
@@ -650,6 +657,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     if(page==='bug')openSupport();else stopSupportPoll();
     if(page==='messages')openMessages(); else stopMsgPoll();
     if(page==='notifs')openNotifs();
+    if(page==='updates')loadReleases(true);
     clearMsg();
   }
   document.querySelectorAll('[data-nav]').forEach(function(el){el.onclick=function(){nav(el.getAttribute('data-nav'));};});
@@ -712,22 +720,16 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 
   function renderUsage(account){
     account=account||{};
-    var limit=Number(account.limit)||5;
-    var used=Math.max(0,Number(account.used)||0);
-    var bonus=Math.max(0,Number(account.bonus)||0);
-    var rem=account.remaining==null?Math.max(0,limit-used)+bonus:Number(account.remaining);
-    var pct=Math.max(0,Math.min(100,(used/limit)*100));
-    $('usageValue').textContent=used+' of '+limit+' used';
+    var pct=Math.max(0,Math.min(100,Math.round(Number(account.usagePercent)||0)));
+    $('usageValue').textContent=pct+'% used';
     $('usageFill').style.width=pct+'%';
-    $('meter').textContent=rem+' generation'+(rem===1?'':'s')+' available'+(bonus?'  -  '+bonus+' bonus':'');
+    $('meter').textContent='Usage resets every Saturday.';
   }
   function updateMeter(d){
-    if(!d||d.remaining==null){return;}
+    if(!d||d.usagePercent==null)return;
     if(!state.account)state.account={};
-    state.account.remaining=d.remaining;state.account.limit=d.limit||state.account.limit||5;
-    if(d.used!=null)state.account.used=d.used;
-    else state.account.used=Math.max(0,state.account.limit-Math.min(d.remaining,state.account.limit));
-    if(d.bonus!=null)state.account.bonus=d.bonus;
+    state.account.usagePercent=d.usagePercent;
+    state.account.resetAt=d.resetAt||state.account.resetAt;
     renderUsage(state.account);
   }
   function renderLinks(links){
@@ -735,7 +737,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     $('linksEmpty').classList.toggle('hidden',links.length>0);
     $('routeCount').textContent=links.length+' saved';
     if(state.account)renderUsage(state.account);
-    else renderUsage({limit:5,used:0,remaining:5,bonus:0});
+    else renderUsage({usagePercent:0});
     var pinSet={};(state.pinned||[]).forEach(function(u){pinSet[u]=true;});
     var ordered=links.slice().sort(function(a,b){
       var pa=pinSet[a]?1:0,pb=pinSet[b]?1:0;
@@ -795,15 +797,17 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   // account page
   function renderAccount(){
     var a=state.account||{};
+    var role=a.role||'member';
     $('acUser').textContent=state.username||'—';
     $('acSince').textContent=fmtDate(a.created);
-    var rem=(a.remaining==null?(a.limit||5):a.remaining);
-    $('acRemain').textContent=rem+' link token'+(rem===1?'':'s');
+    $('acRemain').textContent=Math.max(0,Math.min(100,Math.round(Number(a.usagePercent)||0)))+'% used';
+    $('acRole').textContent=role.charAt(0).toUpperCase()+role.slice(1);
     $('acTheme').textContent=state.settings.theme;
+    $('staffAdminLink').classList.toggle('hidden',role!=='admin'&&role!=='support');
     api('/api/users').then(function(res){ if(res.ok) giftUsers=res.data.usernames||[]; });
   }
 
-  // gift a link token to another user (autocomplete + send; server caps 1/hr/person)
+  // Share one weekly usage credit with another user.
   var giftUsers=[], giftHl=-1;
   function giftSuggest(){
     var q=$('giftUser').value.trim().toLowerCase(), box=$('giftSuggest');
@@ -818,13 +822,13 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   function sendGift(){
     var to=$('giftUser').value.trim();
     if(!to){msg('Pick a username.','err');return;}
-    var b=$('giftBtn');b.disabled=true;msg('Sending token...','');
+    var b=$('giftBtn');b.disabled=true;msg('Sharing usage...','');
     api('/api/send-token',{method:'POST',body:{to:to}}).then(function(res){
       b.disabled=false;
       if(!res.ok){msg(res.data.error||'Could not send.','err');return;}
       if(res.data.account){state.account=res.data.account;renderAccount();}
       $('giftUser').value='';$('giftSuggest').classList.add('hidden');
-      msg('Sent 1 token to '+res.data.sentTo+'.','ok');
+      msg('Shared usage with '+res.data.sentTo+'.','ok');
     }).catch(function(){b.disabled=false;msg('Network error.','err');});
   }
   $('giftUser').addEventListener('input',giftSuggest);
@@ -1161,6 +1165,32 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     });
   }
 
+  // release notes
+  function releaseSeen(){try{return localStorage.getItem('scale_xt_seen_release')||'';}catch(e){return'';}}
+  function setReleaseSeen(id){try{localStorage.setItem('scale_xt_seen_release',id);}catch(e){}}
+  function paintReleaseBadge(){
+    var latest=state.releases&&state.releases[0],badge=$('releaseBadge');
+    if(latest&&releaseSeen()!==latest.id){badge.classList.remove('hidden');}else{badge.classList.add('hidden');}
+  }
+  function loadReleases(markSeen){
+    api('/api/releases').then(function(res){
+      if(!res.ok)return;
+      state.releases=res.data.releases||[];
+      var list=$('releaseList');list.innerHTML='';
+      $('releaseEmpty').classList.toggle('hidden',state.releases.length>0);
+      state.releases.forEach(function(release){
+        var card=document.createElement('article');card.className='release-card';
+        var meta=document.createElement('div');meta.className='release-meta';meta.textContent='v'+(release.version||'')+' · '+fmtDate(release.at);
+        var title=document.createElement('h3');title.textContent=release.title||'Scale XT update';
+        var copy=document.createElement('p');copy.textContent=release.text||'';
+        card.appendChild(meta);card.appendChild(title);card.appendChild(copy);list.appendChild(card);
+      });
+      if(markSeen&&state.releases[0])setReleaseSeen(state.releases[0].id);
+      paintReleaseBadge();
+    });
+  }
+  function checkReleases(){loadReleases(false);}
+
   // vault page
   function loadVault(){
     $('vPool').textContent='…';$('vTotal').textContent='…';$('vBlocked').textContent='…';$('vRemain').textContent='…';
@@ -1168,9 +1198,9 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       if(!res.ok){msg(res.data.error||'Could not load vault.','err');return;}
       var d=res.data;
       $('vPool').textContent=d.poolSize;$('vTotal').textContent=d.totalLinks;$('vBlocked').textContent=d.blockedCount;
-      var vr=(d.remaining==null?0:d.remaining);
-      $('vRemain').textContent=vr+' link token'+(vr===1?'':'s');
-      if(state.account){state.account.remaining=d.remaining;state.account.used=d.used;state.account.limit=d.limit;}
+      var pct=Math.max(0,Math.min(100,Math.round(Number(d.usagePercent)||0)));
+      $('vRemain').textContent=pct+'% used';
+      if(state.account){state.account.usagePercent=pct;state.account.resetAt=d.resetAt||state.account.resetAt;}
     }).catch(function(){msg('Network error.','err');});
   }
   $('vaultRefresh').onclick=loadVault;

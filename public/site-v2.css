@@ -49,4 +49,64 @@ footer{min-height:150px;display:grid;grid-template-columns:1fr 1fr 1fr;align-ite
 .announcement-rail button{padding:5px 0;background:transparent;border-bottom:1px solid var(--line);color:var(--muted);font:700 9px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}.announcement-rail button:hover{border-color:var(--signal);color:var(--signal-dark)}
 @keyframes announcementIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @media(max-width:760px){.announcement-rail{grid-template-columns:1fr auto;gap:12px 20px}.announcement-index{grid-column:1/-1}.announcement-copy p{font-size:15px}}
-@media(max-width:680px){.hero,.hero-copy,.hero-visual{min-width:0;width:100%;max-width:100%}h1{max-width:100%;font-size:47px;line-height:.92}.hero-actions{flex-direction:column;align-items:flex-start;gap:12px}}
+@media(max-width:680px){.hero,.hero-copy,.hero-visual{min-width:0;width:100%;max-width:100%}h1{max-width:100%;font-size:47px;line-height:.92}.hero-actions{flex-direction:column;align-items:flex-start;gap:12px}}/* 2.4 minimal black-and-white landing */
+:root{--ink:#000;--ink-2:#111;--paper:#fff;--paper-2:#f4f4f4;--muted:#9b9b9b;--line:#2a2a2a;--signal:#fff;--signal-dark:#ddd;--live:#fff;--white:#fff;--shadow:none}
+*{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+html,body{background:#000;color:#fff}
+body{font-size:15px;line-height:1.5}
+.grain,.hero-visual,.promise{display:none!important}
+.site-header{height:64px;display:grid;grid-template-columns:1fr auto 1fr;padding:0 clamp(20px,4vw,54px);background:rgba(0,0,0,.96);border-bottom:1px solid #242424;color:#fff;backdrop-filter:none}
+.wordmark{gap:9px;font-size:15px;font-weight:650;letter-spacing:0}
+.wordmark>span:last-child{text-transform:none}
+.mark{width:20px;height:20px;background:#fff;border-radius:50%}
+.mark:before,.mark:after,.mark i{display:none}
+.site-header nav{gap:24px}
+.site-header nav a{font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;border:0;color:#aaa}
+.site-header nav a:hover{color:#fff}
+.status{font-size:11px;text-transform:none;letter-spacing:0;color:#999}
+.status i,.preview-foot i{width:6px;height:6px;background:#fff;box-shadow:none}
+.announcement-rail{max-width:1180px;margin:20px auto 0;border:1px solid #2c2c2c;background:#080808;color:#fff}
+.announcement-index{color:#888}
+.announcement-copy p{color:#fff}
+.announcement-copy div{color:#aaa}
+.announcement-rail button{color:#aaa;border-color:#333}
+.hero{min-height:calc(78vh - 64px);display:block;border-bottom:1px solid #242424;background:#000}
+.hero-copy{min-height:calc(78vh - 64px);max-width:1180px;margin:0 auto;padding:clamp(76px,11vw,150px) clamp(20px,5vw,64px);background:#000;color:#fff;justify-content:center}
+.hero-copy:after{display:none}
+.eyebrow{margin-bottom:18px;color:#8d8d8d;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0}
+.eyebrow span:first-child:before{display:none}
+h1{max-width:none;margin-bottom:22px;font-size:clamp(52px,9vw,104px);font-weight:650;line-height:1;letter-spacing:-.055em;text-transform:none}
+h1 em,h2 em{color:inherit;font-style:normal}
+.lede{max-width:530px;margin-bottom:34px;color:#a8a8a8;font-size:18px;line-height:1.6}
+.hero-actions{gap:18px}
+.install-button,.install-button.dark{min-height:48px;padding:0 18px;background:#fff;color:#000;border:1px solid #fff;box-shadow:none;font-size:12px;font-weight:600;text-transform:none;letter-spacing:0}
+.install-button:hover,.install-button.dark:hover{transform:none;background:#e8e8e8;box-shadow:none}
+.orbit-icon{display:none}
+.text-button{padding:8px 0;background:none;color:#999;border-bottom:1px solid #444;font-size:12px;text-transform:none;letter-spacing:0}
+.text-button:hover{color:#fff;border-color:#fff}
+.microcopy{margin-top:16px;color:#666;font-size:11px;text-transform:none;letter-spacing:0}
+.reveal,.reveal-late{animation:none}
+.how{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:160px .8fr 1.2fr;padding:100px clamp(20px,5vw,64px);gap:50px;background:#000;color:#fff;border-bottom:1px solid #242424}
+.section-number{color:#777;font-size:12px;text-transform:none;letter-spacing:0}
+.how-intro h2{font-size:42px;font-weight:650;line-height:1.1;letter-spacing:-.035em;text-transform:none}
+.how-intro p,.steps p{color:#999}
+.steps{border-top:1px solid #333}
+.steps li{border-bottom:1px solid #333}
+.steps>li>span{color:#777;font-size:11px}
+.steps h3{font-size:15px;font-weight:600;text-transform:none}
+kbd{background:#111;border-color:#333;color:#fff;box-shadow:none;font-size:11px}
+.install{display:grid;grid-template-columns:1fr 1fr;background:#fff;color:#000}
+.install-copy{padding:90px clamp(24px,7vw,100px);border-right:1px solid #d5d5d5}
+.install-copy .eyebrow{color:#777}
+.install-copy h2{font-size:clamp(40px,5vw,68px);font-weight:650;line-height:1.05;letter-spacing:-.045em;text-transform:none}
+.code-panel{padding:90px clamp(24px,7vw,100px);background:#f5f5f5;color:#000}
+.code-head{border-color:#ccc}
+.code-head button{color:#333}
+.code-panel code{background:#fff;border-color:#d0d0d0;color:#333}
+.code-panel>p{color:#666}
+footer{background:#000;color:#888;border-top:1px solid #242424}
+footer .wordmark{color:#fff}
+footer a{color:#aaa}
+::selection{background:#fff;color:#000}
+@media(max-width:900px){.site-header{grid-template-columns:1fr auto}.site-header nav{display:none}.status{display:inline-flex}.how{grid-template-columns:1fr;padding:72px 24px;gap:28px}.install{grid-template-columns:1fr}.install-copy{border-right:0;border-bottom:1px solid #d5d5d5}.install-copy,.code-panel{padding:68px 24px}}
+@media(max-width:560px){.site-header{padding:0 18px}.status{font-size:0}.status i{display:block}.hero-copy{padding:82px 22px}.hero-actions{align-items:stretch;flex-direction:column}.install-button{width:100%}.text-button{width:max-content}h1{font-size:54px}}

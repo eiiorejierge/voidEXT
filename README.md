@@ -39,15 +39,15 @@ vercel.json          Vercel config (CORS headers, clean URLs)
 ## Features
 
 - **Signup + login** in the popup (passwords hashed with scrypt, token auth).
-- **Link rotation** — generate up to 5 links per UTC day, one at a time, while
-  pinned links and refunded bonus tokens stay attached to the account.
+- **Weekly link rotation** — usage resets every Saturday, while pinned links
+  and returned usage stay attached to the account.
 - **Blocked-link reporting** — every link has a `blocked` button; tapping it pulls
   the link from *everyone's* rotation and logs it for review (you asked to be alerted
   about dead links). Restore it later via the admin endpoint if it comes back.
 - **No native dialogs** — there are zero `alert()`/`confirm()`/`prompt()` calls, so you
   never see the `"<site> says..."` browser chrome. Everything renders inside the popup.
-- **Daily quota** — enabled at `5/day`, with extra tokens available through
-  refunds, bug-report awards, gifts, or admin grants.
+- **Percentage-only usage** — members see weekly usage as a percentage instead
+  of an exposed generation count; support credits and admin grants still work.
 - **Three coordinated interfaces** — a responsive public installer, the full
   in-page bookmarklet app, and a mobile-ready admin control room.
 
