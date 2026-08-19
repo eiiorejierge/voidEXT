@@ -411,6 +411,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <button type="button" data-command="links" data-search="links home routes"><span class="command-icon">↗</span><span><b>Links</b><small>Return to your workspace</small></span></button>
       <button type="button" data-command="report" data-search="report broken dead link"><span class="command-icon">!</span><span><b>Report links</b><small>Flag destinations that do not work</small></span></button>
       <button type="button" data-command="support" data-search="support bug report help"><span class="command-icon">?</span><span><b>New support report</b><small>Start a conversation about a problem</small></span></button>
+      <button type="button" data-command="global" data-search="global public community room chat"><span class="command-icon">◎</span><span><b>Global chat</b><small>Talk with everyone in Scale XT</small></span></button>
       <button type="button" data-command="messages" data-search="messages conversation chat"><span class="command-icon">••</span><span><b>Messages</b><small>Open your conversations</small></span></button>
       <button type="button" data-command="notifications" data-search="notifications announcements alerts"><span class="command-icon">○</span><span><b>Notifications</b><small>See account and service updates</small></span></button>
       <button type="button" data-command="vault" data-search="vault status usage links"><span class="command-icon">□</span><span><b>Vault status</b><small>Check live link availability</small></span></button>
@@ -458,6 +459,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <aside class="side" aria-label="Primary navigation">
       <div class="brand" title="Scale XT"><span class="d"></span><span class="nm">Scale XT</span></div>
       <button class="navitem active" data-nav="links" data-label="Links" title="Links" aria-label="Links"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M13 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg></span><span class="navtext">Links</span></button>
+      <button class="navitem" data-nav="global" data-label="Global chat" title="Global chat" aria-label="Global chat"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.3 3.4 5.1 3.4 8.5S14.3 18.2 12 20.5M12 3.5C9.7 5.8 8.6 8.6 8.6 12s1.1 6.2 3.4 8.5"/></svg></span><span class="navtext">Global chat</span></button>
       <button class="navitem" data-nav="bug" data-label="Support" title="Support" aria-label="Support"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5h14v10H9l-4 3v-13z"/><path d="M8 9h8M8 12h5"/></svg></span><span class="navtext">Support</span><span class="badge hidden" id="bugBadge">0</span></button>
       <button class="navitem" data-nav="messages" data-label="Messages" title="Messages" aria-label="Messages"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7 7 0 0 1-9.5 6.5L5 19.5l1.4-4A7 7 0 1 1 20 11.5z"/></svg></span><span class="navtext">Messages</span><span class="badge hidden" id="msgBadge">0</span></button>
       <div class="spacer"></div>
@@ -555,6 +557,23 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
           <div class="support-thread" id="supportMessages"></div>
           <div class="chatcompose"><input id="supportReply" type="text" placeholder="Reply to support..." autocomplete="off"><button class="btn" id="supportReplyBtn">Send</button></div>
         </div>
+      </section>
+      <!-- GLOBAL CHAT -->
+      <section id="page-global" class="hidden">
+        <div class="global-head">
+          <div><div class="ptitle">Global chat</div><div class="psub">One shared room for everyone using Scale XT.</div></div>
+          <div class="global-presence"><i></i><span id="globalOnline">— online</span></div>
+        </div>
+        <div class="global-room">
+          <div class="global-messages" id="globalMessages"></div>
+          <div class="global-empty" id="globalEmpty"><span>◎</span><strong>No messages yet</strong><small>Start the room.</small></div>
+          <div class="global-compose">
+            <input id="globalInput" type="text" maxlength="500" placeholder="Message everyone…" autocomplete="off">
+            <span id="globalCount">0 / 500</span>
+            <button class="btn" id="globalSend" type="button">Send</button>
+          </div>
+        </div>
+        <div class="global-note">Messages are visible to every signed-in member. You can remove your own messages; staff can moderate the room.</div>
       </section>
       <!-- MESSAGES -->
       <section id="page-messages" class="hidden">
@@ -703,12 +722,12 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   function applyTheme(t){document.body.setAttribute('data-theme',t||'void');}
   function applySettings(s){state.settings=Object.assign({},DEFAULTS,s||{});applyTheme(state.settings.theme);}
 
-  function showAuth(){$('authWrap').classList.remove('hidden');$('app').classList.add('hidden');closeCommand();closeMore();stopHomeAnnouncementWatch();}
+  function showAuth(){$('authWrap').classList.remove('hidden');$('app').classList.add('hidden');closeCommand();closeMore();stopHomeAnnouncementWatch();stopGlobalPoll();}
   function showApp(){$('authWrap').classList.add('hidden');$('app').classList.remove('hidden');nav('links');checkReleases();paintVersionState();startHomeAnnouncementWatch();}
 
-  var PAGE_NAMES={links:'Links',report:'Report links',bug:'Support',messages:'Messages',notifs:'Notifications',updates:'Updates',vault:'Vault',account:'Account',settings:'Settings',help:'Help'};
+  var PAGE_NAMES={links:'Links',global:'Global chat',report:'Report links',bug:'Support',messages:'Messages',notifs:'Notifications',updates:'Updates',vault:'Vault',account:'Account',settings:'Settings',help:'Help'};
   function nav(page){
-    ['links','report','bug','messages','notifs','updates','vault','account','settings','help'].forEach(function(p){
+    ['links','global','report','bug','messages','notifs','updates','vault','account','settings','help'].forEach(function(p){
       $('page-'+p).classList.toggle('hidden',p!==page);
     });
     state.activePage=page;
@@ -720,6 +739,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     if(page==='vault')loadVault();
     if(page==='report')renderReport();
     if(page==='bug')openSupport();else stopSupportPoll();
+    if(page==='global')openGlobal();else stopGlobalPoll();
     if(page==='messages')openMessages(); else stopMsgPoll();
     if(page==='notifs')openNotifs();
     if(page==='updates')loadReleases(true);
@@ -759,7 +779,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   }
   function runCommand(command){
     closeCommand();
-    var pages={links:'links',report:'report',messages:'messages',notifications:'notifs',vault:'vault',updates:'updates',settings:'settings',account:'account'};
+    var pages={links:'links',global:'global',report:'report',messages:'messages',notifications:'notifs',vault:'vault',updates:'updates',settings:'settings',account:'account'};
     if(pages[command]){nav(pages[command]);return;}
     if(command==='generate'){nav('links');setTimeout(function(){$('genBtn').click();},0);return;}
     if(command==='support'){nav('bug');setTimeout(function(){$('supportNewBtn').click();},0);}
@@ -1108,6 +1128,86 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   $('supportReplyBtn').onclick=sendSupportReply;
   $('supportReply').addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();sendSupportReply();}});
 
+  // global chat — one persistent room shared by every signed-in member.
+  var globalPoll=null,globalSig='';
+  function openGlobal(){
+    globalSig='';
+    loadGlobal(true);
+    startGlobalPoll();
+    setTimeout(function(){$('globalInput').focus();},80);
+  }
+  function loadGlobal(forceScroll){
+    api('/api/global/messages').then(function(res){
+      if(!res.ok)return;
+      var online=Math.max(1,Number(res.data.online)||1);
+      $('globalOnline').textContent=online+' online';
+      renderGlobal(res.data.messages||[],forceScroll);
+    }).catch(function(){});
+  }
+  function renderGlobal(messages,forceScroll){
+    var sig=messages.map(function(message){return message.id;}).join(',');
+    if(sig===globalSig&&!forceScroll)return;
+    var box=$('globalMessages');
+    var atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<70;
+    globalSig=sig;
+    box.innerHTML='';
+    $('globalEmpty').classList.toggle('hidden',messages.length>0);
+    messages.forEach(function(message){
+      var row=document.createElement('article');row.className='global-message'+(message.mine?' mine':'');
+      var avatar=document.createElement('span');avatar.className='global-avatar';avatar.textContent=(message.from||'?').charAt(0).toUpperCase();
+      var content=document.createElement('div');content.className='global-message-content';
+      var head=document.createElement('div');head.className='global-message-head';
+      var name=document.createElement('strong');name.textContent=message.mine?'You':(message.from||'Member');
+      head.appendChild(name);
+      if(message.role&&message.role!=='member'){
+        var role=document.createElement('span');role.className='global-role '+message.role;role.textContent=message.role;head.appendChild(role);
+      }
+      var time=document.createElement('time');time.textContent=msgTime(message.at);head.appendChild(time);
+      var copy=document.createElement('p');copy.textContent=message.text||'';
+      content.appendChild(head);content.appendChild(copy);
+      row.appendChild(avatar);row.appendChild(content);
+      if(message.canDelete){
+        var remove=document.createElement('button');remove.type='button';remove.className='global-delete';remove.title='Delete message';remove.setAttribute('aria-label','Delete message');remove.textContent='×';
+        remove.onclick=function(){
+          if(remove.getAttribute('data-confirm')!=='1'){
+            remove.setAttribute('data-confirm','1');remove.textContent='?';
+            setTimeout(function(){if(remove.parentNode){remove.removeAttribute('data-confirm');remove.textContent='×';}},1800);
+            return;
+          }
+          remove.disabled=true;
+          api('/api/global/delete',{method:'POST',body:{id:message.id}}).then(function(res){
+            if(!res.ok){remove.disabled=false;remove.textContent='×';remove.removeAttribute('data-confirm');msg(res.data.error||'Could not delete message.','err');return;}
+            loadGlobal(false);
+          }).catch(function(){remove.disabled=false;msg('Network error.','err');});
+        };
+        row.appendChild(remove);
+      }
+      box.appendChild(row);
+    });
+    if(forceScroll||atBottom)box.scrollTop=box.scrollHeight;
+  }
+  function sendGlobal(){
+    var input=$('globalInput'),text=input.value.trim();
+    if(!text)return;
+    var button=$('globalSend');button.disabled=true;
+    api('/api/global/send',{method:'POST',body:{text:text}}).then(function(res){
+      button.disabled=false;
+      if(!res.ok){msg(res.data.error||'Could not send message.','err');return;}
+      input.value='';$('globalCount').textContent='0 / 500';input.focus();loadGlobal(true);
+    }).catch(function(){button.disabled=false;msg('Network error.','err');});
+  }
+  function startGlobalPoll(){
+    stopGlobalPoll();
+    globalPoll=setInterval(function(){
+      if($('page-global').classList.contains('hidden')){stopGlobalPoll();return;}
+      loadGlobal(false);
+    },3000);
+  }
+  function stopGlobalPoll(){if(globalPoll){clearInterval(globalPoll);globalPoll=null;}}
+  $('globalSend').onclick=sendGlobal;
+  $('globalInput').addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();sendGlobal();}});
+  $('globalInput').addEventListener('input',function(){$('globalCount').textContent=$('globalInput').value.length+' / 500';});
+
   // messages — texting-style: an inbox of conversations, each opening a thread
   // of chat bubbles you reply into. Messages live in the thread (server side),
   // NOT in the recipient's notifications. The open thread polls for new lines.
@@ -1391,7 +1491,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 
   function doLogout(){
     api('/api/logout',{method:'POST'});
-    stopMsgPoll();stopSupportPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);setSupportBadge(0);threadPartner=null;supportId=null;
+    stopMsgPoll();stopGlobalPoll();stopSupportPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);setSupportBadge(0);threadPartner=null;supportId=null;
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
   }
   $('logoutBtn').onclick=doLogout;

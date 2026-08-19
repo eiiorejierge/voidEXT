@@ -42,6 +42,9 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
   assert.match(builtApp, /id="versionBtn"/);
   assert.match(builtApp, /id="moreMenu"/);
   assert.match(builtApp, /id="homeAnnouncement"/);
+  assert.match(builtApp, /id="page-global"/);
+  assert.match(source, /api\('\/api\/global\/messages'\)/);
+  assert.match(source, /api\('\/api\/global\/send'/);
   assert.match(source, /api\('\/api\/announcements'\)/);
   assert.match(source, /scale_xt_dismissed_announcement/);
   assert.match(stylesheet, /\.app\.hidden\{display:none!important\}/);

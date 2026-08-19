@@ -174,6 +174,46 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(publicFeed.json.announcements[0].title, 'General announcement');
   assert.equal(publicFeed.json.announcements[0].text, 'Support conversations are live.');
 
+  assert.equal((await call('/api/global/messages')).status, 401);
+  const globalPost = await call('/api/global/send', {
+    token,
+    method: 'POST',
+    body: { text: 'Hello from the global room.' },
+  });
+  assert.equal(globalPost.status, 200);
+  assert.equal(globalPost.json.message.from, 'reporter');
+  assert.equal(globalPost.json.message.role, 'member');
+  assert.equal(globalPost.json.message.mine, true);
+  assert.equal(globalPost.json.message.canDelete, true);
+  assert.equal((await call('/api/global/send', {
+    token,
+    method: 'POST',
+    body: { text: 'This should be rate limited.' },
+  })).status, 429);
+  assert.equal((await call('/api/global/send', {
+    admin: true,
+    method: 'POST',
+    body: { text: 'Owner checking in.' },
+  })).status, 200);
+  const globalFeed = await call('/api/global/messages', { token });
+  assert.equal(globalFeed.status, 200);
+  assert.equal(globalFeed.json.messages.length, 2);
+  assert.equal(globalFeed.json.messages[1].role, 'owner');
+  assert.equal(globalFeed.json.messages[1].canDelete, false);
+  assert.equal(globalFeed.json.online >= 1, true);
+  assert.equal((await call('/api/global/delete', {
+    token,
+    method: 'POST',
+    body: { id: globalFeed.json.messages[1].id },
+  })).status, 403);
+  assert.equal((await call('/api/global/delete', {
+    admin: true,
+    method: 'POST',
+    body: { id: globalPost.json.message.id },
+  })).status, 200);
+  const globalAfterDelete = await call('/api/global/messages', { token });
+  assert.equal(globalAfterDelete.json.messages.some((message) => message.id === globalPost.json.message.id), false);
+
   const created = await call('/api/bug', {
     token,
     method: 'POST',
