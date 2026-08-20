@@ -50,7 +50,11 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
   assert.match(source, /api\('\/api\/global\/messages'\)/);
   assert.match(source, /api\('\/api\/global\/send'/);
   assert.match(source, /id="linkSearch"/);
-  assert.match(source, /id="undoDelete"/);
+  assert.match(source, /id="deleteModal"/);
+  assert.match(source, /id="deleteConfirm"/);
+  assert.match(source, /This permanently removes the saved link\. You can't undo this\./);
+  assert.doesNotMatch(source, /id="undoDelete"/);
+  assert.doesNotMatch(source, /Link restored\./);
   assert.match(source, /id="reportReason"/);
   assert.match(source, /id="globalMute"/);
   assert.match(source, /api\('\/api\/logout-all'/);

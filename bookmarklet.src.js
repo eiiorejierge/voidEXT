@@ -406,6 +406,16 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
     <button class="btn" id="updCopy" style="width:100%;margin-top:12px;">Copy new bookmarklet</button>
   </div>
 </div>
+<div id="deleteModal" class="delete-modal hidden" role="dialog" aria-modal="true" aria-labelledby="deleteHeading" aria-describedby="deleteDescription">
+  <div class="delete-card">
+    <h2 id="deleteHeading">Delete this link?</h2>
+    <p id="deleteDescription">This permanently removes the saved link. You can't undo this.</p>
+    <div class="delete-actions">
+      <button class="btn ghost" type="button" id="deleteCancel">Cancel</button>
+      <button class="btn delete-confirm" type="button" id="deleteConfirm">Delete</button>
+    </div>
+  </div>
+</div>
 <div id="commandPalette" class="command-overlay hidden" role="dialog" aria-modal="true" aria-label="Quick actions">
   <div class="command-card">
     <div class="command-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="commandInput" type="text" placeholder="Go to or run an action…" autocomplete="off"><kbd>Esc</kbd></div>
@@ -522,7 +532,6 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
         <div class="section-head"><span>Your routes</span><span class="section-count" id="routeCount">0 saved</span></div>
         <ul class="links" id="linkList"></ul>
         <div class="empty" id="linksEmpty">No links yet — generate one.</div>
-        <aside class="undo-delete hidden" id="undoDelete" aria-live="polite"><span>Link removed.</span><button type="button" id="undoDeleteBtn">Undo</button></aside>
       </section>
       <!-- SETTINGS -->
       <section id="page-settings" class="hidden">
@@ -810,7 +819,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   $('commandPalette').onclick=function(e){if(e.target===$('commandPalette'))closeCommand();};
   document.addEventListener('keydown',function(e){
     if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==='k'){e.preventDefault();openCommand();}
-    else if(e.key==='Escape'){closeCommand();closeMore();}
+    else if(e.key==='Escape'){closeDeleteConfirm();closeCommand();closeMore();}
   });
 
   // tabs
@@ -972,31 +981,34 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       var pin=document.createElement('button');pin.type='button';pin.className='lact'+(pinSet[url]?' on':'');pin.title=pinSet[url]?'Unpin':'Pin';pin.innerHTML=PIN;
       pin.onclick=function(){togglePin(url,!pinSet[url]);};
       var del=document.createElement('button');del.type='button';del.className='lact';del.title='Delete';del.innerHTML=TRASH;
-      del.onclick=function(){stageDeleteLink(url);};
+      del.onclick=function(){openDeleteConfirm(url,del);};
       li.appendChild(a);li.appendChild(pin);li.appendChild(del);L.appendChild(li);
     });
   }
-  var pendingDelete=null;
-  function commitPendingDelete(){
-    if(!pendingDelete)return;
-    var item=pendingDelete;pendingDelete=null;$('undoDelete').classList.add('hidden');
-    api('/api/links/delete',{method:'POST',body:{url:item.url}}).then(function(res){
-      if(!res.ok){state.links.splice(Math.min(item.index,state.links.length),0,item.url);if(item.pinned)state.pinned.push(item.url);renderLinks(state.links);msg(res.data.error||'Could not delete.','err');return;}
-      state.links=res.data.links||state.links;state.pinned=res.data.pinned||state.pinned;renderLinks(state.links);
-    }).catch(function(){state.links.splice(Math.min(item.index,state.links.length),0,item.url);if(item.pinned)state.pinned.push(item.url);renderLinks(state.links);msg('Network error.','err');});
+  var pendingDeleteUrl='',deleteTrigger=null,deleteBusy=false;
+  function openDeleteConfirm(url,trigger){
+    if(state.links.indexOf(url)<0)return;
+    pendingDeleteUrl=url;deleteTrigger=trigger||null;
+    $('deleteModal').classList.remove('hidden');
+    setTimeout(function(){$('deleteCancel').focus();},0);
   }
-  function stageDeleteLink(url){
-    if(pendingDelete)commitPendingDelete();
-    var index=state.links.indexOf(url),pinned=state.pinned.indexOf(url)>=0;
-    if(index<0)return;
-    state.links.splice(index,1);state.pinned=state.pinned.filter(function(item){return item!==url;});renderLinks(state.links);
-    pendingDelete={url:url,index:index,pinned:pinned,timer:setTimeout(commitPendingDelete,8000)};
-    $('undoDelete').classList.remove('hidden');
+  function closeDeleteConfirm(){
+    if(deleteBusy||$('deleteModal').classList.contains('hidden'))return;
+    $('deleteModal').classList.add('hidden');pendingDeleteUrl='';
+    if(deleteTrigger&&document.body.contains(deleteTrigger))deleteTrigger.focus();
+    deleteTrigger=null;
   }
-  $('undoDeleteBtn').onclick=function(){
-    if(!pendingDelete)return;
-    var item=pendingDelete;pendingDelete=null;clearTimeout(item.timer);$('undoDelete').classList.add('hidden');
-    state.links.splice(Math.min(item.index,state.links.length),0,item.url);if(item.pinned&&state.pinned.indexOf(item.url)<0)state.pinned.push(item.url);renderLinks(state.links);msg('Link restored.','ok');
+  $('deleteCancel').onclick=closeDeleteConfirm;
+  $('deleteModal').onclick=function(e){if(e.target===$('deleteModal'))closeDeleteConfirm();};
+  $('deleteConfirm').onclick=function(){
+    if(deleteBusy||!pendingDeleteUrl)return;
+    var url=pendingDeleteUrl,button=$('deleteConfirm');deleteBusy=true;button.disabled=true;button.textContent='Deleting…';
+    api('/api/links/delete',{method:'POST',body:{url:url}}).then(function(res){
+      if(!res.ok){msg(res.data.error||'Could not delete.','err');return;}
+      state.links=res.data.links||state.links.filter(function(item){return item!==url;});
+      state.pinned=res.data.pinned||state.pinned.filter(function(item){return item!==url;});
+      $('deleteModal').classList.add('hidden');pendingDeleteUrl='';deleteTrigger=null;renderLinks(state.links);msg('Link deleted.','ok');
+    }).catch(function(){msg('Network error.','err');}).then(function(){deleteBusy=false;button.disabled=false;button.textContent='Delete';});
   };
   function togglePin(url,pin){
     api('/api/links/pin',{method:'POST',body:{url:url,pinned:pin}}).then(function(res){
@@ -1564,7 +1576,7 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 
   function doLogout(callApi){
     if(callApi!==false)api('/api/logout',{method:'POST'});
-    if(pendingDelete){clearTimeout(pendingDelete.timer);pendingDelete=null;$('undoDelete').classList.add('hidden');}
+    if(!$('deleteModal').classList.contains('hidden')){$('deleteModal').classList.add('hidden');pendingDeleteUrl='';deleteTrigger=null;deleteBusy=false;$('deleteConfirm').disabled=false;$('deleteConfirm').textContent='Delete';}
     stopMsgPoll();stopGlobalPoll();stopSupportPoll();if(badgePoll){clearInterval(badgePoll);badgePoll=null;}setMsgBadge(0);setSupportBadge(0);threadPartner=null;supportId=null;
     setToken('');state.username=null;state.account=null;state.links=[];applySettings(DEFAULTS);showAuth();setMode('login');msg('Logged out.','ok');
   }

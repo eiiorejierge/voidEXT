@@ -263,14 +263,24 @@ body[data-theme=eclipse] .global-compose{border-top-color:#d0cec9}
   .global-compose>span{display:none}
   .global-compose .btn{min-width:62px;padding-inline:11px}
 }
-/* 2.8 focused link tools, reversible deletion, and quiet chat controls */
+/* 2.8 focused link tools and quiet chat controls */
 .link-tools{display:grid;grid-template-columns:minmax(0,1fr) 190px auto;gap:8px;margin:13px 0 24px}
 .link-tools input,.link-tools select,#reportReason{min-height:39px;margin:0;padding:9px 11px;border:1px solid var(--border);border-radius:5px;background:var(--field);color:var(--text);outline:none}
 .link-tools input:focus,.link-tools select:focus,#reportReason:focus{border-color:var(--border-hot);box-shadow:0 0 0 2px rgba(255,255,255,.05)}
-.undo-delete{position:sticky;bottom:0;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:10px;padding:10px 12px;border:1px solid var(--border-hot);border-radius:6px;background:var(--elevated);color:var(--text);font-size:11px;box-shadow:0 14px 34px rgba(0,0,0,.3)}
-.undo-delete button{padding:5px 9px;border:1px solid var(--text);border-radius:4px;background:var(--text);color:var(--bg);font-size:10px}
 .global-head-actions{display:flex;align-items:center;gap:7px}
 .global-head-actions .btn{min-height:31px;padding:6px 9px}
 .global-head-actions .global-presence{margin-top:0}
-body[data-theme=eclipse] .link-tools input,body[data-theme=eclipse] .link-tools select,body[data-theme=eclipse] #reportReason,body[data-theme=eclipse] .undo-delete{background:#fff;color:#111}
+body[data-theme=eclipse] .link-tools input,body[data-theme=eclipse] .link-tools select,body[data-theme=eclipse] #reportReason{background:#fff;color:#111}
 @media(max-width:650px){.link-tools{grid-template-columns:1fr 1fr}.link-tools input{grid-column:1/-1}.link-tools .btn{width:100%}.global-head-actions{flex-direction:column;align-items:flex-end}}
+
+/* Simple, irreversible link deletion confirmation. */
+.delete-modal{position:fixed;inset:0;z-index:210;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.76);backdrop-filter:blur(6px)}
+.delete-card{width:min(390px,100%);padding:24px;border:1px solid var(--border-hot);border-radius:8px;background:var(--elevated);color:var(--text);box-shadow:0 28px 90px rgba(0,0,0,.72)}
+.delete-card h2{margin:0;font:400 italic 28px/1.1 Georgia,"Times New Roman",serif!important;letter-spacing:-.025em}
+.delete-card p{margin:10px 0 22px;color:var(--muted);font-size:12px;line-height:1.55}
+.delete-actions{display:flex;justify-content:flex-end;gap:8px}
+.delete-actions .btn{min-width:86px}
+.delete-actions .delete-confirm{background:var(--text)!important;border-color:var(--text)!important;color:var(--bg)!important}
+.delete-actions .delete-confirm:hover{background:#fff!important;border-color:#fff!important}
+body[data-theme=eclipse] .delete-card{background:#fff}
+body[data-theme=eclipse] .delete-actions .delete-confirm{background:#111!important;border-color:#111!important;color:#fff!important}
