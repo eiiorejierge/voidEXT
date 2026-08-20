@@ -81,6 +81,10 @@ test('the gateway page hides the destination and enforces access client-side', a
   assert.ok(page.body.includes('voidext_token'), 'page reads the signed-in session');
   assert.ok(page.body.includes('Open your Scale XT bookmark'), 'page tells users to sign in through the bookmark');
   assert.ok(!page.body.includes('href="/app.html"'), 'page does not send users to the website app page');
+  assert.ok(page.body.includes('Private link / auth check'), 'gateway uses the Scale XT auth-check shell');
+  assert.ok(page.body.includes('nebulabkmlinks.shop'), 'gateway labels the dedicated private-link domain');
+  assert.ok(page.body.includes('#050505'), 'gateway uses the monochrome Scale XT canvas');
+  assert.ok(!page.body.includes('#c084fc') && !page.body.includes('#170d30'), 'legacy purple gateway colors are removed');
   assert.ok(!page.body.includes(dest), 'gateway HTML never prints the destination');
 });
 
