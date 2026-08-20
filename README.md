@@ -6,12 +6,15 @@ staff administration panel.
 
 ## Production deployment
 
-The production application runs on Railway:
+The production application runs on Railway and is served on the custom domain:
 
-https://voidext-production.up.railway.app
+https://nebulabkm.xyz
 
-The bookmarklet is generated with that address and loads the application from
-the Railway service.
+Add `nebulabkm.xyz` as a custom domain on the Railway web service (Railway's own
+`*.up.railway.app` URL keeps working too). The bookmarklet and the per-user link
+gateway are generated with the `nebulabkm.xyz` address, so the whole app — the
+launcher, `/api`, and the `/<token>` links — is served from one origin, which is
+what lets links be locked to the signed-in owner.
 
 ## Railway PostgreSQL setup
 
@@ -52,39 +55,55 @@ owner, admin, or support account. There is no separate admin code.
 ## Link cloaking gateway
 
 Generated links are never handed out as raw destinations. Every destination is
-wrapped in an opaque, per-destination token, so users only ever see and share a
-gateway link of the form:
+wrapped in a short, opaque, **per-user** token, so a user only ever sees and
+shares a personal gateway link of the form:
 
-    https://voidext-production.up.railway.app/go/<token>
+    https://nebulabkm.xyz/<token>
 
-The real URL is stored server-side and is never printed into the gateway page.
-Opening a `/go/<token>` link loads the destination **inside a full-screen frame
-on the Scale XT viewer** — the browser address bar stays on the `/go/<token>`
-link the whole time, so the real destination is never shown in the URL bar or
-the page. The site remains fully usable inside the frame.
+Two different accounts get two different tokens for the same destination, and
+each token is **locked to the account that created it**.
 
-Mechanically, the gateway page embeds a same-origin loader,
-`GET /api/frame/<token>`, which redirects *inside the iframe* to the real
-destination. Because the redirect happens in the frame, the top-level URL never
-changes and the destination is never handed to any JavaScript the page runs.
-This means the private pool cannot be read off the address bar or copied out of
-the app, and every visit is forced through the service — so it can be logged,
-rate-limited, and revoked.
+Opening a `/<token>` link loads the destination **inside a full-screen frame on
+the Scale XT viewer** — the browser address bar stays on the `/<token>` link the
+whole time, so the real destination is never shown in the URL bar or the page.
+The site remains fully usable inside the frame.
 
-Note: a technically sophisticated visitor could still read the destination from
-the browser's network devtools (any embedded page must ultimately be fetched by
-the browser). Fully hiding it from that case would require a server-side reverse
-proxy, which is heavier and can break some target sites. The frame approach
-hides the link from the address bar and page for everyone else.
+How the owner lock works (no destination ever reaches page JavaScript):
 
-- Tokens are deterministic (a keyed hash of the destination), so a user's saved
-  links stay stable and the same destination always maps to the same token.
-- Blocking or removing a pool entry from Admin revokes every cloak link that
-  points at it; restoring it re-enables them.
-- The resolver is rate-limited per IP (`CLOAK_RESOLVE_LIMIT`, default 120/min) so
-  the pool cannot be scraped in bulk.
-- Set `CLOAK_SECRET` to a long random value in production, and `PUBLIC_BASE_URL`
-  to the public origin the links should point at.
+1. The `/<token>` page reads the viewer's Scale XT session from same-origin
+   `localStorage` (this is why the domain must serve the whole app).
+2. It calls `POST /api/frame-ticket` with that session. The server grants a
+   short-lived, single-use ticket **only if that account owns the token**.
+   Otherwise it returns 401 (not signed in) or 403 (someone else's link).
+3. The page loads `GET /api/frame/<ticket>` into the iframe, which redirects
+   *inside the frame* to the destination and immediately discards the ticket.
+
+So a link that is copied and shared simply will not open for anyone but its
+owner, the destination never appears in the address bar/page/JS, and every open
+is forced through the service — loggable, rate-limited, and revocable.
+
+- Tokens are a per-user keyed hash of the destination, so a user's saved links
+  stay stable and the token table does not grow without bound.
+- Blocking or removing a pool entry from Admin revokes it for every user at
+  once; restoring it re-enables it.
+- `POST /api/frame-ticket` is rate-limited per IP (`CLOAK_RESOLVE_LIMIT`,
+  default 120/min).
+- Set `CLOAK_SECRET` to a long random value in production, and
+  `PUBLIC_BASE_URL` to the public origin the links point at (e.g.
+  `https://nebulabkm.xyz`).
+
+Deployment note: the owner lock requires `nebulabkm.xyz` (or whatever
+`PUBLIC_BASE_URL` is) to serve the **whole app** — add it as a custom domain on
+the same Railway service so `app.html`, `/api`, and the `/<token>` gateway are
+all one origin. The bookmarklet loads the app from this domain
+(`API_BASE` in `bookmarklet.src.js` and the app base in `build-bookmarklet.js`);
+after changing it, run `npm run build:bookmarklet`. Existing users sign in once
+on the new domain so their session lives there.
+
+A technically sophisticated visitor who is signed in as the owner could still
+read the destination from the browser's network devtools (any embedded page is
+ultimately fetched by the browser). Fully hiding it from that case would require
+a server-side reverse proxy, which is heavier and can break some target sites.
 
 ## Main files
 
@@ -125,9 +144,10 @@ in-memory storage. That data disappears when the process stops.
 - GET /api/me: validate the current session.
 - POST /api/logout: invalidate the current session.
 - POST /api/logout-all: invalidate every session for the current account.
-- GET /api/links: generate a rotating link batch (returned as cloaked /go links).
-- GET /go/<token>: gateway page that embeds the destination in a hidden frame.
-- GET /api/frame/<token>: in-frame loader that redirects to the destination (rate limited).
+- GET /api/links: generate a rotating link batch (returned as personal /<token> links).
+- GET /<token>: owner-locked gateway page that embeds the destination in a hidden frame.
+- POST /api/frame-ticket: owner-only check that mints a one-time frame ticket (rate limited).
+- GET /api/frame/<ticket>: single-use in-frame loader that redirects to the destination.
 - POST /api/report: report a destination.
 - GET /api/health: check application and storage health.
 - GET /api/admin/session: validate a signed-in staff session.

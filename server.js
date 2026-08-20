@@ -65,9 +65,13 @@ const server = http.createServer(async (req, res) => {
   securityHeaders(res);
   const pathname = req.url.split('?')[0];
 
-  // /api/* is JSON; /go/* is the link-cloaking gateway (HTML). Both funnel
-  // through lib/core.js handle().
-  if (pathname.startsWith('/api/') || pathname.startsWith('/go/')) {
+  // /api/* is JSON; the link-cloaking gateway is served at /<token> (root) and
+  // the legacy /go/<token>. All funnel through lib/core.js handle(). The
+  // root-token pattern is a long alphanumeric single segment, which never
+  // collides with the app's static files (they have extensions) or its short
+  // page routes (/admin, /app, /index).
+  const GATEWAY_TOKEN = /^\/(?:go\/)?[A-Za-z0-9]{16,64}$/;
+  if (pathname.startsWith('/api/') || GATEWAY_TOKEN.test(pathname)) {
     res.setHeader('Cache-Control', 'no-store');
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
