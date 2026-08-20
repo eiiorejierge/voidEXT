@@ -42,6 +42,10 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
   assert.match(builtApp, /id="versionBtn"/);
   assert.match(builtApp, /id="moreMenu"/);
   assert.match(builtApp, /id="homeAnnouncement"/);
+  assert.match(builtApp, /id="updHeading"/);
+  assert.match(builtApp, /class="update-kicker"/);
+  assert.match(source, /if\(\$\('updModal'\)\.classList\.contains\('hidden'\)\)openUpdate\(\)/);
+  assert.match(stylesheet, /\.updmodal\.required \.updclose\{display:none!important\}/);
   assert.match(builtApp, /id="page-global"/);
   assert.match(source, /api\('\/api\/global\/messages'\)/);
   assert.match(source, /api\('\/api\/global\/send'/);

@@ -31,6 +31,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scale XT</title>
+<link rel="icon" href="data:,">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 body{--a1:#a855f7;--a2:#ec4899;--a3:#38bdf8;--grad:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);--grad3:linear-gradient(115deg,#818cf8 0%,#c084fc 32%,#f472b6 62%,#38bdf8 100%);--glow:rgba(168,85,247,0.5);--btn-bg:var(--grad);--btn-fg:#fff;--danger:#fb3b6b;}
@@ -389,11 +390,13 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 <div class="stars"></div>
 <div class="stars s2"></div>
 <div id="updateBar" class="updbar hidden"></div>
-<div id="updModal" class="updmodal hidden">
+<div id="updModal" class="updmodal hidden" role="dialog" aria-modal="true" aria-labelledby="updHeading">
   <div class="updcard">
     <div class="updclose" id="updClose">&#x2715;</div>
-    <div class="updh">Update Scale XT</div>
+    <div class="update-kicker">Scale XT / system update</div>
+    <div class="updh" id="updHeading" aria-live="assertive">Update Scale XT</div>
     <div class="updver" id="updVer">—</div>
+    <p class="updlead" id="updLead">Copy the latest bookmark code and replace the old URL.</p>
     <ol class="updsteps">
       <li>Right-click your <b>Scale XT</b> bookmark and choose <b>Edit</b>.</li>
       <li>Select everything in the <b>URL</b> field and replace it with the code below.</li>
@@ -1619,8 +1622,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       latestVersion=res.data.version;paintVersionState();
       var bar=$('updateBar');
       if(updateReady()){
-        bar.innerHTML='<span class="update-toast-icon">↑</span><span><b>Scale XT v'+latestVersion+' is ready</b><small>You are using v'+INSTALLED_VERSION+'. Tap to update.</small></span>';
-        bar.classList.remove('hidden');bar.onclick=openUpdate;
+        bar.classList.add('hidden');bar.onclick=null;
+        if($('updModal').classList.contains('hidden'))openUpdate();
       }else{
         bar.classList.add('hidden');bar.onclick=null;
         if(announce)msg('Scale XT v'+INSTALLED_VERSION+' is up to date.','ok');
@@ -1633,10 +1636,14 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   }
   function startVersionWatch(){if(versionPoll)return;versionPoll=setInterval(function(){checkVersion(false);},900000);}
   function openUpdate(){
+    var required=updateReady(),modal=$('updModal');
+    modal.classList.toggle('required',required);
+    $('updHeading').textContent=required?'Update required':'Update Scale XT';
+    $('updLead').textContent=required?'Your saved bookmark is out of date. Update it before continuing.':'Copy the latest bookmark code and replace the old URL.';
     var target=latestVersion||APP_VERSION;
     $('updVer').textContent=updateReady()?'v'+INSTALLED_VERSION+'  →  v'+target:'Installed v'+INSTALLED_VERSION;
     $('updCode').textContent='Loading latest version…';
-    $('updModal').classList.remove('hidden');
+    modal.classList.remove('hidden');
     api('/api/bookmarklet').then(function(res){
       if(res.ok&&res.data.code){
         $('updCode').textContent=res.data.code;
@@ -1649,8 +1656,8 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
   }
   $('updatesAction').onclick=function(){if(updateReady())openUpdate();else checkVersion(true);};
   $('helpUpdate').onclick=openUpdate;
-  $('updClose').onclick=function(){$('updModal').classList.add('hidden');};
-  $('updModal').onclick=function(e){if(e.target===$('updModal'))$('updModal').classList.add('hidden');};
+  $('updClose').onclick=function(){if(!updateReady())$('updModal').classList.add('hidden');};
+  $('updModal').onclick=function(e){if(e.target===$('updModal')&&!updateReady())$('updModal').classList.add('hidden');};
   $('updCopy').onclick=function(){
     var text=$('updCode').textContent||'';
     if(!text||text.indexOf('javascript:')!==0){msg('Nothing to copy yet.','err');return;}

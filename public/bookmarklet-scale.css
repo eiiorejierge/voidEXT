@@ -112,6 +112,30 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 .updbar span:nth-child(2){display:flex;flex-direction:column;gap:3px}
 .updbar b{font-size:12px}
 .updbar small{color:#8b8b8b;font-size:10px}
+/* Full-screen update gate: an outdated saved bookmark cannot miss or dismiss it. */
+.updmodal{position:fixed!important;inset:0!important;z-index:220!important;display:block!important;padding:0!important;overflow:auto;background:#050505!important;color:#f2f2ee;backdrop-filter:none!important}
+.updmodal.hidden{display:none!important}
+.updmodal::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),radial-gradient(circle at 82% 14%,rgba(255,255,255,.13),transparent 27%);background-size:36px 36px,36px 36px,100% 100%}
+.updmodal::after{content:"";position:fixed;width:620px;height:620px;right:-310px;top:-330px;border:1px solid rgba(255,255,255,.18);border-radius:50%;box-shadow:0 0 0 82px rgba(255,255,255,.045),0 0 0 164px rgba(255,255,255,.018);pointer-events:none}
+.updcard{position:relative!important;z-index:1;min-height:100%;width:100%!important;max-width:none!important;max-height:none!important;display:grid;grid-template-columns:minmax(240px,.85fr) minmax(340px,1.15fr);grid-template-areas:"kicker steps" "heading steps" "version code" "lead code" ". action";align-content:center;gap:14px clamp(42px,8vw,130px);padding:clamp(34px,7vw,110px)!important;overflow:visible!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.update-kicker{grid-area:kicker;align-self:end;color:#858585;font:700 10px "Cascadia Mono","Consolas",monospace!important;letter-spacing:.16em;text-transform:uppercase}
+.update-kicker::before{content:"";display:inline-block;width:28px;height:2px;margin:0 10px 3px 0;background:#f2f2ee}
+.updh{grid-area:heading;color:#f4f4ef;font:400 italic clamp(52px,8vw,116px)/.84 Georgia,"Times New Roman",serif!important;letter-spacing:-.055em}
+.updver{grid-area:version;justify-self:start;margin:7px 0 0!important;padding:7px 10px;border:1px solid #3b3b3b;border-radius:4px;color:#aaa;font:650 10px "Cascadia Mono","Consolas",monospace!important;letter-spacing:.08em}
+.updlead{grid-area:lead;max-width:490px;margin:3px 0 0;color:#8e8e8e;font-size:13px;line-height:1.65}
+.updsteps{grid-area:steps;align-self:end;margin:0 0 8px 20px!important;color:#b5b5b5;font-size:13px;line-height:1.9}
+.updsteps li{padding-left:5px}
+.updsteps li::marker{color:#f2f2ee;font:700 10px "Cascadia Mono","Consolas",monospace!important}
+.updbox{grid-area:code;width:100%;max-height:150px!important;padding:15px!important;overflow:auto;background:#0c0c0c!important;border:1px solid #343434!important;border-radius:5px!important;color:#797979!important;font:500 10px/1.55 "Cascadia Mono","Consolas",monospace!important;word-break:break-all;user-select:all}
+#updCopy{grid-area:action;width:100%!important;min-height:48px;margin:0!important;font-size:11px!important}
+.updclose{position:fixed!important;top:22px!important;right:22px!important;z-index:2;width:38px!important;height:38px!important;border:1px solid #363636!important;border-radius:5px!important;background:#0c0c0c!important}
+.updmodal.required .updclose{display:none!important}
+.updmodal.required .update-kicker::after{content:" / REQUIRED";color:#f2f2ee}
+@media(max-width:760px){
+  .updmodal::after{width:380px;height:380px;right:-260px;top:-250px}
+  .updcard{grid-template-columns:1fr;grid-template-areas:"kicker" "heading" "version" "lead" "steps" "code" "action";align-content:start;gap:13px;padding:68px 22px 34px!important}
+  .updh{font-size:clamp(48px,16vw,76px)}.updsteps{margin-top:10px!important}.updbox{max-height:120px!important}
+}
 .command-overlay{position:fixed;inset:0;z-index:130;display:grid;place-items:start center;padding-top:min(16vh,130px);background:rgba(0,0,0,.68);backdrop-filter:blur(7px)}
 .command-card{width:min(600px,calc(100% - 28px));overflow:hidden;border:1px solid #393939;border-radius:10px;background:#0a0a0a;box-shadow:0 28px 90px rgba(0,0,0,.72)}
 .command-search{height:56px;display:flex;align-items:center;gap:11px;padding:0 14px;border-bottom:1px solid #252525}
