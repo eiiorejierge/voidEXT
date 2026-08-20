@@ -42,6 +42,8 @@ test('the compact bookmarklet shell tracks the installed launcher version', () =
   assert.match(builtApp, /id="versionBtn"/);
   assert.match(builtApp, /id="moreMenu"/);
   assert.match(builtApp, /id="homeAnnouncement"/);
+  assert.match(builtApp, /class="login-requirement"/);
+  assert.match(builtApp, /Private links only open while you are signed in/);
   assert.match(builtApp, /id="page-global"/);
   assert.match(source, /api\('\/api\/global\/messages'\)/);
   assert.match(source, /api\('\/api\/global\/send'/);

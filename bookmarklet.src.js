@@ -295,6 +295,11 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
 .main{padding:35px 38px;}
 .ptitle{display:block;font-family:'Instrument Serif',Georgia,serif;font-size:42px;font-weight:400;line-height:.95;letter-spacing:-.045em;background:none;color:var(--text);}
 .psub{font-size:12.5px;line-height:1.5;letter-spacing:0;margin:8px 0 26px;max-width:590px;}
+.login-requirement{display:flex;align-items:flex-start;gap:11px;max-width:620px;margin:-11px 0 18px;padding:12px 14px;border:1px solid var(--border);border-left:3px solid var(--a1);background:color-mix(in srgb,var(--a1) 6%,var(--field));}
+.login-requirement svg{width:17px;height:17px;flex:none;color:var(--a1);margin-top:1px;}
+.login-requirement strong{display:block;margin-bottom:3px;font-size:10px;line-height:1.2;letter-spacing:.11em;text-transform:uppercase;color:var(--text);}
+.login-requirement span{display:block;font-size:12px;line-height:1.45;color:var(--muted);}
+.login-requirement b{color:var(--text);font-weight:600;}
 .actions{gap:8px;margin-bottom:10px;}
 .btn{min-height:40px;padding:10px 15px;border:1px solid var(--text);border-radius:0;background:var(--btn-bg);color:var(--btn-fg);font-weight:600;font-size:12px;letter-spacing:0;box-shadow:3px 3px 0 rgba(0,0,0,.28);}
 .btn:hover{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,.28);}
@@ -490,6 +495,11 @@ input:focus,textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix
       <section id="page-links" class="home-page">
         <div class="home-kicker">Your links</div><div class="ptitle">Links</div>
         <div class="psub">Generate a link and keep the ones you use.</div>
+        <aside class="login-requirement" role="note" aria-label="Login required">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <div><strong>Login required</strong><span>Private links only open while you are signed in to <b>nebulabkmlinks.shop</b> in this browser.</span></div>
+        </aside>
+
         <aside class="home-announcement hidden" id="homeAnnouncement" aria-live="polite">
           <span class="home-announcement-label">Broadcast</span>
           <div class="home-announcement-copy"><div><strong id="homeAnnouncementTitle">General announcement</strong><time id="homeAnnouncementDate"></time></div><p id="homeAnnouncementText"></p></div>
