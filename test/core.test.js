@@ -144,9 +144,9 @@ test('admin controls, announcements, and support conversations work end to end',
 
   const builtInReleases = await call('/api/releases');
   assert.equal(builtInReleases.status, 200);
+  assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.5'), true);
   assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.4'), true);
   assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.3'), true);
-  assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.2'), true);
   const publishedRelease = await call('/api/admin/release', {
     admin: true,
     method: 'POST',
