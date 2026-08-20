@@ -79,8 +79,8 @@ test('the gateway page hides the destination and enforces access client-side', a
   // The page proves ownership via the session before loading anything.
   assert.ok(page.body.includes('/api/frame-ticket'), 'page requests an access ticket');
   assert.ok(page.body.includes('voidext_token'), 'page reads the signed-in session');
-  assert.ok(page.body.includes('nebulabkmlinks.shop'), 'page explains the required login domain');
-  assert.ok(page.body.includes('href="/app.html"'), 'page offers a direct sign-in action');
+  assert.ok(page.body.includes('Open your Scale XT bookmark'), 'page tells users to sign in through the bookmark');
+  assert.ok(!page.body.includes('href="/app.html"'), 'page does not send users to the website app page');
   assert.ok(!page.body.includes(dest), 'gateway HTML never prints the destination');
 });
 
