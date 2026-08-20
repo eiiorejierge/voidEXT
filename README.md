@@ -8,11 +8,11 @@ staff administration panel.
 
 The production application runs on Railway and is served on the custom domain:
 
-https://nebulabkm.xyz
+https://nebulabkmlinks.shop
 
-Add `nebulabkm.xyz` as a custom domain on the Railway web service (Railway's own
+Add `nebulabkmlinks.shop` as a custom domain on the Railway web service (Railway's own
 `*.up.railway.app` URL keeps working too). The bookmarklet and the per-user link
-gateway are generated with the `nebulabkm.xyz` address, so the whole app — the
+gateway are generated with the `nebulabkmlinks.shop` address, so the whole app — the
 launcher, `/api`, and the `/<token>` links — is served from one origin, which is
 what lets links be locked to the signed-in owner.
 
@@ -58,7 +58,7 @@ Generated links are never handed out as raw destinations. Every destination is
 wrapped in a short, opaque, **per-user** token, so a user only ever sees and
 shares a personal gateway link of the form:
 
-    https://nebulabkm.xyz/<token>
+    https://nebulabkmlinks.shop/<token>
 
 Two different accounts get two different tokens for the same destination, and
 each token is **locked to the account that created it**.
@@ -90,9 +90,9 @@ is forced through the service — loggable, rate-limited, and revocable.
   default 120/min).
 - Set `CLOAK_SECRET` to a long random value in production, and
   `PUBLIC_BASE_URL` to the public origin the links point at (e.g.
-  `https://nebulabkm.xyz`).
+  `https://nebulabkmlinks.shop`).
 
-Deployment note: the owner lock requires `nebulabkm.xyz` (or whatever
+Deployment note: the owner lock requires `nebulabkmlinks.shop` (or whatever
 `PUBLIC_BASE_URL` is) to serve the **whole app** — add it as a custom domain on
 the same Railway service so `app.html`, `/api`, and the `/<token>` gateway are
 all one origin. The bookmarklet loads the app from this domain

@@ -1,6 +1,6 @@
 {
   "name": "voidext",
-  "version": "2.9.2",
+  "version": "2.9.3",
   "private": true,
   "description": "Scale XT - private bookmarklet-driven link rotation with account authentication.",
   "scripts": {

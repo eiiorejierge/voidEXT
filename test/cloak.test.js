@@ -14,6 +14,16 @@ delete globalThis.__voidMem;
 const { handle } = require('../lib/core.js');
 const cloak = require('../lib/cloak.js');
 
+test('the former production base automatically migrates to the dedicated link domain', () => {
+  const originalBase = process.env.PUBLIC_BASE_URL;
+  process.env.PUBLIC_BASE_URL = 'https://nebulabkm.xyz/';
+  try {
+    assert.equal(cloak.cloakBase(), 'https://nebulabkmlinks.shop');
+  } finally {
+    process.env.PUBLIC_BASE_URL = originalBase;
+  }
+});
+
 async function signup(username, ip) {
   const r = await handle({
     method: 'POST',

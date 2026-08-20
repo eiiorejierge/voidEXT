@@ -13,7 +13,7 @@
  * ============================================================================= */
 (function () {
   // <<< CONFIG >>> Point this at your deployed site (no trailing slash).
-  const API_BASE = 'https://nebulabkm.xyz';
+  const API_BASE = 'https://nebulabkmlinks.shop';
   const APP_URL = API_BASE + '/app.html?v=__VERSION__';
 
   const OVERLAY_ID = 'nebula-overlay';
