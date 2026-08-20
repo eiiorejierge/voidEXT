@@ -65,7 +65,9 @@ const server = http.createServer(async (req, res) => {
   securityHeaders(res);
   const pathname = req.url.split('?')[0];
 
-  if (pathname.startsWith('/api/')) {
+  // /api/* is JSON; /go/* is the link-cloaking gateway (HTML). Both funnel
+  // through lib/core.js handle().
+  if (pathname.startsWith('/api/') || pathname.startsWith('/go/')) {
     res.setHeader('Cache-Control', 'no-store');
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
@@ -75,15 +77,25 @@ const server = http.createServer(async (req, res) => {
     try {
       const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
         req.socket.remoteAddress || 'unknown';
-      const { status, json } = await handle({
+      const result = await handle({
         method: req.method,
         path: pathname,
         body,
         authHeader: req.headers['authorization'],
         ip,
       });
+      const { status, json, body: rawBody, contentType, location, headers } = result;
       res.statusCode = status;
-      if (json === null) return res.end();
+      if (headers) for (const [k, v] of Object.entries(headers)) res.setHeader(k, v);
+      if (location) {
+        res.setHeader('Location', location);
+        return res.end();
+      }
+      if (typeof rawBody === 'string') {
+        res.setHeader('Content-Type', contentType || 'text/html; charset=utf-8');
+        return res.end(rawBody);
+      }
+      if (json === null || json === undefined) return res.end();
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify(json));
     } catch (err) {

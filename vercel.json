@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "rewrites": [
+    { "source": "/go/:token", "destination": "/api/gopage/:token" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
