@@ -12,7 +12,7 @@ delete process.env.ADMIN_KEY;
 process.env.OWNER_SETUP_PASSWORD = 'owner-password-123';
 delete globalThis.__voidMem;
 
-const { handle, usagePeriod } = require('../lib/core.js');
+const { handle, usagePeriod, syncLinkPeriod } = require('../lib/core.js');
 
 let ownerToken = '';
 
@@ -68,6 +68,12 @@ test('admin controls, announcements, and support conversations work end to end',
   const sampleWeek = usagePeriod(Date.parse('2026-08-18T12:00:00Z'));
   assert.equal(new Date(sampleWeek.start).toISOString(), '2026-08-15T00:00:00.000Z');
   assert.equal(new Date(sampleWeek.resetAt).toISOString(), '2026-08-22T00:00:00.000Z');
+  const staleLinks = { links: ['https://example.com/old'], pinned: ['https://example.com/old'], linkPeriod: sampleWeek.key };
+  const weeklyLinkReset = syncLinkPeriod(staleLinks, Date.parse('2026-08-22T00:00:00Z'));
+  assert.equal(weeklyLinkReset.cleared, 1);
+  assert.deepEqual(staleLinks.links, []);
+  assert.deepEqual(staleLinks.pinned, []);
+  assert.equal(staleLinks.linkPeriod, usagePeriod(Date.parse('2026-08-22T00:00:00Z')).key);
 
   const secondSignup = await call('/api/signup', {
     method: 'POST',
@@ -75,9 +81,11 @@ test('admin controls, announcements, and support conversations work end to end',
   });
   assert.equal(secondSignup.status, 200);
 
+  let oldSecondLink = '';
   for (let index = 1; index <= 5; index++) {
     const generated = await call('/api/links', { token: secondSignup.json.token });
     assert.equal(generated.status, 200);
+    if (index === 1) oldSecondLink = generated.json.added;
     assert.equal(generated.json.usagePercent, index * 20);
     assert.equal(generated.json.usageAvailable, 5 - index);
     assert.equal(generated.json.usageCredits, 0);
@@ -144,9 +152,9 @@ test('admin controls, announcements, and support conversations work end to end',
 
   const builtInReleases = await call('/api/releases');
   assert.equal(builtInReleases.status, 200);
+  assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.10'), true);
   assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.9'), true);
   assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.8'), true);
-  assert.equal(builtInReleases.json.releases.some((item) => item.version === '2.9.7'), true);
   const publishedRelease = await call('/api/admin/release', {
     admin: true,
     method: 'POST',
@@ -421,6 +429,7 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(resetAll.status, 200);
   assert.equal(resetAll.json.accounts, 3);
   assert.equal(resetAll.json.reset, 1);
+  assert.equal(resetAll.json.linksCleared >= 1, true);
 
   const rewardedReporter = await call('/api/me', { token });
   assert.equal(rewardedReporter.json.account.usagePercent, 0);
@@ -432,6 +441,14 @@ test('admin controls, announcements, and support conversations work end to end',
   assert.equal(resetSecond.json.account.usagePercent, 0);
   assert.equal(resetSecond.json.account.usageAvailable, 9);
   assert.equal(resetSecond.json.account.usageCredits, 4);
+  assert.deepEqual(resetSecond.json.links, []);
+  assert.deepEqual(resetSecond.json.pinned, []);
+  const expiredLink = await call('/api/frame-ticket', {
+    token: secondSignup.json.token,
+    method: 'POST',
+    body: { token: new URL(oldSecondLink).pathname.slice(1) },
+  });
+  assert.equal(expiredLink.status, 404);
 
   const maintenanceOff = await call('/api/admin/maintenance', {
     admin: true,
