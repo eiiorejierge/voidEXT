@@ -14,9 +14,6 @@ delete globalThis.__voidMem;
 const { handle } = require('../lib/core.js');
 const cloak = require('../lib/cloak.js');
 
-// Destination substrings that must never appear in anything sent to the client.
-const REAL_DEST = /quizizz|blooket|storage\.googleapis|s3[.-]|amazonaws|run\.app|kavellewatches/i;
-
 async function signup(username, ip) {
   const r = await handle({
     method: 'POST',
@@ -39,30 +36,34 @@ test('generated links are cloaked and never leak the real destination', async ()
   // The user only ever sees a /go/<token> gateway URL.
   assert.ok(cloak.isCloakUrl(gen.json.added), 'added link is a cloak URL');
   assert.match(gen.json.added, /^https:\/\/example\.test\/go\/[A-Za-z0-9_-]{6,64}$/);
-
-  // No real destination leaks anywhere in the response.
-  assert.doesNotMatch(JSON.stringify(gen.json), REAL_DEST);
   for (const link of gen.json.links) assert.ok(cloak.isCloakUrl(link));
 
   const tok = cloak.tokenFromUrl(gen.json.added);
+  const dest = await cloak.resolveToken(tok);
+  assert.match(dest, /^https?:\/\//, 'server holds a real destination');
 
-  // The gateway page renders but does not contain the destination in its HTML.
+  // The real destination leaks nowhere in the /api/links response.
+  assert.ok(!JSON.stringify(gen.json).includes(dest), 'response never contains the destination');
+
+  // The gateway page renders, embeds a same-origin frame loader, and does NOT
+  // contain the destination anywhere in its HTML.
   const page = await handle({ method: 'GET', path: '/go/' + tok, ip: '9.9.9.9' });
   assert.equal(page.status, 200);
   assert.equal(page.contentType, 'text/html; charset=utf-8');
-  const dest = await cloak.resolveToken(tok);
-  assert.ok(REAL_DEST.test(dest), 'server holds a real destination');
+  assert.ok(page.headers && /frame-src/.test(page.headers['Content-Security-Policy']), 'relaxed CSP allows framing');
+  assert.ok(page.body.includes('/api/frame/' + tok), 'page frames the same-origin loader');
   assert.ok(!page.body.includes(dest), 'gateway HTML never prints the destination');
 
-  // The resolver returns the destination as JSON.
-  const resolved = await handle({ method: 'GET', path: '/api/go/' + tok, ip: '9.9.9.9' });
-  assert.equal(resolved.status, 200);
-  assert.equal(resolved.json.url, dest);
+  // The frame loader redirects *inside the iframe* to the destination; the
+  // real URL only appears as a redirect Location, never in the top document.
+  const frame = await handle({ method: 'GET', path: '/api/frame/' + tok, ip: '9.9.9.9' });
+  assert.equal(frame.status, 302);
+  assert.equal(frame.location, dest);
 });
 
 test('unknown and revoked tokens do not resolve', async () => {
   const bogus = 'Zz'.repeat(11);
-  const missing = await handle({ method: 'GET', path: '/api/go/' + bogus, ip: '9.9.9.9' });
+  const missing = await handle({ method: 'GET', path: '/api/frame/' + bogus, ip: '9.9.9.9' });
   assert.equal(missing.status, 404);
   const missingPage = await handle({ method: 'GET', path: '/go/' + bogus, ip: '9.9.9.9' });
   assert.equal(missingPage.status, 404);
@@ -74,12 +75,12 @@ test('unknown and revoked tokens do not resolve', async () => {
   const dest = await cloak.resolveToken(tok);
 
   await cloak.revokeDestination(dest);
-  const afterRevoke = await handle({ method: 'GET', path: '/api/go/' + tok, ip: '9.9.9.9' });
-  assert.equal(afterRevoke.status, 404, 'revoked token stops resolving');
+  const afterRevoke = await handle({ method: 'GET', path: '/api/frame/' + tok, ip: '9.9.9.9' });
+  assert.equal(afterRevoke.status, 404, 'revoked token stops loading');
 
   await cloak.unrevokeDestination(dest);
-  const afterRestore = await handle({ method: 'GET', path: '/api/go/' + tok, ip: '9.9.9.9' });
-  assert.equal(afterRestore.status, 200, 'restoring re-enables the token');
+  const afterRestore = await handle({ method: 'GET', path: '/api/frame/' + tok, ip: '9.9.9.9' });
+  assert.equal(afterRestore.status, 302, 'restoring re-enables the token');
 });
 
 test('cloak URLs sent back by the client resolve to the real destination', async () => {

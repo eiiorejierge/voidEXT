@@ -58,10 +58,24 @@ gateway link of the form:
     https://voidext-production.up.railway.app/go/<token>
 
 The real URL is stored server-side and is never printed into the gateway page.
-Opening a `/go/<token>` link shows a short branded Scale XT pass-through screen,
-which then fetches the destination from `GET /api/go/<token>` and redirects. This
-means the private pool cannot be copied out of the app, and every visit is forced
-through the service — so it can be logged, rate-limited, and revoked.
+Opening a `/go/<token>` link loads the destination **inside a full-screen frame
+on the Scale XT viewer** — the browser address bar stays on the `/go/<token>`
+link the whole time, so the real destination is never shown in the URL bar or
+the page. The site remains fully usable inside the frame.
+
+Mechanically, the gateway page embeds a same-origin loader,
+`GET /api/frame/<token>`, which redirects *inside the iframe* to the real
+destination. Because the redirect happens in the frame, the top-level URL never
+changes and the destination is never handed to any JavaScript the page runs.
+This means the private pool cannot be read off the address bar or copied out of
+the app, and every visit is forced through the service — so it can be logged,
+rate-limited, and revoked.
+
+Note: a technically sophisticated visitor could still read the destination from
+the browser's network devtools (any embedded page must ultimately be fetched by
+the browser). Fully hiding it from that case would require a server-side reverse
+proxy, which is heavier and can break some target sites. The frame approach
+hides the link from the address bar and page for everyone else.
 
 - Tokens are deterministic (a keyed hash of the destination), so a user's saved
   links stay stable and the same destination always maps to the same token.
@@ -112,8 +126,8 @@ in-memory storage. That data disappears when the process stops.
 - POST /api/logout: invalidate the current session.
 - POST /api/logout-all: invalidate every session for the current account.
 - GET /api/links: generate a rotating link batch (returned as cloaked /go links).
-- GET /go/<token>: branded gateway page that redirects to the real destination.
-- GET /api/go/<token>: resolve a token to its destination (rate limited).
+- GET /go/<token>: gateway page that embeds the destination in a hidden frame.
+- GET /api/frame/<token>: in-frame loader that redirects to the destination (rate limited).
 - POST /api/report: report a destination.
 - GET /api/health: check application and storage health.
 - GET /api/admin/session: validate a signed-in staff session.
